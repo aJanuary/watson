@@ -1,5 +1,6 @@
 package com.ajanuary.watson;
 
+import com.ajanuary.watson.config.Config;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import io.github.cdimascio.dotenv.Dotenv;
 import java.io.IOException;

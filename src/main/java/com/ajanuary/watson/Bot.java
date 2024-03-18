@@ -1,5 +1,6 @@
 package com.ajanuary.watson;
 
+import com.ajanuary.watson.config.Config;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 
