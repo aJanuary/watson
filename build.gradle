@@ -17,11 +17,14 @@ jar {
 }
 
 dependencies {
-    implementation 'ch.qos.logback:logback-core:1.5.2'
     implementation 'ch.qos.logback:logback-classic:1.5.2'
+    implementation 'ch.qos.logback:logback-core:1.5.2'
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.16.1'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.16.1'
     implementation 'io.github.cdimascio:dotenv-java:3.0.0'
+    implementation 'io.github.furstenheim:copy_down:1.1'
     implementation 'net.dv8tion:JDA:5.0.0-beta.20'
+    implementation("org.xerial:sqlite-jdbc:3.40.0.0")
 
     testImplementation platform('org.junit:junit-bom:5.9.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'

@@ -44,3 +44,4 @@ bin/
 ### Config and log directories ###
 /configs/
 /logs/
+programme.db

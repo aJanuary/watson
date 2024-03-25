@@ -1,5 +1,6 @@
-package com.ajanuary.watson;
+package com.ajanuary.watson.membership;
 
+import com.ajanuary.watson.Secrets;
 import com.ajanuary.watson.config.Config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -25,7 +26,6 @@ import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.events.session.SessionResumeEvent;
-import net.dv8tion.jda.api.exceptions.HierarchyException;
 import net.dv8tion.jda.api.hooks.EventListener;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -93,7 +93,7 @@ public class MembershipModule implements EventListener  {
       } else {
         var guild = jda.getGuildById(config.guildId());
         assert guild != null;
-        var modsChannel = guild.getTextChannelById(config.discordModsChannelId());
+        var modsChannel = guild.getTextChannelById(config.channels().discordMods());
         assert modsChannel != null;
 
         var responseData = objectMapper.readTree(response.body());
@@ -140,8 +140,8 @@ public class MembershipModule implements EventListener  {
               } else {
                 logger.info("User {} is a member. Setting nickname to {}.", userId, name);
                 try {
-                  guild.modifyNickname(member, name).queue();
-                } catch (HierarchyException e) {
+                  guild.modifyNickname(member, name).complete();
+                } catch (Exception e) {
                   logger.error("Error setting nickname for user {}", userId, e);
                 }
               }
@@ -149,7 +149,7 @@ public class MembershipModule implements EventListener  {
               for (var roleId : roles) {
                 logger.info("Adding role {} to user {}", roleId, userId);
                 guild.addRoleToMember(UserSnowflake.fromId(userId),
-                    Objects.requireNonNull(guild.getRoleById(roleId))).queue();
+                    Objects.requireNonNull(guild.getRoleById(roleId))).queue((v) -> {}, e -> logger.error("Error adding role {} to user {}", roleId, userId, e));
               }
             }
           } catch (Exception e) {
