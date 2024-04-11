@@ -1,5 +1,7 @@
 package com.ajanuary.watson.db;
 
+import com.ajanuary.watson.alarms.ScheduledDM;
+import com.ajanuary.watson.alarms.WithId;
 import com.ajanuary.watson.programme.DiscordItem;
 import com.ajanuary.watson.programme.DiscordThread;
 import com.ajanuary.watson.programme.Status;
@@ -7,18 +9,12 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.time.Instant;
+import java.sql.Types;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -27,19 +23,13 @@ public class DatabaseConnection implements Closeable {
   private final Connection connection;
 
   public DatabaseConnection(String path) throws SQLException {
-    var newDatabase = !Files.exists(Path.of(path));
     connection = DriverManager.getConnection("jdbc:sqlite:" + path);
-    if (newDatabase) {
-      createDatabaseSchema();
-    } else {
-      upgradeDatabaseSchema();
-    }
   }
 
-  private void createDatabaseSchema() throws SQLException {
+  public void init() throws SQLException {
     try (var statement = connection.createStatement()) {
       statement.executeUpdate("""
-        create table discord_threads
+        create table if not exists discord_threads
         (
           programme_item_id string primary key,
           thread_id string not null,
@@ -49,7 +39,23 @@ public class DatabaseConnection implements Closeable {
           loc string not null,
           time string not null,
           date_time string not null,
-          status string not null
+          status string not null,
+          processed_alarms tinyint not null default 0
+        )
+        """);
+
+      statement.executeUpdate("""
+        create table if not exists scheduled_dm
+        (
+          id integer primary key autoincrement,
+          discord_thread_id string not null,
+          discord_message_id string not null,
+          user_id string not null,
+          message_time string not null,
+          title string not null,
+          jump_url string not null,
+          contents string not null,
+          tags string
         )
         """);
     }
@@ -170,12 +176,183 @@ public class DatabaseConnection implements Closeable {
         from
           discord_threads
         """)) {
-      ResultSet rs = statement.executeQuery();
+      var rs = statement.executeQuery();
       var results = new ArrayList<String>();
       while (rs.next()) {
         results.add(rs.getString(1));
       }
       return results;
+    }
+  }
+
+  public List<DiscordThread> getItemsBefore(LocalDateTime maxTime) throws SQLException {
+    try (var statement = connection.prepareStatement("""
+          select
+            programme_item_id,
+            thread_id,
+            message_id,
+            title,
+            desc,
+            loc,
+            time,
+            date_time,
+            status
+          from
+            discord_threads
+          where
+            date_time <= ?
+            and processed_alarms = 0
+          """)) {
+      statement.setString(1, maxTime.toString());
+      var rs = statement.executeQuery();
+      var results = new ArrayList<DiscordThread>();
+      while (rs.next()) {
+        var programmeItemId = rs.getString(1);
+        var threadId = rs.getString(2);
+        var messageId = rs.getString(3);
+        var title = rs.getString(4);
+        var desc = new String(rs.getBytes(5));
+        var loc = rs.getString(6);
+        var time = rs.getString(7);
+        var dateTime = LocalDateTime.parse(rs.getString(8));
+        var status = Status.valueOf(rs.getString(9));
+        results.add(new DiscordThread(threadId, messageId, status, new DiscordItem(programmeItemId, title, desc, loc, time, dateTime)));
+      }
+      return results;
+    }
+  }
+
+  public Optional<LocalDateTime> getNextItemTime() throws SQLException {
+    try (var statement = connection.prepareStatement("""
+          select
+            min(date_time)
+          from
+            discord_threads
+          where
+            processed_alarms = 0
+          """)) {
+      var rs = statement.executeQuery();
+      if (!rs.next()) {
+        return Optional.empty();
+      }
+      var time = rs.getString(1);
+      if (time == null) {
+        return Optional.empty();
+      }
+      return Optional.of(LocalDateTime.parse(time));
+    }
+  }
+
+  public void markThreadAsProcessed(String programmeItemId) throws SQLException {
+    try (var statement = connection.prepareStatement("""
+        update
+          discord_threads
+        set
+          processed_alarms = 1
+        where
+          programme_item_id = ?
+        """)) {
+      statement.setString(1, programmeItemId);
+      statement.executeUpdate();
+    }
+  }
+
+  public void addScheduledDM(ScheduledDM scheduledDM) throws SQLException {
+    try (PreparedStatement statement = connection.prepareStatement("""
+        insert into scheduled_dm(
+          discord_thread_id,
+          discord_message_id,
+          user_id,
+          message_time,
+          title,
+          jump_url,
+          contents,
+          tags
+        )
+        values (?, ?, ?, ?, ?, ?, ?, ?)
+        """)) {
+      statement.setString(1, scheduledDM.discordThreadId());
+      statement.setString(2, scheduledDM.discordMessageId());
+      statement.setString(3, scheduledDM.userId());
+      statement.setString(4, scheduledDM.messageTime().toString());
+      statement.setString(5, scheduledDM.title());
+      statement.setString(6, scheduledDM.jumpUrl());
+      statement.setString(7, scheduledDM.contents());
+      if (scheduledDM.tags().isPresent()) {
+        statement.setString(8, scheduledDM.tags().get());
+      } else {
+        statement.setNull(8, Types.VARCHAR);
+      }
+
+      int rowsAffected = statement.executeUpdate();
+      if (rowsAffected != 1) {
+        throw new SQLException("Error inserting event. Expected to insert 1 row but got " + rowsAffected);
+      }
+    }
+  }
+
+  public Optional<LocalDateTime> getNextScheduledDMTime() throws SQLException {
+    try (var statement = connection.prepareStatement("""
+        select
+          min(message_time)
+        from
+          scheduled_dm
+        """)) {
+      var rs = statement.executeQuery();
+      if (!rs.next()) {
+        return Optional.empty();
+      }
+      var time = rs.getString(1);
+      if (time == null) {
+        return Optional.empty();
+      }
+      return Optional.of(LocalDateTime.parse(time));
+    }
+  }
+
+  public List<WithId<ScheduledDM>> getScheduledDMsBefore(LocalDateTime localDateTime) throws SQLException {
+    try (var statement = connection.prepareStatement("""
+        select
+          id,
+          discord_thread_id,
+          discord_message_id,
+          user_id,
+          message_time,
+          title,
+          jump_url,
+          contents,
+          tags
+        from
+          scheduled_dm
+        where
+          message_time <= ?
+        """)) {
+      statement.setString(1, localDateTime.toString());
+      var rs = statement.executeQuery();
+      var results = new ArrayList<WithId<ScheduledDM>>();
+      while (rs.next()) {
+        var id = rs.getInt(1);
+        var discordThreadId = rs.getString(2);
+        var discordMessageId = rs.getString(3);
+        var userId = rs.getString(4);
+        var messageTime = LocalDateTime.parse(rs.getString(5));
+        var title = rs.getString(6);
+        var jumpUrl = rs.getString(7);
+        var contents = rs.getString(8);
+        var tags = Optional.ofNullable(rs.getString(9));
+        results.add(new WithId<>(id, new ScheduledDM(discordThreadId, discordMessageId, userId, messageTime, title, jumpUrl, contents, tags)));
+      }
+      return results;
+    }
+  }
+
+  public void deleteScheduledDM(int id) throws SQLException {
+    try (var statement = connection.prepareStatement("""
+        delete from scheduled_dm
+        where id = ?
+        """)) {
+      statement.setInt(1, id);
+      statement.executeUpdate();
     }
   }
 }

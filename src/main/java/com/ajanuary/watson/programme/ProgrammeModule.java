@@ -2,7 +2,8 @@ package com.ajanuary.watson.programme;
 
 import com.ajanuary.watson.config.Config;
 import com.ajanuary.watson.db.DatabaseConnection;
-import com.ajanuary.watson.membership.MembershipModule;
+import com.ajanuary.watson.notification.EventDispatcher;
+import com.ajanuary.watson.notification.EventType;
 import com.fasterxml.jackson.core.StreamReadFeature;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,10 +22,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import jdk.jfr.Event;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -33,7 +36,7 @@ import org.slf4j.LoggerFactory;
 public class ProgrammeModule {
 
   private static final int MAX_THREAD_TITLE_LEN = 100;
-  private final Logger logger = LoggerFactory.getLogger(MembershipModule.class);
+  private final Logger logger = LoggerFactory.getLogger(ProgrammeModule.class);
   private final ObjectMapper objectMapper = JsonMapper.builder()
       .addModule(new JavaTimeModule())
       .enable(StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION)
@@ -41,10 +44,12 @@ public class ProgrammeModule {
 
   private final JDA jda;
   private final Config config;
+  private final EventDispatcher eventDispatcher;
 
-  public ProgrammeModule(JDA jda, Config config) {
+  public ProgrammeModule(JDA jda, Config config, EventDispatcher eventDispatcher) {
     this.jda = jda;
     this.config = config;
+    this.eventDispatcher = eventDispatcher;
     Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(this::pollProgramme, 0, 1, TimeUnit.MINUTES);
   }
 
@@ -55,10 +60,12 @@ public class ProgrammeModule {
       assert guild != null;
 
       var announcementChannel = jda.getTextChannelById(config.channels().majorAnnouncements());
+      if (announcementChannel == null) {
+        throw new IllegalArgumentException("announxcementCHannel [" + config.channels().majorAnnouncements() + "] is null");
+      }
       assert announcementChannel != null;
 
       var newProgrammeItems = getNewProgrammeItems();
-      newProgrammeItems = newProgrammeItems.stream().filter(item -> item.dateTime().format(DateTimeFormatter.ofPattern("EEEE")).equals("Friday")).toList();
 
       for (var newItem : newProgrammeItems) {
         var existingThread = db.getDiscordThread(newItem.id());
@@ -87,9 +94,12 @@ public class ProgrammeModule {
           var forumPost = channel.createForumPost(title, MessageCreateData.fromContent(desc))
               .setTags(tags).complete();
 
+          forumPost.getMessage().addReaction(Emoji.fromUnicode(config.alarmEmoji())).complete();
+
           String discordThreadId = forumPost.getThreadChannel().getId();
           String discordMessageId = forumPost.getMessage().getId();
           db.insertDiscordThread(new DiscordThread(discordThreadId, discordMessageId, Status.SCHEDULED, newDiscordItem));
+          eventDispatcher.dispatch(EventType.ITEMS_CHANGED);
 
           if (config.hasPerformedFirstLoad()) {
             var announcementEmbedBuilder = new EmbedBuilder();
@@ -137,6 +147,7 @@ public class ProgrammeModule {
           threadChannel.editMessageById(existingThread.get().discordMessageId(), desc).complete();
 
           db.updateDiscordThread(new DiscordThread(existingThread.get().discordThreadId(), existingThread.get().discordMessageId(), isSignificantUpdate ? Status.UPDATED : existingThread.get().status(), newDiscordItem));
+          eventDispatcher.dispatch(EventType.ITEMS_CHANGED);
 
           if (isSignificantUpdate) {
             var announcementEmbedBuilder = new EmbedBuilder();
@@ -189,6 +200,7 @@ public class ProgrammeModule {
 
             db.updateDiscordThread(new DiscordThread(existingThread.discordThreadId(),
                 existingThread.discordMessageId(), Status.CANCELLED, existingThread.item()));
+            eventDispatcher.dispatch(EventType.ITEMS_CHANGED);
 
             var announcementEmbedBuilder = new EmbedBuilder();
             announcementEmbedBuilder.appendDescription("'" + existingThread.item().title() + "' has been cancelled");
