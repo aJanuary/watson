@@ -60,12 +60,12 @@ public class Scheduler<T> {
                 }
               } else {
                 long millisToSleep = Math.max(0, ChronoUnit.MILLIS.between(LocalDateTime.now(zoneId), nextEventTime.get()));
-                logger.info("Waiting for " + millisToSleep + " ms until " + nextEventTime.get());
+                logger.info("Waiting for {} ms until {}", millisToSleep, nextEventTime.get());
                 waiting.await(millisToSleep, TimeUnit.MILLISECONDS);
               }
               try {
                 nextEventTime = getNextEventTime.get();
-                logger.info("Got next event time " + nextEventTime);
+                logger.info("Got next event time {}", nextEventTime);
                 hadError = false;
               } catch (Exception e) {
                 logger.error("Error getting next event", e);

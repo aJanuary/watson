@@ -50,7 +50,7 @@ public record ProgrammeItem(
     }
 
     @Override
-    public List<String> deserialize(com.fasterxml.jackson.core.JsonParser p, com.fasterxml.jackson.databind.DeserializationContext ctxt) throws java.io.IOException, com.fasterxml.jackson.core.JsonProcessingException {
+    public List<String> deserialize(com.fasterxml.jackson.core.JsonParser p, com.fasterxml.jackson.databind.DeserializationContext ctxt) throws java.io.IOException {
       var result = new ArrayList<String>();
       var list = p.readValueAsTree();
       for (var i = 0; i < list.size(); i++) {

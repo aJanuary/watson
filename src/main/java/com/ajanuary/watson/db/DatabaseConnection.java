@@ -7,8 +7,6 @@ import com.ajanuary.watson.programme.DiscordThread;
 import com.ajanuary.watson.programme.Status;
 import java.io.Closeable;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -59,9 +57,6 @@ public class DatabaseConnection implements Closeable {
         )
         """);
     }
-  }
-
-  private void upgradeDatabaseSchema() {
   }
 
   @Override

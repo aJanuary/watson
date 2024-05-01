@@ -1,7 +1,7 @@
 package com.ajanuary.watson.membership;
 
-import com.ajanuary.watson.Secrets;
 import com.ajanuary.watson.config.Config;
+import com.ajanuary.watson.utils.JDAUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.net.URI;
@@ -16,7 +16,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
-import java.util.Objects;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import net.dv8tion.jda.api.JDA;
@@ -35,14 +34,14 @@ public class MembershipModule implements EventListener  {
   private final Logger logger = LoggerFactory.getLogger(MembershipModule.class);
 
   private final JDA jda;
+  private final JDAUtils jdaUtils;
   private final Config config;
-  private final Secrets secrets;
   private final ObjectMapper objectMapper = new ObjectMapper();
 
-  public MembershipModule(JDA jda, Config config, Secrets secrets) {
+  public MembershipModule(JDA jda, Config config) {
     this.jda = jda;
+    this.jdaUtils = new JDAUtils(jda, config);
     this.config = config;
-    this.secrets = secrets;
 
     jda.addEventListener(this);
   }
@@ -52,10 +51,14 @@ public class MembershipModule implements EventListener  {
     if (event instanceof ReadyEvent || event instanceof SessionResumeEvent) {
       var guild = jda.getGuildById(config.guildId());
       assert guild != null;
+
+      var unverifiedRole = jdaUtils.getRole(config.membership().unverifiedRole());
+      var membersRole = jdaUtils.getRole(config.membership().memberRole());
+
       guild.loadMembers().onSuccess(members -> checkMembership(
           members.stream()
               .filter(m -> !m.getUser().isBot())
-              .filter(m -> m.getRoles().stream().noneMatch(r -> r.getId().equals(config.roles().unverified()) || r.getId().equals(config.roles().member())))
+              .filter(m -> m.getRoles().stream().noneMatch(r -> r.getId().equals(unverifiedRole.getId()) || r.getId().equals(membersRole.getId())))
               .map(Member::getId).toList()));
     } else if (event instanceof GuildMemberJoinEvent guildMemberJoinEvent) {
       var member = guildMemberJoinEvent.getMember();
@@ -71,7 +74,7 @@ public class MembershipModule implements EventListener  {
     logger.info("Checking memberships for users: {}", discordUserIds);
 
     var postData = "{\"discordUserIds\": " + discordUserIds + "}";
-    var uri = URI.create(config.membersApiRoot() + "/api/check-discord-ids.php");
+    var uri = URI.create(config.membership().membersApiRoot() + "/api/check-discord-ids.php");
     var now = ZonedDateTime.now(java.time.ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"));
 
     var dataToSign = "POST\n" + uri.getPath() + "\n" + now + "\n" + Base64.getEncoder().encodeToString(postData.getBytes());
@@ -93,46 +96,32 @@ public class MembershipModule implements EventListener  {
       } else {
         var guild = jda.getGuildById(config.guildId());
         assert guild != null;
-        var modsChannel = guild.getTextChannelById(config.channels().discordMods());
+        var modsChannel = jdaUtils.getTextChannel(config.membership().discordModsChannel());
         assert modsChannel != null;
 
         var responseData = objectMapper.readTree(response.body());
-        logger.info(response.body());
         responseData.fieldNames().forEachRemaining(userId -> {
           try {
             var userDetails = responseData.get(userId);
             if (userDetails.isNull()) {
               logger.info("Missing user {}. Adding unverified role.", userId);
-              guild.addRoleToMember(UserSnowflake.fromId(userId),
-                  Objects.requireNonNull(guild.getRoleById(config.roles().unverified()))).queue();
+              var member = guild.retrieveMember(UserSnowflake.fromId(userId)).complete();
+              guild.addRoleToMember(member, jdaUtils.getRole(config.membership().unverifiedRole())).queue();
+              if (!member.getEffectiveName().endsWith("[" + config.membership().unverifiedRole() + "]")) {
+                guild.modifyNickname(member, member.getEffectiveName() + " [" + config.membership().unverifiedRole() + "]").queue();
+              }
               modsChannel.sendMessage(
                       "User <@" + userId
                           + "> has joined but we can't find them in our members database. They have been given the Unverified role.")
                   .queue();
             } else {
               var name = userDetails.get("name").asText();
-              var badgeNo = userDetails.get("badge_no").asText();
-
               var roles = new ArrayList<String>();
               userDetails.get("roles").elements().forEachRemaining(role -> {
                 var roleId = role.asText();
-                switch (roleId) {
-                  case "programme participant":
-                    roles.add(config.roles().programmeParticipant());
-                    break;
-                  case "programme moderator":
-                    roles.add(config.roles().programmeModerator());
-                    break;
-                  case "artist":
-                    roles.add(config.roles().artist());
-                    break;
-                  case "dealer":
-                    roles.add(config.roles().dealer());
-                    break;
-                }
+                roles.add(config.membership().additionalRoles().get(roleId));
               });
-              roles.add(badgeNo.charAt(0) == 'V' ? config.roles().virtual() : config.roles().onSite());
-              roles.add(config.roles().member());
+              roles.add(config.membership().memberRole());
 
               var member = guild.retrieveMember(UserSnowflake.fromId(userId)).complete();
               if (member == null) {
@@ -146,10 +135,10 @@ public class MembershipModule implements EventListener  {
                 }
               }
 
-              for (var roleId : roles) {
-                logger.info("Adding role {} to user {}", roleId, userId);
+              for (var roleName : roles) {
+                logger.info("Adding role {} to user {}", roleName, userId);
                 guild.addRoleToMember(UserSnowflake.fromId(userId),
-                    Objects.requireNonNull(guild.getRoleById(roleId))).queue((v) -> {}, e -> logger.error("Error adding role {} to user {}", roleId, userId, e));
+                    jdaUtils.getRole(roleName)).queue((v) -> {}, e -> logger.error("Error adding role {} to user {}", roleName, userId, e));
               }
             }
           } catch (Exception e) {
@@ -167,7 +156,7 @@ public class MembershipModule implements EventListener  {
   private String calculateSignature(String dataToSign) {
     try {
       var mac = Mac.getInstance("HmacSHA256");
-      var secretKey = new SecretKeySpec(secrets.membersApiKey().getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+      var secretKey = new SecretKeySpec(config.membership().membersApiKey().getBytes(StandardCharsets.UTF_8), "HmacSHA256");
       mac.init(secretKey);
       var signature = new StringBuilder();
       for (var b : mac.doFinal(dataToSign.getBytes(StandardCharsets.UTF_8))) {

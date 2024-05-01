@@ -31,25 +31,25 @@ public class AlarmsModule {
     this.jda = jda;
     this.config = config;
 
-    var itemScheduler = new Scheduler<>("item", jda, config.timezone(), Duration.ZERO, this::getNextItemTime, this::getItemsBefore, this::handleItem);
+    var itemScheduler = new Scheduler<>("item", jda, config.alarms().timezone(), Duration.ZERO, this::getNextItemTime, this::getItemsBefore, this::handleItem);
     eventDispatcher.register(EventType.ITEMS_CHANGED, itemScheduler::notifyOfDbChange);
-    this.dmScheduler = new Scheduler<>("dm", jda, config.timezone(), config.minTimeBetweenDMs(), this::getNextScheduledDMTime, this::getScheduledDMsBefore, this::sendDM);
+    this.dmScheduler = new Scheduler<>("dm", jda, config.alarms().timezone(), config.alarms().minTimeBetweenDMs(), this::getNextScheduledDMTime, this::getScheduledDMsBefore, this::sendDM);
   }
 
   private Optional<LocalDateTime> getNextItemTime() throws SQLException, IOException {
-    try (var db = new DatabaseConnection(config.programmeStoragePath())) {
-      return db.getNextItemTime().map(t -> t.minus(config.timeBeforeToNotify()));
+    try (var db = new DatabaseConnection(config.databasePath())) {
+      return db.getNextItemTime().map(t -> t.minus(config.alarms().timeBeforeToNotify()));
     }
   }
 
   private List<DiscordThread> getItemsBefore(LocalDateTime time) throws SQLException, IOException {
-    try (var db = new DatabaseConnection(config.programmeStoragePath())) {
-      return db.getItemsBefore(time.plus(config.timeBeforeToNotify()));
+    try (var db = new DatabaseConnection(config.databasePath())) {
+      return db.getItemsBefore(time.plus(config.alarms().timeBeforeToNotify()));
     }
   }
 
   private void handleItem(DiscordThread discordThread) {
-    try (var db = new DatabaseConnection(config.programmeStoragePath())) {
+    try (var db = new DatabaseConnection(config.databasePath())) {
       db.markThreadAsProcessed(discordThread.item().id());
     } catch (SQLException | IOException e) {
       logger.error("Error marking thread as processed", e);
@@ -59,7 +59,7 @@ public class AlarmsModule {
     var threadChannel = jda.getThreadChannelById(discordThread.discordThreadId());
     assert threadChannel != null;
     threadChannel.retrieveMessageById(discordThread.discordMessageId()).queue(message -> {
-      var reaction = message.getReaction(Emoji.fromUnicode(config.alarmEmoji()));
+      var reaction = message.getReaction(Emoji.fromUnicode(config.alarms().alarmEmoji()));
       if (reaction == null) {
         logger.warn("Couldn't get the reaction on the message. This is usually because the time was set too soon.");
         return;
@@ -74,7 +74,7 @@ public class AlarmsModule {
       }
 
       reaction.retrieveUsers().queue(users -> {
-        try (var db = new DatabaseConnection(config.programmeStoragePath())) {
+        try (var db = new DatabaseConnection(config.databasePath())) {
           for (var user : users) {
             if (user.isBot()) {
               continue;
@@ -82,64 +82,64 @@ public class AlarmsModule {
 
             var scheduledDM = new ScheduledDM(discordThread.discordThreadId(),
                 discordThread.discordMessageId(), user.getId(),
-                discordThread.item().dateTime().minus(config.timeBeforeToNotify()),
+                discordThread.item().dateTime().minus(config.alarms().timeBeforeToNotify()),
                 threadChannel.getName(), threadChannel.getJumpUrl(), message.getContentRaw(), tags);
             db.addScheduledDM(scheduledDM);
           }
         } catch (SQLException | IOException e) {
-          logger.error("Error adding DM for item " + discordThread.item().id(), e);
+          logger.error("Error adding DM for item {}", discordThread.item().id(), e);
         }
 
         dmScheduler.notifyOfDbChange();
-      }, error -> logger.error("Error getting users who reacted to the message " + discordThread.discordMessageId(), error));
-    }, error -> logger.error("Error getting message for thread " + discordThread.discordThreadId(), error));
+      }, error -> logger.error("Error getting users who reacted to the message {}",
+          discordThread.discordMessageId(), error));
+    }, error -> logger.error("Error getting message for thread {}", discordThread.discordThreadId(),
+        error));
   }
 
   private Optional<LocalDateTime> getNextScheduledDMTime() throws SQLException, IOException {
-    try (var db = new DatabaseConnection(config.programmeStoragePath())) {
+    try (var db = new DatabaseConnection(config.databasePath())) {
       return db.getNextScheduledDMTime();
     }
   }
 
   private List<WithId<ScheduledDM>> getScheduledDMsBefore(LocalDateTime localDateTime) throws SQLException, IOException {
-    try (var db = new DatabaseConnection(config.programmeStoragePath())) {
+    try (var db = new DatabaseConnection(config.databasePath())) {
       return db.getScheduledDMsBefore(localDateTime);
     }
   }
 
   private void sendDM(WithId<ScheduledDM> dmWithId) {
-    try (var db = new DatabaseConnection(config.programmeStoragePath())) {
+    try (var db = new DatabaseConnection(config.databasePath())) {
       db.deleteScheduledDM(dmWithId.id());
     } catch (SQLException | IOException e) {
-      logger.error("Error deleting scheduled DM " + dmWithId.id(), e);
+      logger.error("Error deleting scheduled DM {}", dmWithId.id(), e);
       return;
     }
 
     var dm = dmWithId.value();
-    if (!dm.messageTime().plus(config.timeBeforeToNotify()).plus(config.maxTimeAfterToNotify()).isAfter(LocalDateTime.now(config.timezone()))) {
-      logger.warn("DM " + dmWithId.id() + " is being processed too late after it's scheduled time of " + dm.messageTime() + ". Ignoring");
+    if (!dm.messageTime().plus(config.alarms().timeBeforeToNotify()).plus(config.alarms().maxTimeAfterToNotify()).isAfter(LocalDateTime.now(
+        config.alarms().timezone()))) {
+      logger.warn("DM {} is being processed too late after it's scheduled time of {}. Ignoring",
+          dmWithId.id(), dm.messageTime());
       return;
     }
 
-    jda.retrieveUserById(dm.userId()).queue(user -> {
-      user.openPrivateChannel().queue(channel -> {
-        var embedBuilder = new EmbedBuilder()
-            .setTitle(dm.title(), dm.jumpUrl())
-            .addField("Description", dm.contents(), false);
-        dm.tags().ifPresent(tags -> embedBuilder.addField("Tags", tags, false));
+    jda.retrieveUserById(dm.userId()).queue(user -> user.openPrivateChannel().queue(channel -> {
+      var embedBuilder = new EmbedBuilder()
+          .setTitle(dm.title(), dm.jumpUrl())
+          .addField("Description", dm.contents(), false);
+      dm.tags().ifPresent(tags -> embedBuilder.addField("Tags", tags, false));
 
-        channel.sendMessage(new MessageCreateBuilder()
-            .addContent("You asked me to remind you about this event:")
-            .addEmbeds(embedBuilder.build()).build())
-            .queue(
-                success -> { },
-                error -> logger.error("Error sending message to user " + user.getName() + " message " + dmWithId.id(), error));
-      }, error -> {
-        logger.error("Error opening private channel with user " + dm.userId() + " for dm " + dmWithId.id(), error);
-      });
-    }, error -> {
-      logger.error("Error getting user " + dm.userId() + " for dm " + dmWithId.id(), error);
-    });
+      channel.sendMessage(new MessageCreateBuilder()
+          .addContent("You asked me to remind you about this event:")
+          .addEmbeds(embedBuilder.build()).build())
+          .queue(
+              success -> { },
+              error -> logger.error("Error sending message to user {} message {}", user.getName(),
+                  dmWithId.id(), error));
+    }, error -> logger.error("Error opening private channel with user {} for dm {}", dm.userId(),
+        dmWithId.id(), error)), error -> logger.error("Error getting user {} for dm {}", dm.userId(), dmWithId.id(), error));
   }
 
 

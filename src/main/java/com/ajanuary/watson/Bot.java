@@ -8,24 +8,26 @@ import com.ajanuary.watson.notification.EventDispatcher;
 import com.ajanuary.watson.programme.ProgrammeModule;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Bot {
-  public Bot(Config config, Secrets secrets) throws InterruptedException {
-    try (var db = new DatabaseConnection(config.programmeStoragePath())) {
+  private final Logger logger = LoggerFactory.getLogger(Bot.class);
+
+  public Bot(Config config) throws InterruptedException {
+    try (var db = new DatabaseConnection(config.databasePath())) {
       db.init();
     } catch (SQLException | IOException e) {
       throw new RuntimeException(e);
     }
 
-    var builder = JDABuilder.createDefault(secrets.discordBotToken())
+    var builder = JDABuilder.createDefault(config.discordBotToken())
         .enableIntents(GatewayIntent.GUILD_MEMBERS)
         .enableIntents(GatewayIntent.MESSAGE_CONTENT)
         .setChunkingFilter(ChunkingFilter.ALL)
@@ -34,9 +36,17 @@ public class Bot {
         .setActivity(Activity.playing("with time"));
     var jda = builder.build();
     jda.awaitReady();
+    try {
+      config.validateDiscordConfig(jda);
+    } catch (Exception e) {
+      logger.error("Error validating configuration", e);
+      jda.shutdownNow();
+      System.exit(1);
+    }
+
     var eventDispatcher = new EventDispatcher();
-    new MembershipModule(jda, config, secrets);
-    new ProgrammeModule(jda, config, eventDispatcher);
     new AlarmsModule(jda, config, eventDispatcher);
+    new MembershipModule(jda, config);
+    new ProgrammeModule(jda, config, eventDispatcher);
   }
 }

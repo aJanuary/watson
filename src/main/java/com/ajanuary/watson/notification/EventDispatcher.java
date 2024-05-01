@@ -7,7 +7,7 @@ import java.util.Map;
 
 public class EventDispatcher {
 
-  private Map<EventType, List<Runnable>> handlers = new HashMap<>();
+  private final Map<EventType, List<Runnable>> handlers = new HashMap<>();
 
   public void register(EventType eventType, Runnable handler) {
     handlers.computeIfAbsent(eventType, k -> new ArrayList<>()).add(handler);

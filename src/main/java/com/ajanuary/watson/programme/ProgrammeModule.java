@@ -4,6 +4,7 @@ import com.ajanuary.watson.config.Config;
 import com.ajanuary.watson.db.DatabaseConnection;
 import com.ajanuary.watson.notification.EventDispatcher;
 import com.ajanuary.watson.notification.EventType;
+import com.ajanuary.watson.utils.JDAUtils;
 import com.fasterxml.jackson.core.StreamReadFeature;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,7 +23,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import jdk.jfr.Event;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
@@ -43,26 +43,25 @@ public class ProgrammeModule {
   .build();
 
   private final JDA jda;
+  private final JDAUtils jdaUtils;
   private final Config config;
   private final EventDispatcher eventDispatcher;
 
   public ProgrammeModule(JDA jda, Config config, EventDispatcher eventDispatcher) {
     this.jda = jda;
+    this.jdaUtils = new JDAUtils(jda, config);
     this.config = config;
     this.eventDispatcher = eventDispatcher;
     Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(this::pollProgramme, 0, 1, TimeUnit.MINUTES);
   }
 
   private void pollProgramme() {
-    try (var db = new DatabaseConnection(config.programmeStoragePath())){
+    try (var db = new DatabaseConnection(config.databasePath())){
       var mdConverter = new CopyDown();
       var guild = jda.getGuildById(config.guildId());
       assert guild != null;
 
-      var announcementChannel = jda.getTextChannelById(config.channels().majorAnnouncements());
-      if (announcementChannel == null) {
-        throw new IllegalArgumentException("announxcementCHannel [" + config.channels().majorAnnouncements() + "] is null");
-      }
+      var announcementChannel = jdaUtils.getTextChannel(config.programme().majorAnnouncementsChannel());
       assert announcementChannel != null;
 
       var newProgrammeItems = getNewProgrammeItems();
@@ -71,14 +70,14 @@ public class ProgrammeModule {
         var existingThread = db.getDiscordThread(newItem.id());
         var newDiscordItem = new DiscordItem(newItem.id(), newItem.title(), newItem.desc(), newItem.loc(), newItem.time(), newItem.dateTime());
         if (existingThread.isEmpty()) {
-          logger.info("Add item [" + newItem.id() + "] '" + newItem.title() + "'");
+          logger.info("Add item [{}] '{}'", newItem.id(), newItem.title());
 
           var day = newItem.date().format(DateTimeFormatter.ofPattern("EEEE"));
           var channel = guild.getForumChannelsByName(day, true).get(0);
           assert channel != null;
 
           var title = newItem.time() + " " + newItem.title();
-          if (config.hasPerformedFirstLoad()) {
+          if (config.programme().hasPerformedFirstLoad()) {
             if (title.length() > MAX_THREAD_TITLE_LEN - 6) {
               title = title.substring(0, MAX_THREAD_TITLE_LEN - 6);
             }
@@ -94,14 +93,14 @@ public class ProgrammeModule {
           var forumPost = channel.createForumPost(title, MessageCreateData.fromContent(desc))
               .setTags(tags).complete();
 
-          forumPost.getMessage().addReaction(Emoji.fromUnicode(config.alarmEmoji())).complete();
+          forumPost.getMessage().addReaction(Emoji.fromUnicode(config.alarms().alarmEmoji())).complete();
 
           String discordThreadId = forumPost.getThreadChannel().getId();
           String discordMessageId = forumPost.getMessage().getId();
           db.insertDiscordThread(new DiscordThread(discordThreadId, discordMessageId, Status.SCHEDULED, newDiscordItem));
           eventDispatcher.dispatch(EventType.ITEMS_CHANGED);
 
-          if (config.hasPerformedFirstLoad()) {
+          if (config.programme().hasPerformedFirstLoad()) {
             var announcementEmbedBuilder = new EmbedBuilder();
             announcementEmbedBuilder.appendDescription("'" + newItem.title() + "' has been added");
             announcementEmbedBuilder.addField("Time", newItem.time(), false);
@@ -110,7 +109,7 @@ public class ProgrammeModule {
             announcementChannel.sendMessage(MessageCreateData.fromEmbeds(announcementEmbedBuilder.build())).complete();
           }
         } else if (!existingThread.get().item().equals(newDiscordItem) || existingThread.get().status() == Status.CANCELLED) {
-          logger.info("Edit item [" + newItem.id() + "] '" + newItem.title() + "'");
+          logger.info("Edit item [{}] '{}'", newItem.id(), newItem.title());
 
           var day = newItem.date().format(DateTimeFormatter.ofPattern("EEEE"));
           var channel = guild.getForumChannelsByName(day, true).get(0);
@@ -181,12 +180,12 @@ public class ProgrammeModule {
         if (newProgrammeItems.stream().noneMatch(newItem -> newItem.id().equals(oldItemId))) {
           var existingThreadM = db.getDiscordThread(oldItemId);
           if (existingThreadM.isEmpty()) {
-            logger.error("Existing to find item for " + oldItemId + " but not found");
+            logger.error("Existing to find item for {} but not found", oldItemId);
             continue;
           }
           var existingThread = existingThreadM.get();
           if (existingThread.status() != Status.CANCELLED) {
-            logger.info("Cancel item [" + oldItemId + "] '" + existingThread.item().title() + "'");
+            logger.info("Cancel item [{}] '{}'", oldItemId, existingThread.item().title());
 
             var title = existingThread.item().time() + " " + existingThread.item().title();
 
@@ -266,7 +265,7 @@ public class ProgrammeModule {
   private List<ProgrammeItem> getNewProgrammeItems() throws IOException, InterruptedException {
     var client = HttpClient.newHttpClient();
     var request = HttpRequest.newBuilder()
-        .uri(URI.create(config.programmeUrl()))
+        .uri(URI.create(config.programme().programmeUrl()))
         .GET().build();
     var response = client.send(request, HttpResponse.BodyHandlers.ofString());
     if (response.statusCode() != 200) {
