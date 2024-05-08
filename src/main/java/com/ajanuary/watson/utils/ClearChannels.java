@@ -6,15 +6,13 @@ import io.github.cdimascio.dotenv.Dotenv;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 
 public class ClearChannels {
-
-  private static final Set<String> DAYS_OF_THE_WEEK = Set.of("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday");
 
   public static void main(String[] args)
       throws IOException, InterruptedException, ExecutionException {
@@ -24,6 +22,9 @@ public class ClearChannels {
     var jsonConfig = objectMapper.readTree(Paths.get(args[0], "config.yaml").toFile());
     var config = new ConfigYamlParser().parse(jsonConfig, dotenv);
 
+    var possibleNames = config.programme().channelNameResolver().getPossibleNames().stream()
+        .map(String::toLowerCase).collect(Collectors.toSet());
+
     var builder = JDABuilder.createDefault(config.discordBotToken())
         .enableIntents(GatewayIntent.GUILD_MEMBERS);
     var jda = builder.build();
@@ -32,16 +33,12 @@ public class ClearChannels {
     var guild = jda.getGuildById(config.guildId());
     assert guild != null;
 
-    var futures = new ArrayList<Future<Void>>();
     guild.getForumChannels().forEach(channel -> {
-      if (DAYS_OF_THE_WEEK.contains(channel.getName().toLowerCase())) {
-        channel.getThreadChannels().forEach(threadChannel -> futures.add(threadChannel.delete().submit()));
+      if (possibleNames.contains(channel.getName().toLowerCase())) {
+        channel.getThreadChannels().forEach(threadChannel -> threadChannel.delete().complete());
       }
     });
 
-    for (var future : futures) {
-      future.get();
-    }
     jda.shutdown();
   }
 }

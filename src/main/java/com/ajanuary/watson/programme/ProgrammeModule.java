@@ -72,8 +72,8 @@ public class ProgrammeModule {
         if (existingThread.isEmpty()) {
           logger.info("Add item [{}] '{}'", newItem.id(), newItem.title());
 
-          var day = newItem.date().format(DateTimeFormatter.ofPattern("EEEE"));
-          var channel = guild.getForumChannelsByName(day, true).get(0);
+          var channelName = config.programme().channelNameResolver().resolveChannelName(newItem);
+          var channel = guild.getForumChannelsByName(channelName, true).get(0);
           assert channel != null;
 
           var title = newItem.time() + " " + newItem.title();
@@ -110,10 +110,6 @@ public class ProgrammeModule {
           }
         } else if (!existingThread.get().item().equals(newDiscordItem) || existingThread.get().status() == Status.CANCELLED) {
           logger.info("Edit item [{}] '{}'", newItem.id(), newItem.title());
-
-          var day = newItem.date().format(DateTimeFormatter.ofPattern("EEEE"));
-          var channel = guild.getForumChannelsByName(day, true).get(0);
-          assert channel != null;
 
           var threadChannel = jda.getThreadChannelById(existingThread.get().discordThreadId());
           assert threadChannel != null;
