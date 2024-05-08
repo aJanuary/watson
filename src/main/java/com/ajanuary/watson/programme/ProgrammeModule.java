@@ -129,7 +129,7 @@ public class ProgrammeModule {
 
           var title = newItem.time() + " " + newItem.title();
 
-          if (isSignificantUpdate || existingThread.get().status() == Status.UPDATED) {
+          if (!config.programme().hasPerformedFirstLoad() && (isSignificantUpdate || existingThread.get().status() == Status.UPDATED)) {
             if (title.length() > MAX_THREAD_TITLE_LEN - 10) {
               title = title.substring(0, MAX_THREAD_TITLE_LEN - 10);
             }
@@ -148,7 +148,7 @@ public class ProgrammeModule {
           db.updateDiscordThread(new DiscordThread(existingThread.get().discordThreadId(), existingThread.get().discordMessageId(), isSignificantUpdate ? Status.UPDATED : existingThread.get().status(), newDiscordItem));
           eventDispatcher.dispatch(EventType.ITEMS_CHANGED);
 
-          if (isSignificantUpdate) {
+          if (!config.programme().hasPerformedFirstLoad() && isSignificantUpdate) {
             var announcementEmbedBuilder = new EmbedBuilder();
             var threadEmbedBuilder = new EmbedBuilder();
             var allEmbedBuilders = List.of(announcementEmbedBuilder, threadEmbedBuilder);
@@ -184,35 +184,40 @@ public class ProgrammeModule {
             continue;
           }
           var existingThread = existingThreadM.get();
-          if (existingThread.status() != Status.CANCELLED) {
-            logger.info("Cancel item [{}] '{}'", oldItemId, existingThread.item().title());
-
-            var title = existingThread.item().time() + " " + existingThread.item().title();
-
-            if (title.length() > MAX_THREAD_TITLE_LEN - 12) {
-              title = title.substring(0, MAX_THREAD_TITLE_LEN - 12);
-            }
-            title += " [CANCELLED]";
-
+          if (!config.programme().hasPerformedFirstLoad()) {
             Objects.requireNonNull(jda.getThreadChannelById(existingThread.discordThreadId()))
-                .getManager().setName(title).complete();
+                .delete().complete();
+            db.deleteDiscordThread(oldItemId);
+          } else {
+            if (existingThread.status() != Status.CANCELLED) {
+              logger.info("Cancel item [{}] '{}'", oldItemId, existingThread.item().title());
 
-            db.updateDiscordThread(new DiscordThread(existingThread.discordThreadId(),
-                existingThread.discordMessageId(), Status.CANCELLED, existingThread.item()));
-            eventDispatcher.dispatch(EventType.ITEMS_CHANGED);
+              var title = existingThread.item().time() + " " + existingThread.item().title();
 
-            var announcementEmbedBuilder = new EmbedBuilder();
-            announcementEmbedBuilder.appendDescription("'" + existingThread.item().title() + "' has been cancelled");
-            announcementEmbedBuilder.addField("Discussion thread", "<#" + existingThread.discordThreadId() + ">", false);
-            announcementChannel.sendMessage(MessageCreateData.fromEmbeds(announcementEmbedBuilder.build())).complete();
+              if (title.length() > MAX_THREAD_TITLE_LEN - 12) {
+                title = title.substring(0, MAX_THREAD_TITLE_LEN - 12);
+              }
+              title += " [CANCELLED]";
 
-            var threadChannel = jda.getThreadChannelById(existingThread.discordThreadId());
-            assert threadChannel != null;
-            threadChannel.sendMessage("This item has been cancelled.").complete();
+              Objects.requireNonNull(jda.getThreadChannelById(existingThread.discordThreadId()))
+                  .getManager().setName(title).complete();
 
-            var firehoseEmbedBuilder = new EmbedBuilder();
-            firehoseEmbedBuilder.appendDescription("Item cancelled: '" + existingThread.item().title() + "'");
-            announcementEmbedBuilder.addField("Discussion thread", "<#" + existingThread.discordThreadId() + ">", false);
+              db.updateDiscordThread(new DiscordThread(existingThread.discordThreadId(),
+                  existingThread.discordMessageId(), Status.CANCELLED, existingThread.item()));
+              eventDispatcher.dispatch(EventType.ITEMS_CHANGED);
+
+              var announcementEmbedBuilder = new EmbedBuilder();
+              announcementEmbedBuilder.appendDescription(
+                  "'" + existingThread.item().title() + "' has been cancelled");
+              announcementEmbedBuilder.addField("Discussion thread",
+                  "<#" + existingThread.discordThreadId() + ">", false);
+              announcementChannel.sendMessage(
+                  MessageCreateData.fromEmbeds(announcementEmbedBuilder.build())).complete();
+
+              var threadChannel = jda.getThreadChannelById(existingThread.discordThreadId());
+              assert threadChannel != null;
+              threadChannel.sendMessage("This item has been cancelled.").complete();
+            }
           }
         }
       }

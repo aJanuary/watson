@@ -350,4 +350,14 @@ public class DatabaseConnection implements Closeable {
       statement.executeUpdate();
     }
   }
+
+  public void deleteDiscordThread(String id) throws SQLException {
+    try (var statement = connection.prepareStatement("""
+        delete from discord_threads
+        where programme_item_id = ?
+        """)) {
+      statement.setString(1, id);
+      statement.executeUpdate();
+    }
+  }
 }
