@@ -18,7 +18,7 @@ public record Config(
   public void validateDiscordConfig(JDA jda) {
     var guild = jda.getGuildById(guildId());
     if (guild == null) {
-      throw new IllegalStateException("Guild not found");
+      throw new IllegalStateException("Guild not found: " + guildId() + ". Is the ID correct, and has the bot been invited to the server?");
     }
 
     var jdaUtils = new JDAUtils(jda, this);

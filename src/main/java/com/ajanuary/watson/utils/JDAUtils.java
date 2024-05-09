@@ -37,7 +37,7 @@ public class JDAUtils {
       throw new IllegalArgumentException("Channel not found: " + channelName);
     }
     if (channels.size() > 1) {
-      throw new IllegalArgumentException("Multiple channels found with label: " + channelName);
+      throw new IllegalArgumentException("Multiple channels found with the name: " + channelName);
     }
     return channels.get(0);
   }
