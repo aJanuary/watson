@@ -13,20 +13,24 @@ public class DayTodChannelNameResolver implements ChannelNameResolver {
     this.thresholds = thresholds;
   }
 
+  public List<Threshold> thresholds() {
+    return thresholds;
+  }
+
   @Override
   public String resolveChannelName(ProgrammeItem item) {
     var day = item.date().format(DateTimeFormatter.ofPattern("EEEE"));
     return thresholds.stream()
         .filter(threshold -> item.time().compareTo(threshold.start()) >= 0 && item.time().compareTo(threshold.end()) < 0)
-        .findFirst().map(threshold -> day + "-" + threshold.name()).orElse(day);
+        .findFirst().map(threshold -> day + "-" + threshold.label()).orElse(day);
   }
 
   @Override
   public Set<String> getPossibleNames() {
     return Set.of("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday").stream().flatMap(day ->
-        thresholds.stream().map(threshold -> day + "-" + threshold.name())).collect(Collectors.toSet());
+        thresholds.stream().map(threshold -> day + "-" + threshold.label())).collect(Collectors.toSet());
   }
 
-  public record Threshold(String name, String start, String end) {
+  public record Threshold(String label, String start, String end) {
   }
 }

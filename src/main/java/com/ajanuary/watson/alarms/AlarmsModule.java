@@ -24,27 +24,29 @@ public class AlarmsModule {
   private final Logger logger = LoggerFactory.getLogger(Scheduler.class);
 
   private final JDA jda;
+  private final AlarmsConfig alarmsConfig;
   private final Config config;
   private final Scheduler<WithId<ScheduledDM>> dmScheduler;
 
-  public AlarmsModule(JDA jda, Config config, EventDispatcher eventDispatcher) {
+  public AlarmsModule(JDA jda, AlarmsConfig alarmsConfig, Config config, EventDispatcher eventDispatcher) {
     this.jda = jda;
+    this.alarmsConfig = alarmsConfig;
     this.config = config;
 
-    var itemScheduler = new Scheduler<>("item", jda, config.alarms().timezone(), Duration.ZERO, this::getNextItemTime, this::getItemsBefore, this::handleItem);
+    var itemScheduler = new Scheduler<>("item", jda, alarmsConfig.timezone(), Duration.ZERO, this::getNextItemTime, this::getItemsBefore, this::handleItem);
     eventDispatcher.register(EventType.ITEMS_CHANGED, itemScheduler::notifyOfDbChange);
-    this.dmScheduler = new Scheduler<>("dm", jda, config.alarms().timezone(), config.alarms().minTimeBetweenDMs(), this::getNextScheduledDMTime, this::getScheduledDMsBefore, this::sendDM);
+    this.dmScheduler = new Scheduler<>("dm", jda, alarmsConfig.timezone(), alarmsConfig.minTimeBetweenDMs(), this::getNextScheduledDMTime, this::getScheduledDMsBefore, this::sendDM);
   }
 
   private Optional<LocalDateTime> getNextItemTime() throws SQLException, IOException {
     try (var db = new DatabaseConnection(config.databasePath())) {
-      return db.getNextItemTime().map(t -> t.minus(config.alarms().timeBeforeToNotify()));
+      return db.getNextItemTime().map(t -> t.minus(alarmsConfig.timeBeforeToNotify()));
     }
   }
 
   private List<DiscordThread> getItemsBefore(LocalDateTime time) throws SQLException, IOException {
     try (var db = new DatabaseConnection(config.databasePath())) {
-      return db.getItemsBefore(time.plus(config.alarms().timeBeforeToNotify()));
+      return db.getItemsBefore(time.plus(alarmsConfig.timeBeforeToNotify()));
     }
   }
 
@@ -59,7 +61,7 @@ public class AlarmsModule {
     var threadChannel = jda.getThreadChannelById(discordThread.discordThreadId());
     assert threadChannel != null;
     threadChannel.retrieveMessageById(discordThread.discordMessageId()).queue(message -> {
-      var reaction = message.getReaction(Emoji.fromUnicode(config.alarms().alarmEmoji()));
+      var reaction = message.getReaction(alarmsConfig.alarmEmoji());
       if (reaction == null) {
         logger.warn("Couldn't get the reaction on the message. This is usually because the time was set too soon.");
         return;
@@ -82,7 +84,7 @@ public class AlarmsModule {
 
             var scheduledDM = new ScheduledDM(discordThread.discordThreadId(),
                 discordThread.discordMessageId(), user.getId(),
-                discordThread.item().dateTime().minus(config.alarms().timeBeforeToNotify()),
+                discordThread.item().dateTime().minus(alarmsConfig.timeBeforeToNotify()),
                 threadChannel.getName(), threadChannel.getJumpUrl(), message.getContentRaw(), tags);
             db.addScheduledDM(scheduledDM);
           }
@@ -118,8 +120,8 @@ public class AlarmsModule {
     }
 
     var dm = dmWithId.value();
-    if (!dm.messageTime().plus(config.alarms().timeBeforeToNotify()).plus(config.alarms().maxTimeAfterToNotify()).isAfter(LocalDateTime.now(
-        config.alarms().timezone()))) {
+    if (!dm.messageTime().plus(alarmsConfig.timeBeforeToNotify()).plus(alarmsConfig.maxTimeAfterToNotify()).isAfter(LocalDateTime.now(
+        alarmsConfig.timezone()))) {
       logger.warn("DM {} is being processed too late after it's scheduled time of {}. Ignoring",
           dmWithId.id(), dm.messageTime());
       return;

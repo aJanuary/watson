@@ -23,7 +23,7 @@ public class JDAUtils {
       throw new IllegalArgumentException("Role not found: " + roleName);
     }
     if (roles.size() > 1) {
-      throw new IllegalArgumentException("Multiple roles found with name: " + roleName);
+      throw new IllegalArgumentException("Multiple roles found with label: " + roleName);
     }
     return roles.get(0);
   }
@@ -37,7 +37,7 @@ public class JDAUtils {
       throw new IllegalArgumentException("Channel not found: " + channelName);
     }
     if (channels.size() > 1) {
-      throw new IllegalArgumentException("Multiple channels found with name: " + channelName);
+      throw new IllegalArgumentException("Multiple channels found with label: " + channelName);
     }
     return channels.get(0);
   }

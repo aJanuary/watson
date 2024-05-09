@@ -35,12 +35,14 @@ public class MembershipModule implements EventListener  {
 
   private final JDA jda;
   private final JDAUtils jdaUtils;
+  private final MembershipConfig membershipConfig;
   private final Config config;
   private final ObjectMapper objectMapper = new ObjectMapper();
 
-  public MembershipModule(JDA jda, Config config) {
+  public MembershipModule(JDA jda, MembershipConfig membershipConfig, Config config) {
     this.jda = jda;
     this.jdaUtils = new JDAUtils(jda, config);
+    this.membershipConfig = membershipConfig;
     this.config = config;
 
     jda.addEventListener(this);
@@ -52,8 +54,8 @@ public class MembershipModule implements EventListener  {
       var guild = jda.getGuildById(config.guildId());
       assert guild != null;
 
-      var unverifiedRole = jdaUtils.getRole(config.membership().unverifiedRole());
-      var membersRole = jdaUtils.getRole(config.membership().memberRole());
+      var unverifiedRole = jdaUtils.getRole(membershipConfig.unverifiedRole());
+      var membersRole = jdaUtils.getRole(membershipConfig.memberRole());
 
       guild.loadMembers().onSuccess(members -> checkMembership(
           members.stream()
@@ -74,7 +76,7 @@ public class MembershipModule implements EventListener  {
     logger.info("Checking memberships for users: {}", discordUserIds);
 
     var postData = "{\"discordUserIds\": " + discordUserIds + "}";
-    var uri = URI.create(config.membership().membersApiRoot() + "/api/check-discord-ids.php");
+    var uri = URI.create(membershipConfig.membersApiRoot() + "/api/check-discord-ids.php");
     var now = ZonedDateTime.now(java.time.ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"));
 
     var dataToSign = "POST\n" + uri.getPath() + "\n" + now + "\n" + Base64.getEncoder().encodeToString(postData.getBytes());
@@ -96,7 +98,7 @@ public class MembershipModule implements EventListener  {
       } else {
         var guild = jda.getGuildById(config.guildId());
         assert guild != null;
-        var modsChannel = jdaUtils.getTextChannel(config.membership().discordModsChannel());
+        var modsChannel = jdaUtils.getTextChannel(membershipConfig.discordModsChannel());
         assert modsChannel != null;
 
         var responseData = objectMapper.readTree(response.body());
@@ -106,9 +108,9 @@ public class MembershipModule implements EventListener  {
             if (userDetails.isNull()) {
               logger.info("Missing user {}. Adding unverified role.", userId);
               var member = guild.retrieveMember(UserSnowflake.fromId(userId)).complete();
-              guild.addRoleToMember(member, jdaUtils.getRole(config.membership().unverifiedRole())).queue();
-              if (!member.getEffectiveName().endsWith("[" + config.membership().unverifiedRole() + "]")) {
-                guild.modifyNickname(member, member.getEffectiveName() + " [" + config.membership().unverifiedRole() + "]").queue();
+              guild.addRoleToMember(member, jdaUtils.getRole(membershipConfig.unverifiedRole())).queue();
+              if (!member.getEffectiveName().endsWith("[" + membershipConfig.unverifiedRole() + "]")) {
+                guild.modifyNickname(member, member.getEffectiveName() + " [" + membershipConfig.unverifiedRole() + "]").queue();
               }
               modsChannel.sendMessage(
                       "User <@" + userId
@@ -119,9 +121,9 @@ public class MembershipModule implements EventListener  {
               var roles = new ArrayList<String>();
               userDetails.get("roles").elements().forEachRemaining(role -> {
                 var roleId = role.asText();
-                roles.add(config.membership().additionalRoles().get(roleId));
+                roles.add(membershipConfig.additionalRoles().get(roleId));
               });
-              roles.add(config.membership().memberRole());
+              roles.add(membershipConfig.memberRole());
 
               var member = guild.retrieveMember(UserSnowflake.fromId(userId)).complete();
               if (member == null) {
@@ -156,7 +158,7 @@ public class MembershipModule implements EventListener  {
   private String calculateSignature(String dataToSign) {
     try {
       var mac = Mac.getInstance("HmacSHA256");
-      var secretKey = new SecretKeySpec(config.membership().membersApiKey().getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+      var secretKey = new SecretKeySpec(membershipConfig.membersApiKey().getBytes(StandardCharsets.UTF_8), "HmacSHA256");
       mac.init(secretKey);
       var signature = new StringBuilder();
       for (var b : mac.doFinal(dataToSign.getBytes(StandardCharsets.UTF_8))) {

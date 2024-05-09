@@ -18,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Bot {
-  private final Logger logger = LoggerFactory.getLogger(Bot.class);
 
   public Bot(Config config) throws InterruptedException {
     try (var db = new DatabaseConnection(config.databasePath())) {
@@ -39,14 +38,15 @@ public class Bot {
     try {
       config.validateDiscordConfig(jda);
     } catch (Exception e) {
+      Logger logger = LoggerFactory.getLogger(Bot.class);
       logger.error("Error validating configuration", e);
       jda.shutdownNow();
       System.exit(1);
     }
 
     var eventDispatcher = new EventDispatcher();
-    new AlarmsModule(jda, config, eventDispatcher);
-    new MembershipModule(jda, config);
-    new ProgrammeModule(jda, config, eventDispatcher);
+    config.alarms().ifPresent(alarmsConfig -> new AlarmsModule(jda, alarmsConfig, config, eventDispatcher));
+    config.membership().ifPresent(membershipConfig -> new MembershipModule(jda, membershipConfig, config));
+    config.programme().ifPresent(programmeConfig -> new ProgrammeModule(jda, programmeConfig, config, eventDispatcher));
   }
 }

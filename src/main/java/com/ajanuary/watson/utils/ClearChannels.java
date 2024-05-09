@@ -22,7 +22,7 @@ public class ClearChannels {
     var jsonConfig = objectMapper.readTree(Paths.get(args[0], "config.yaml").toFile());
     var config = new ConfigYamlParser().parse(jsonConfig, dotenv);
 
-    var possibleNames = config.programme().channelNameResolver().getPossibleNames().stream()
+    var possibleNames = config.programme().get().channelNameResolver().getPossibleNames().stream()
         .map(String::toLowerCase).collect(Collectors.toSet());
 
     var builder = JDABuilder.createDefault(config.discordBotToken())

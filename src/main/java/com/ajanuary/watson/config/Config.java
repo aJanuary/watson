@@ -4,15 +4,16 @@ import com.ajanuary.watson.alarms.AlarmsConfig;
 import com.ajanuary.watson.membership.MembershipConfig;
 import com.ajanuary.watson.programme.ProgrammeConfig;
 import com.ajanuary.watson.utils.JDAUtils;
+import java.util.Optional;
 import net.dv8tion.jda.api.JDA;
 
 public record Config(
     String discordBotToken,
     String guildId,
     String databasePath,
-    AlarmsConfig alarms,
-    MembershipConfig membership,
-    ProgrammeConfig programme) {
+    Optional<AlarmsConfig> alarms,
+    Optional<MembershipConfig> membership,
+    Optional<ProgrammeConfig> programme) {
 
   public void validateDiscordConfig(JDA jda) {
     var guild = jda.getGuildById(guildId());
@@ -21,7 +22,7 @@ public record Config(
     }
 
     var jdaUtils = new JDAUtils(jda, this);
-    membership().validateDiscordConfig(jdaUtils);
-    programme().validateDiscordConfig(jdaUtils);
+    membership().ifPresent(membershipConfig -> membershipConfig.validateDiscordConfig(jdaUtils));
+    programme().ifPresent(programmeConfig -> programmeConfig.validateDiscordConfig(jdaUtils));
   }
 }
