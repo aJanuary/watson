@@ -26,13 +26,14 @@ public class Bot {
       throw new RuntimeException(e);
     }
 
-    var builder = JDABuilder.createDefault(config.discordBotToken())
-        .enableIntents(GatewayIntent.GUILD_MEMBERS)
-        .enableIntents(GatewayIntent.MESSAGE_CONTENT)
-        .setChunkingFilter(ChunkingFilter.ALL)
-        .setMemberCachePolicy(MemberCachePolicy.ALL)
-        .enableCache(CacheFlag.FORUM_TAGS)
-        .setActivity(Activity.playing("with time"));
+    var builder =
+        JDABuilder.createDefault(config.discordBotToken())
+            .enableIntents(GatewayIntent.GUILD_MEMBERS)
+            .enableIntents(GatewayIntent.MESSAGE_CONTENT)
+            .setChunkingFilter(ChunkingFilter.ALL)
+            .setMemberCachePolicy(MemberCachePolicy.ALL)
+            .enableCache(CacheFlag.FORUM_TAGS)
+            .setActivity(Activity.playing("with time"));
     var jda = builder.build();
     jda.awaitReady();
     try {
@@ -45,8 +46,15 @@ public class Bot {
     }
 
     var eventDispatcher = new EventDispatcher();
-    config.alarms().ifPresent(alarmsConfig -> new AlarmsModule(jda, alarmsConfig, config, eventDispatcher));
-    config.membership().ifPresent(membershipConfig -> new MembershipModule(jda, membershipConfig, config));
-    config.programme().ifPresent(programmeConfig -> new ProgrammeModule(jda, programmeConfig, config, eventDispatcher));
+    config
+        .alarms()
+        .ifPresent(alarmsConfig -> new AlarmsModule(jda, alarmsConfig, config, eventDispatcher));
+    config
+        .membership()
+        .ifPresent(membershipConfig -> new MembershipModule(jda, membershipConfig, config));
+    config
+        .programme()
+        .ifPresent(
+            programmeConfig -> new ProgrammeModule(jda, programmeConfig, config, eventDispatcher));
   }
 }

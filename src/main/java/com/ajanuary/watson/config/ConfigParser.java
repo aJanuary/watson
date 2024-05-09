@@ -86,8 +86,7 @@ public abstract class ConfigParser {
       } catch (ConfigException e) {
         throw e;
       } catch (Exception e) {
-        throw new ConfigException("Malformed value for " + path + ": " + e.getMessage(),
-            e);
+        throw new ConfigException("Malformed value for " + path + ": " + e.getMessage(), e);
       }
     }
 
@@ -120,13 +119,13 @@ public abstract class ConfigParser {
         var field = it.next();
         var itPath = path + "." + field.getKey();
         try {
-          map.put(field.getKey(), valueMapper.apply(
-              new UnknownTypeConfigParser(field.getValue(), itPath)));
+          map.put(
+              field.getKey(),
+              valueMapper.apply(new UnknownTypeConfigParser(field.getValue(), itPath)));
         } catch (ConfigException e) {
           throw e;
         } catch (Exception e) {
-          throw new ConfigException(
-              "Malformed value for " + itPath + ": " + e.getMessage(), e);
+          throw new ConfigException("Malformed value for " + itPath + ": " + e.getMessage(), e);
         }
       }
       return map;
@@ -217,8 +216,7 @@ public abstract class ConfigParser {
       } catch (ConfigException e) {
         throw e;
       } catch (Exception e) {
-        throw new ConfigException("Malformed value for " + path + ": " + e.getMessage(),
-            e);
+        throw new ConfigException("Malformed value for " + path + ": " + e.getMessage(), e);
       }
     }
 
@@ -228,8 +226,7 @@ public abstract class ConfigParser {
       } catch (ConfigException e) {
         throw e;
       } catch (Exception e) {
-        throw new ConfigException("Malformed value for " + path + ": " + e.getMessage(),
-            e);
+        throw new ConfigException("Malformed value for " + path + ": " + e.getMessage(), e);
       }
     }
   }
@@ -278,8 +275,7 @@ public abstract class ConfigParser {
       } catch (ConfigException e) {
         throw e;
       } catch (Exception e) {
-        throw new ConfigException("Malformed value for " + path + ": " + e.getMessage(),
-            e);
+        throw new ConfigException("Malformed value for " + path + ": " + e.getMessage(), e);
       }
     }
 
@@ -289,8 +285,7 @@ public abstract class ConfigParser {
       } catch (ConfigException e) {
         throw e;
       } catch (Exception e) {
-        throw new ConfigException("Malformed value for " + path + ": " + e.getMessage(),
-            e);
+        throw new ConfigException("Malformed value for " + path + ": " + e.getMessage(), e);
       }
     }
   }

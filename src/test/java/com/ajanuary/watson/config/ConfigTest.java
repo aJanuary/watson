@@ -21,22 +21,25 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import org.junit.jupiter.api.Test;
 
 public class ConfigTest {
+
   @Test
   void validateErrorsIfGuildNotFound() {
     var jda = mock(JDA.class);
     when(jda.getGuildById("the-guild-id")).thenReturn(null);
 
-    var config = new Config(
-        "some-token",
-        "the-guild-id",
-        "some-database-path",
-        Optional.empty(),
-        Optional.empty(),
-        Optional.empty()
-    );
+    var config =
+        new Config(
+            "some-token",
+            "the-guild-id",
+            "some-database-path",
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty());
     var thrown = assertThrows(IllegalStateException.class, () -> config.validateDiscordConfig(jda));
 
-    assertEquals("Guild not found: the-guild-id. Is the ID correct, and has the bot been invited to the server?", thrown.getMessage());
+    assertEquals(
+        "Guild not found: the-guild-id. Is the ID correct, and has the bot been invited to the server?",
+        thrown.getMessage());
   }
 
   @Test
@@ -44,14 +47,14 @@ public class ConfigTest {
     var jda = mock(JDA.class);
     when(jda.getGuildById("the-guild-id")).thenReturn(mock(Guild.class));
 
-    var config = new Config(
-        "some-token",
-        "the-guild-id",
-        "some-database-path",
-        Optional.empty(),
-        Optional.empty(),
-        Optional.empty()
-    );
+    var config =
+        new Config(
+            "some-token",
+            "the-guild-id",
+            "some-database-path",
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty());
 
     config.validateDiscordConfig(jda);
   }
@@ -63,20 +66,23 @@ public class ConfigTest {
     when(jda.getGuildById("the-guild-id")).thenReturn(guild);
     when(guild.getTextChannelById("the-channel-id")).thenReturn(null);
 
-    var config = new Config(
-        "some-token",
-        "the-guild-id",
-        "some-database-path",
-        Optional.empty(),
-        Optional.of(new MembershipConfig(
-            "https://example.com/some-api-root",
-            "some-api-key",
-            "the-channel-id",
-            "some-mods-channel",
-            "some-unverified-role",
-            Map.of())),
+    var config =
+        new Config(
+            "some-token",
+            "the-guild-id",
+            "some-database-path",
+            Optional.empty(),
+            Optional.of(
+                new MembershipConfig(
+                    "https://example.com/some-api-root",
+                    "some-api-key",
+                    "the-channel-id",
+                    "some-mods-channel",
+                    "some-unverified-role",
+                    Map.of())),
             Optional.empty());
-    var thrown = assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
+    var thrown =
+        assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
     assertEquals("Channel not found: the-channel-id", thrown.getMessage());
   }
@@ -87,23 +93,24 @@ public class ConfigTest {
     var guild = mock(Guild.class);
     when(jda.getGuildById("the-guild-id")).thenReturn(guild);
     // Just mock any roles, as we don't care about them for this test
-    when(guild.getRolesByName(any(), anyBoolean())).thenReturn(
-        List.of(mock(Role.class))
-    );
-    when(guild.getTextChannelsByName(eq("the-channel-id"), anyBoolean())).thenReturn(List.of(mock(TextChannel.class)));
+    when(guild.getRolesByName(any(), anyBoolean())).thenReturn(List.of(mock(Role.class)));
+    when(guild.getTextChannelsByName(eq("the-channel-id"), anyBoolean()))
+        .thenReturn(List.of(mock(TextChannel.class)));
 
-    var config = new Config(
-        "some-token",
-        "the-guild-id",
-        "some-database-path",
-        Optional.empty(),
-        Optional.of(new MembershipConfig(
-            "https://example.com/some-api-root",
-            "some-api-key",
-            "the-channel-id",
-            "some-member-role",
-            "some-unverified-role",
-            Map.of())),
+    var config =
+        new Config(
+            "some-token",
+            "the-guild-id",
+            "some-database-path",
+            Optional.empty(),
+            Optional.of(
+                new MembershipConfig(
+                    "https://example.com/some-api-root",
+                    "some-api-key",
+                    "the-channel-id",
+                    "some-member-role",
+                    "some-unverified-role",
+                    Map.of())),
             Optional.empty());
 
     config.validateDiscordConfig(jda);
@@ -115,25 +122,27 @@ public class ConfigTest {
     var guild = mock(Guild.class);
     when(jda.getGuildById("the-guild-id")).thenReturn(guild);
     // Just mock any roles, as we don't care about them for this test
-    when(guild.getRolesByName(any(), anyBoolean())).thenReturn(
-        List.of(mock(Role.class))
-    );
-    when(guild.getTextChannelsByName(eq("the-channel-id"), anyBoolean())).thenReturn(List.of(mock(TextChannel.class), mock(TextChannel.class)));
+    when(guild.getRolesByName(any(), anyBoolean())).thenReturn(List.of(mock(Role.class)));
+    when(guild.getTextChannelsByName(eq("the-channel-id"), anyBoolean()))
+        .thenReturn(List.of(mock(TextChannel.class), mock(TextChannel.class)));
 
-    var config = new Config(
-        "some-token",
-        "the-guild-id",
-        "some-database-path",
-        Optional.empty(),
-        Optional.of(new MembershipConfig(
-            "https://example.com/some-api-root",
-            "some-api-key",
-            "the-channel-id",
-            "some-member-role",
-            "some-unverified-role",
-            Map.of())),
+    var config =
+        new Config(
+            "some-token",
+            "the-guild-id",
+            "some-database-path",
+            Optional.empty(),
+            Optional.of(
+                new MembershipConfig(
+                    "https://example.com/some-api-root",
+                    "some-api-key",
+                    "the-channel-id",
+                    "some-member-role",
+                    "some-unverified-role",
+                    Map.of())),
             Optional.empty());
-    var thrown = assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
+    var thrown =
+        assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
     assertEquals("Multiple channels found with the name: the-channel-id", thrown.getMessage());
   }
@@ -144,24 +153,25 @@ public class ConfigTest {
     var guild = mock(Guild.class);
     when(jda.getGuildById("the-guild-id")).thenReturn(guild);
     // Just mock any channels, as we don't care about them for this test
-    when(guild.getTextChannelsByName(any(), anyBoolean())).thenReturn(List.of(mock(TextChannel.class)));
+    when(guild.getTextChannelsByName(any(), anyBoolean()))
+        .thenReturn(List.of(mock(TextChannel.class)));
     when(guild.getRolesByName(any(), anyBoolean())).thenReturn(List.of(mock(Role.class)));
 
-    var config = new Config(
-        "some-token",
-        "the-guild-id",
-        "some-database-path",
-        Optional.empty(),
-        Optional.of(new MembershipConfig(
-            "https://example.com/some-api-root",
-            "some-api-key",
-            "some-mods-channel",
-            "the-member-role",
-            "the-unverified-role",
-            Map.of(
-                "some-role-label", "the-role-id"
-            ))),
-        Optional.empty());
+    var config =
+        new Config(
+            "some-token",
+            "the-guild-id",
+            "some-database-path",
+            Optional.empty(),
+            Optional.of(
+                new MembershipConfig(
+                    "https://example.com/some-api-root",
+                    "some-api-key",
+                    "some-mods-channel",
+                    "the-member-role",
+                    "the-unverified-role",
+                    Map.of("some-role-label", "the-role-id"))),
+            Optional.empty());
 
     config.validateDiscordConfig(jda);
   }
@@ -172,30 +182,36 @@ public class ConfigTest {
     var guild = mock(Guild.class);
     when(jda.getGuildById("the-guild-id")).thenReturn(guild);
     // Just mock any channels, as we don't care about them for this test
-    when(guild.getTextChannelsByName(any(), anyBoolean())).thenReturn(List.of(mock(TextChannel.class)));
-    when(guild.getRolesByName(any(), anyBoolean())).thenAnswer(i -> {
-      if ("the-member-role".equals(i.getArgument(0))) {
-        return List.of();
-      } else {
-        // Just mock any other roles, as we don't care about them for this test
-        return List.of(mock(Role.class));
-      }
-    });
+    when(guild.getTextChannelsByName(any(), anyBoolean()))
+        .thenReturn(List.of(mock(TextChannel.class)));
+    when(guild.getRolesByName(any(), anyBoolean()))
+        .thenAnswer(
+            i -> {
+              if ("the-member-role".equals(i.getArgument(0))) {
+                return List.of();
+              } else {
+                // Just mock any other roles, as we don't care about them for this test
+                return List.of(mock(Role.class));
+              }
+            });
 
-    var config = new Config(
-        "some-token",
-        "the-guild-id",
-        "some-database-path",
-        Optional.empty(),
-        Optional.of(new MembershipConfig(
-            "https://example.com/some-api-root",
-            "some-api-key",
-            "some-mods-channel",
-            "the-member-role",
-            "some-unverified-role",
-            Map.of())),
+    var config =
+        new Config(
+            "some-token",
+            "the-guild-id",
+            "some-database-path",
+            Optional.empty(),
+            Optional.of(
+                new MembershipConfig(
+                    "https://example.com/some-api-root",
+                    "some-api-key",
+                    "some-mods-channel",
+                    "the-member-role",
+                    "some-unverified-role",
+                    Map.of())),
             Optional.empty());
-    var thrown = assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
+    var thrown =
+        assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
     assertEquals("Role not found: the-member-role", thrown.getMessage());
   }
@@ -206,30 +222,36 @@ public class ConfigTest {
     var guild = mock(Guild.class);
     when(jda.getGuildById("the-guild-id")).thenReturn(guild);
     // Just mock any channels, as we don't care about them for this test
-    when(guild.getTextChannelsByName(any(), anyBoolean())).thenReturn(List.of(mock(TextChannel.class)));
-    when(guild.getRolesByName(any(), anyBoolean())).thenAnswer(i -> {
-      if ("the-member-role".equals(i.getArgument(0))) {
-        return List.of(mock(Role.class), mock(Role.class));
-      } else {
-        // Just mock any other roles, as we don't care about them for this test
-        return List.of(mock(Role.class));
-      }
-    });
+    when(guild.getTextChannelsByName(any(), anyBoolean()))
+        .thenReturn(List.of(mock(TextChannel.class)));
+    when(guild.getRolesByName(any(), anyBoolean()))
+        .thenAnswer(
+            i -> {
+              if ("the-member-role".equals(i.getArgument(0))) {
+                return List.of(mock(Role.class), mock(Role.class));
+              } else {
+                // Just mock any other roles, as we don't care about them for this test
+                return List.of(mock(Role.class));
+              }
+            });
 
-    var config = new Config(
-        "some-token",
-        "the-guild-id",
-        "some-database-path",
-        Optional.empty(),
-        Optional.of(new MembershipConfig(
-            "https://example.com/some-api-root",
-            "some-api-key",
-            "some-mods-channel",
-            "the-member-role",
-            "some-unverified-role",
-            Map.of())),
+    var config =
+        new Config(
+            "some-token",
+            "the-guild-id",
+            "some-database-path",
+            Optional.empty(),
+            Optional.of(
+                new MembershipConfig(
+                    "https://example.com/some-api-root",
+                    "some-api-key",
+                    "some-mods-channel",
+                    "the-member-role",
+                    "some-unverified-role",
+                    Map.of())),
             Optional.empty());
-    var thrown = assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
+    var thrown =
+        assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
     assertEquals("Multiple roles found with label: the-member-role", thrown.getMessage());
   }
@@ -240,30 +262,36 @@ public class ConfigTest {
     var guild = mock(Guild.class);
     when(jda.getGuildById("the-guild-id")).thenReturn(guild);
     // Just mock any channels, as we don't care about them for this test
-    when(guild.getTextChannelsByName(any(), anyBoolean())).thenReturn(List.of(mock(TextChannel.class)));
-    when(guild.getRolesByName(any(), anyBoolean())).thenAnswer(i -> {
-      if ("the-unverified-role".equals(i.getArgument(0))) {
-        return List.of();
-      } else {
-        // Just mock any other roles, as we don't care about them for this test
-        return List.of(mock(Role.class));
-      }
-    });
+    when(guild.getTextChannelsByName(any(), anyBoolean()))
+        .thenReturn(List.of(mock(TextChannel.class)));
+    when(guild.getRolesByName(any(), anyBoolean()))
+        .thenAnswer(
+            i -> {
+              if ("the-unverified-role".equals(i.getArgument(0))) {
+                return List.of();
+              } else {
+                // Just mock any other roles, as we don't care about them for this test
+                return List.of(mock(Role.class));
+              }
+            });
 
-    var config = new Config(
-        "some-token",
-        "the-guild-id",
-        "some-database-path",
-        Optional.empty(),
-        Optional.of(new MembershipConfig(
-            "https://example.com/some-api-root",
-            "some-api-key",
-            "some-mods-channel",
-            "some-member-role",
-            "the-unverified-role",
-            Map.of())),
+    var config =
+        new Config(
+            "some-token",
+            "the-guild-id",
+            "some-database-path",
+            Optional.empty(),
+            Optional.of(
+                new MembershipConfig(
+                    "https://example.com/some-api-root",
+                    "some-api-key",
+                    "some-mods-channel",
+                    "some-member-role",
+                    "the-unverified-role",
+                    Map.of())),
             Optional.empty());
-    var thrown = assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
+    var thrown =
+        assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
     assertEquals("Role not found: the-unverified-role", thrown.getMessage());
   }
@@ -274,30 +302,36 @@ public class ConfigTest {
     var guild = mock(Guild.class);
     when(jda.getGuildById("the-guild-id")).thenReturn(guild);
     // Just mock any channels, as we don't care about them for this test
-    when(guild.getTextChannelsByName(any(), anyBoolean())).thenReturn(List.of(mock(TextChannel.class)));
-    when(guild.getRolesByName(any(), anyBoolean())).thenAnswer(i -> {
-      if ("the-unverified-role".equals(i.getArgument(0))) {
-        return List.of(mock(Role.class), mock(Role.class));
-      } else {
-        // Just mock any other roles, as we don't care about them for this test
-        return List.of(mock(Role.class));
-      }
-    });
+    when(guild.getTextChannelsByName(any(), anyBoolean()))
+        .thenReturn(List.of(mock(TextChannel.class)));
+    when(guild.getRolesByName(any(), anyBoolean()))
+        .thenAnswer(
+            i -> {
+              if ("the-unverified-role".equals(i.getArgument(0))) {
+                return List.of(mock(Role.class), mock(Role.class));
+              } else {
+                // Just mock any other roles, as we don't care about them for this test
+                return List.of(mock(Role.class));
+              }
+            });
 
-    var config = new Config(
-        "some-token",
-        "the-guild-id",
-        "some-database-path",
-        Optional.empty(),
-        Optional.of(new MembershipConfig(
-            "https://example.com/some-api-root",
-            "some-api-key",
-            "some-mods-channel",
-            "some-member-role",
-            "the-unverified-role",
-            Map.of())),
+    var config =
+        new Config(
+            "some-token",
+            "the-guild-id",
+            "some-database-path",
+            Optional.empty(),
+            Optional.of(
+                new MembershipConfig(
+                    "https://example.com/some-api-root",
+                    "some-api-key",
+                    "some-mods-channel",
+                    "some-member-role",
+                    "the-unverified-role",
+                    Map.of())),
             Optional.empty());
-    var thrown = assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
+    var thrown =
+        assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
     assertEquals("Multiple roles found with label: the-unverified-role", thrown.getMessage());
   }
@@ -308,32 +342,36 @@ public class ConfigTest {
     var guild = mock(Guild.class);
     when(jda.getGuildById("the-guild-id")).thenReturn(guild);
     // Just mock any channels, as we don't care about them for this test
-    when(guild.getTextChannelsByName(any(), anyBoolean())).thenReturn(List.of(mock(TextChannel.class)));
-    when(guild.getRolesByName(any(), anyBoolean())).thenAnswer(i -> {
-      if ("the-role-id".equals(i.getArgument(0))) {
-        return List.of();
-      } else {
-        // Just mock any other roles, as we don't care about them for this test
-        return List.of(mock(Role.class));
-      }
-    });
+    when(guild.getTextChannelsByName(any(), anyBoolean()))
+        .thenReturn(List.of(mock(TextChannel.class)));
+    when(guild.getRolesByName(any(), anyBoolean()))
+        .thenAnswer(
+            i -> {
+              if ("the-role-id".equals(i.getArgument(0))) {
+                return List.of();
+              } else {
+                // Just mock any other roles, as we don't care about them for this test
+                return List.of(mock(Role.class));
+              }
+            });
 
-    var config = new Config(
-        "some-token",
-        "the-guild-id",
-        "some-database-path",
-        Optional.empty(),
-        Optional.of(new MembershipConfig(
-            "https://example.com/some-api-root",
-            "some-api-key",
-            "some-mods-channel",
-            "some-member-role",
-            "some-unverified-role",
-            Map.of(
-                "some-role-label", "the-role-id"
-            ))),
-        Optional.empty());
-    var thrown = assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
+    var config =
+        new Config(
+            "some-token",
+            "the-guild-id",
+            "some-database-path",
+            Optional.empty(),
+            Optional.of(
+                new MembershipConfig(
+                    "https://example.com/some-api-root",
+                    "some-api-key",
+                    "some-mods-channel",
+                    "some-member-role",
+                    "some-unverified-role",
+                    Map.of("some-role-label", "the-role-id"))),
+            Optional.empty());
+    var thrown =
+        assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
     assertEquals("Role not found: the-role-id", thrown.getMessage());
   }
@@ -344,34 +382,36 @@ public class ConfigTest {
     var guild = mock(Guild.class);
     when(jda.getGuildById("the-guild-id")).thenReturn(guild);
     // Just mock any channels, as we don't care about them for this test
-    when(guild.getTextChannelsByName(any(), anyBoolean())).thenReturn(
-        List.of(mock(TextChannel.class)));
-    when(guild.getRolesByName(any(), anyBoolean())).thenAnswer(i -> {
-      if ("the-role-id".equals(i.getArgument(0))) {
-        return List.of(mock(Role.class), mock(Role.class));
-      } else {
-        // Just mock any other roles, as we don't care about them for this test
-        return List.of(mock(Role.class));
-      }
-    });
+    when(guild.getTextChannelsByName(any(), anyBoolean()))
+        .thenReturn(List.of(mock(TextChannel.class)));
+    when(guild.getRolesByName(any(), anyBoolean()))
+        .thenAnswer(
+            i -> {
+              if ("the-role-id".equals(i.getArgument(0))) {
+                return List.of(mock(Role.class), mock(Role.class));
+              } else {
+                // Just mock any other roles, as we don't care about them for this test
+                return List.of(mock(Role.class));
+              }
+            });
 
-    var config = new Config(
-        "some-token",
-        "the-guild-id",
-        "some-database-path",
-        Optional.empty(),
-        Optional.of(new MembershipConfig(
-            "https://example.com/some-api-root",
-            "some-api-key",
-            "some-mods-channel",
-            "some-member-role",
-            "some-unverified-role",
-            Map.of(
-                "some-role-label", "the-role-id"
-            ))),
-        Optional.empty());
-    var thrown = assertThrows(IllegalArgumentException.class,
-        () -> config.validateDiscordConfig(jda));
+    var config =
+        new Config(
+            "some-token",
+            "the-guild-id",
+            "some-database-path",
+            Optional.empty(),
+            Optional.of(
+                new MembershipConfig(
+                    "https://example.com/some-api-root",
+                    "some-api-key",
+                    "some-mods-channel",
+                    "some-member-role",
+                    "some-unverified-role",
+                    Map.of("some-role-label", "the-role-id"))),
+            Optional.empty());
+    var thrown =
+        assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
     assertEquals("Multiple roles found with label: the-role-id", thrown.getMessage());
   }
@@ -383,20 +423,21 @@ public class ConfigTest {
     when(jda.getGuildById("the-guild-id")).thenReturn(guild);
     when(guild.getTextChannelById("the-channel-id")).thenReturn(null);
 
-    var config = new Config(
-        "some-token",
-        "the-guild-id",
-        "some-database-path",
-        Optional.empty(),
-        Optional.empty(),
-        Optional.of(new ProgrammeConfig(
-            "https://example.com/some-api-root",
-            "the-channel-id",
-            new DayChannelNameResolver(),
-            false
-        ))
-    );
-    var thrown = assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
+    var config =
+        new Config(
+            "some-token",
+            "the-guild-id",
+            "some-database-path",
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(
+                new ProgrammeConfig(
+                    "https://example.com/some-api-root",
+                    "the-channel-id",
+                    new DayChannelNameResolver(),
+                    false)));
+    var thrown =
+        assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
     assertEquals("Channel not found: the-channel-id", thrown.getMessage());
   }
@@ -407,24 +448,23 @@ public class ConfigTest {
     var guild = mock(Guild.class);
     when(jda.getGuildById("the-guild-id")).thenReturn(guild);
     // Just mock any roles, as we don't care about them for this test
-    when(guild.getRolesByName(any(), anyBoolean())).thenReturn(
-        List.of(mock(Role.class)
-    ));
-    when(guild.getTextChannelsByName(eq("the-channel-id"), anyBoolean())).thenReturn(List.of(mock(TextChannel.class)));
+    when(guild.getRolesByName(any(), anyBoolean())).thenReturn(List.of(mock(Role.class)));
+    when(guild.getTextChannelsByName(eq("the-channel-id"), anyBoolean()))
+        .thenReturn(List.of(mock(TextChannel.class)));
 
-    var config = new Config(
-        "some-token",
-        "the-guild-id",
-        "some-database-path",
-        Optional.empty(),
-        Optional.empty(),
-        Optional.of(new ProgrammeConfig(
-            "https://example.com/some-api-root",
-            "the-channel-id",
-            new DayChannelNameResolver(),
-            false
-        ))
-    );
+    var config =
+        new Config(
+            "some-token",
+            "the-guild-id",
+            "some-database-path",
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(
+                new ProgrammeConfig(
+                    "https://example.com/some-api-root",
+                    "the-channel-id",
+                    new DayChannelNameResolver(),
+                    false)));
 
     config.validateDiscordConfig(jda);
   }
@@ -435,25 +475,25 @@ public class ConfigTest {
     var guild = mock(Guild.class);
     when(jda.getGuildById("the-guild-id")).thenReturn(guild);
     // Just mock any roles, as we don't care about them for this test
-    when(guild.getRolesByName(any(), anyBoolean())).thenReturn(
-        List.of(mock(Role.class)
-    ));
-    when(guild.getTextChannelsByName(eq("the-channel-id"), anyBoolean())).thenReturn(List.of(mock(TextChannel.class), mock(TextChannel.class)));
+    when(guild.getRolesByName(any(), anyBoolean())).thenReturn(List.of(mock(Role.class)));
+    when(guild.getTextChannelsByName(eq("the-channel-id"), anyBoolean()))
+        .thenReturn(List.of(mock(TextChannel.class), mock(TextChannel.class)));
 
-    var config = new Config(
-        "some-token",
-        "the-guild-id",
-        "some-database-path",
-        Optional.empty(),
-        Optional.empty(),
-        Optional.of(new ProgrammeConfig(
-            "https://example.com/some-api-root",
-            "the-channel-id",
-            new DayChannelNameResolver(),
-            false
-        ))
-    );
-    var thrown = assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
+    var config =
+        new Config(
+            "some-token",
+            "the-guild-id",
+            "some-database-path",
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(
+                new ProgrammeConfig(
+                    "https://example.com/some-api-root",
+                    "the-channel-id",
+                    new DayChannelNameResolver(),
+                    false)));
+    var thrown =
+        assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
     assertEquals("Multiple channels found with the name: the-channel-id", thrown.getMessage());
   }

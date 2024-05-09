@@ -7,8 +7,7 @@ import java.util.Map;
 
 public class MembershipConfigYamlParser {
 
-  private MembershipConfigYamlParser() {
-  }
+  private MembershipConfigYamlParser() {}
 
   public static MembershipConfig parse(ObjectConfigParserWithValue configParser, Dotenv dotenv) {
     var membersApiKey = dotenv.get("MEMBERS_API_KEY");
@@ -17,15 +16,20 @@ public class MembershipConfigYamlParser {
     }
 
     var membersApiRoot = configParser.get("membersApiRoot").string().required().value();
-    var discordModsChannel = configParser.get("discordModsChannel").string()
-        .defaultingTo("discord-mods").value();
+    var discordModsChannel =
+        configParser.get("discordModsChannel").string().defaultingTo("discord-mods").value();
     var memberRole = configParser.get("memberRole").string().defaultingTo("member").value();
-    var unverifiedRole = configParser.get("unverifiedRole").string().defaultingTo("unverified")
-        .value();
-    var additionalRoles = configParser.get("additionalRoles").object().map(
-        additionalRolesConfig -> additionalRolesConfig.toMap(
-            roleConfig -> roleConfig.string().required().value())).orElse(
-        Map.of());
+    var unverifiedRole =
+        configParser.get("unverifiedRole").string().defaultingTo("unverified").value();
+    var additionalRoles =
+        configParser
+            .get("additionalRoles")
+            .object()
+            .map(
+                additionalRolesConfig ->
+                    additionalRolesConfig.toMap(
+                        roleConfig -> roleConfig.string().required().value()))
+            .orElse(Map.of());
 
     return new MembershipConfig(
         membersApiRoot,
@@ -33,7 +37,6 @@ public class MembershipConfigYamlParser {
         discordModsChannel,
         memberRole,
         unverifiedRole,
-        additionalRoles
-    );
+        additionalRoles);
   }
 }

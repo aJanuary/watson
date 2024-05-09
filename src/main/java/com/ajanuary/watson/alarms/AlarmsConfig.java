@@ -9,6 +9,4 @@ public record AlarmsConfig(
     Emoji alarmEmoji,
     TemporalAmount timeBeforeToNotify,
     TemporalAmount maxTimeAfterToNotify,
-    TemporalAmount minTimeBetweenDMs
-) {
-}
+    TemporalAmount minTimeBetweenDMs) {}

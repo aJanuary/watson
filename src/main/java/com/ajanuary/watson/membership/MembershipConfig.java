@@ -9,8 +9,8 @@ public record MembershipConfig(
     String discordModsChannel,
     String memberRole,
     String unverifiedRole,
-    Map<String, String> additionalRoles
-) {
+    Map<String, String> additionalRoles) {
+
   public void validateDiscordConfig(JDAUtils jdaUtils) {
     jdaUtils.getTextChannel(discordModsChannel());
     jdaUtils.getRole(memberRole());

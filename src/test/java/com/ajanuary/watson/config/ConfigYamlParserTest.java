@@ -14,10 +14,14 @@ import net.dv8tion.jda.api.entities.emoji.Emoji;
 import org.junit.jupiter.api.Test;
 
 public class ConfigYamlParserTest {
+
   @Test
   void readsDiscordBotTokenFromDotenv() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "the-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         """);
@@ -31,7 +35,10 @@ public class ConfigYamlParserTest {
   @Test
   void throwsIfDiscordBotTokenMissing() throws JsonProcessingException {
     var dotenv = new DotenvFake();
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         """);
@@ -45,7 +52,10 @@ public class ConfigYamlParserTest {
   @Test
   void readsCoreConfigFrom() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: the-guild-id
         databasePath: some-db-path
         """);
@@ -59,7 +69,10 @@ public class ConfigYamlParserTest {
   @Test
   void errorsIfGuildIdIsNotString() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: 10
         databasePath: some-db-path
         """);
@@ -73,7 +86,10 @@ public class ConfigYamlParserTest {
   @Test
   void errorsIfGuildIdIsMissing() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         databasePath: test.db
         """);
 
@@ -86,7 +102,10 @@ public class ConfigYamlParserTest {
   @Test
   void readsDatabasePathFromConfig() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: the-db-path
         """);
@@ -100,7 +119,10 @@ public class ConfigYamlParserTest {
   @Test
   void errorsIfDatabasePathIsNotString() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: 10
         """);
@@ -114,7 +136,10 @@ public class ConfigYamlParserTest {
   @Test
   void errorsIfDatabasePathIsMissing() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         """);
 
@@ -127,7 +152,10 @@ public class ConfigYamlParserTest {
   @Test
   void alarmsConfigIsOptional() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         """);
@@ -141,7 +169,10 @@ public class ConfigYamlParserTest {
   @Test
   void parsesAlarmsTimezone() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         alarms:
@@ -161,7 +192,10 @@ public class ConfigYamlParserTest {
   @Test
   void errorsIfAlarmsTimezoneIsMissing() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         alarms:
@@ -179,7 +213,10 @@ public class ConfigYamlParserTest {
   @Test
   void errorsIfAlarmsTimezoneIsNotString() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         alarms:
@@ -198,7 +235,10 @@ public class ConfigYamlParserTest {
   @Test
   void errorsIfAlarmsTimezoneIsInvalid() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         alarms:
@@ -211,13 +251,18 @@ public class ConfigYamlParserTest {
     var parser = new ConfigYamlParser();
     var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
 
-    assertEquals("Malformed value for alarms.timezone: Unknown time-zone ID: Invalid/Timezone", thrown.getMessage());
+    assertEquals(
+        "Malformed value for alarms.timezone: Unknown time-zone ID: Invalid/Timezone",
+        thrown.getMessage());
   }
 
   @Test
   void parsesAlarmsTimeBeforeToNotify() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         alarms:
@@ -237,7 +282,10 @@ public class ConfigYamlParserTest {
   @Test
   void errorsIfAlarmsTimeBeforeToNotifyIsMissing() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         alarms:
@@ -255,7 +303,10 @@ public class ConfigYamlParserTest {
   @Test
   void errorsIfAlarmsTimeBeforeToNotifyIsNotString() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         alarms:
@@ -274,7 +325,10 @@ public class ConfigYamlParserTest {
   @Test
   void errorsIfAlarmsTimeBeforeToNotifyIsInvalidDuration() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         alarms:
@@ -287,13 +341,18 @@ public class ConfigYamlParserTest {
     var parser = new ConfigYamlParser();
     var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
 
-    assertEquals("Malformed value for alarms.timeBeforeToNotify: Text cannot be parsed to a Duration", thrown.getMessage());
+    assertEquals(
+        "Malformed value for alarms.timeBeforeToNotify: Text cannot be parsed to a Duration",
+        thrown.getMessage());
   }
 
   @Test
   void parsesAlarmsMaxTimeAfterToNotify() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         alarms:
@@ -313,7 +372,10 @@ public class ConfigYamlParserTest {
   @Test
   void errorsIfAlarmsMaxTimeAfterToNotifyIsMissing() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         alarms:
@@ -331,7 +393,10 @@ public class ConfigYamlParserTest {
   @Test
   void errorsIfAlarmsMaxTimeAfterToNotifyIsNotString() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         alarms:
@@ -350,7 +415,10 @@ public class ConfigYamlParserTest {
   @Test
   void errorsIfAlarmsMaxTimeAfterToNotifyIsInvalidDuration() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         alarms:
@@ -371,7 +439,10 @@ public class ConfigYamlParserTest {
   @Test
   void parsesAlarmsMinTimeBetweenDMs() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         alarms:
@@ -391,7 +462,10 @@ public class ConfigYamlParserTest {
   @Test
   void errorsIfAlarmsMinTimeBetweenDMsIsMissing() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         alarms:
@@ -409,7 +483,10 @@ public class ConfigYamlParserTest {
   @Test
   void errorsIfAlarmsMinTimeBetweenDMsIsNotString() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         alarms:
@@ -428,7 +505,10 @@ public class ConfigYamlParserTest {
   @Test
   void errorsIfAlarmsMinTimeBetweenDMsIsInvalidDuration() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         alarms:
@@ -449,7 +529,10 @@ public class ConfigYamlParserTest {
   @Test
   void parsesAlarmEmoji() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         alarms:
@@ -470,7 +553,10 @@ public class ConfigYamlParserTest {
   @Test
   void defaultsAlarmEmojiToClockEmoji() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         alarms:
@@ -490,7 +576,10 @@ public class ConfigYamlParserTest {
   @Test
   void errorsIfAlarmEmojiIsNotString() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         alarms:
@@ -510,7 +599,10 @@ public class ConfigYamlParserTest {
   @Test
   void errorsIfAlarmEmojiIsInvalidEmoji() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         alarms:
@@ -524,13 +616,17 @@ public class ConfigYamlParserTest {
     var parser = new ConfigYamlParser();
     var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
 
-    assertEquals("Malformed value for alarms.alarmEmoji: Unicode may not be empty", thrown.getMessage());
+    assertEquals(
+        "Malformed value for alarms.alarmEmoji: Unicode may not be empty", thrown.getMessage());
   }
 
   @Test
   void membershipConfigIsOptional() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         """);
@@ -544,7 +640,10 @@ public class ConfigYamlParserTest {
   @Test
   void membershipModuleRequiresMembersApiKey() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
@@ -559,8 +658,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void readsMembersApiKeyFromDotenv() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "the-key");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var dotenv =
+        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "the-key");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
@@ -576,8 +679,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void parsesMembershipApiRoot() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var dotenv =
+        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
@@ -593,8 +700,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfMembershipApiRootIsMissing() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var dotenv =
+        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         membership: {}
@@ -608,8 +719,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfMembershipApiRootIsNotString() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var dotenv =
+        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
@@ -624,8 +739,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void parsesMembershipDiscordModsChannel() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var dotenv =
+        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
@@ -642,8 +761,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void defaultsMembershipDiscordModsChannelToDiscordMods() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var dotenv =
+        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
@@ -659,8 +782,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfMembershipDiscordModsChannelIsNotString() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var dotenv =
+        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
@@ -676,9 +803,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void parsesMembershipMemberRole() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token")
-        .add("MEMBERS_API_KEY", "some-key");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var dotenv =
+        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
@@ -695,9 +825,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void defaultsMembershipMemberRoleToMember() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token")
-        .add("MEMBERS_API_KEY", "some-key");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var dotenv =
+        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
@@ -713,9 +846,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfMembershipMemberRoleIsNotString() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token")
-        .add("MEMBERS_API_KEY", "some-key");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var dotenv =
+        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
@@ -731,9 +867,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void parsesMembershipUnverifiedRole() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token")
-        .add("MEMBERS_API_KEY", "some-key");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var dotenv =
+        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
@@ -750,9 +889,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void defaultsMembershipUnverifiedRoleToUnverified() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token")
-        .add("MEMBERS_API_KEY", "some-key");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var dotenv =
+        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
@@ -768,9 +910,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfMembershipUnverifiedRoleIsNotString() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token")
-        .add("MEMBERS_API_KEY", "some-key");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var dotenv =
+        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
@@ -786,9 +931,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void parsesMembershipAdditionalRoles() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token")
-        .add("MEMBERS_API_KEY", "some-key");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var dotenv =
+        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
@@ -802,16 +950,20 @@ public class ConfigYamlParserTest {
     var config = parser.parse(jsonConfig, dotenv);
 
     assertTrue(config.membership().isPresent(), "membership config is present");
-    assertEquals(2, config.membership().get().additionalRoles().size(), "additional roles has 2 entries");
+    assertEquals(
+        2, config.membership().get().additionalRoles().size(), "additional roles has 2 entries");
     assertEquals("the-role-1", config.membership().get().additionalRoles().get("role1"));
     assertEquals("the-role-2", config.membership().get().additionalRoles().get("role2"));
   }
 
   @Test
   void errorsIfMembershipAdditionalRolesIsNotAnObject() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token")
-        .add("MEMBERS_API_KEY", "some-key");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var dotenv =
+        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
@@ -827,9 +979,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfMembershipAdditionalRolesContainsNonStringValues() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token")
-        .add("MEMBERS_API_KEY", "some-key");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var dotenv =
+        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
@@ -847,9 +1002,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void defaultsAdditionalRolesToEmptyMap() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token")
-        .add("MEMBERS_API_KEY", "some-key");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var dotenv =
+        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
@@ -866,7 +1024,10 @@ public class ConfigYamlParserTest {
   @Test
   void programmeConfigIsOptional() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         """);
@@ -880,7 +1041,10 @@ public class ConfigYamlParserTest {
   @Test
   void parsesProgrammeProgrammeUrl() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         programme:
@@ -897,7 +1061,10 @@ public class ConfigYamlParserTest {
   @Test
   void errorsIfProgrammeProgrammeUrlIsMissing() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         programme: {}
@@ -912,7 +1079,10 @@ public class ConfigYamlParserTest {
   @Test
   void errorsIfProgrammeProgrammeUrlIsNotString() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         programme:
@@ -928,7 +1098,10 @@ public class ConfigYamlParserTest {
   @Test
   void parsesProgrammeMajorAnnouncementsChannel() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         programme:
@@ -940,14 +1113,18 @@ public class ConfigYamlParserTest {
     var config = parser.parse(jsonConfig, dotenv);
 
     assertTrue(config.programme().isPresent(), "programme config is present");
-    assertEquals("the-major-announcements-channel",
-        config.programme().get().majorAnnouncementsChannel());
+    assertEquals(
+        "the-major-announcements-channel", config.programme().get().majorAnnouncementsChannel());
   }
 
   @Test
-  void defaultsProgrammeMajorAnnouncementsChannelToProgrammeAnnouncements() throws JsonProcessingException {
+  void defaultsProgrammeMajorAnnouncementsChannelToProgrammeAnnouncements()
+      throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         programme:
@@ -958,14 +1135,16 @@ public class ConfigYamlParserTest {
     var config = parser.parse(jsonConfig, dotenv);
 
     assertTrue(config.programme().isPresent(), "programme config is present");
-    assertEquals("programme-announcements",
-        config.programme().get().majorAnnouncementsChannel());
+    assertEquals("programme-announcements", config.programme().get().majorAnnouncementsChannel());
   }
 
   @Test
   void errorsIfProgrammeMajorAnnouncementsChannelIsNotString() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         programme:
@@ -982,7 +1161,10 @@ public class ConfigYamlParserTest {
   @Test
   void parsesProgrammeHasPerformedFirstLoad() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         {
           "guildId": "some-guild-id",
           "databasePath": "some-db-path",
@@ -1003,7 +1185,10 @@ public class ConfigYamlParserTest {
   @Test
   void defaultsProgrammeHasPerformedFirstLoadToTrue() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         {
           "guildId": "some-guild-id",
           "databasePath": "some-db-path",
@@ -1023,7 +1208,10 @@ public class ConfigYamlParserTest {
   @Test
   void errorsIfProgrammeHasPerformedFirstLoadIsNotBoolean() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         {
           "guildId": "some-guild-id",
           "databasePath": "some-db-path",
@@ -1043,7 +1231,10 @@ public class ConfigYamlParserTest {
   @Test
   void programmeChannelNameResolverIsOptional() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         programme:
@@ -1060,7 +1251,10 @@ public class ConfigYamlParserTest {
   @Test
   void errorsIfProgrammeChannelNameResolverIsNotAnObject() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         programme:
@@ -1077,13 +1271,16 @@ public class ConfigYamlParserTest {
   @Test
   void errorsIfProgrammeChannelNameResolverTypeIsMissing() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
-          guildId: some-guild-id
-          databasePath: some-db-path
-          programme:
-            programmeUrl: https://example.com/some-programme-url
-            channelNameResolver: {}
-          """);
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+        guildId: some-guild-id
+        databasePath: some-db-path
+        programme:
+          programmeUrl: https://example.com/some-programme-url
+          channelNameResolver: {}
+        """);
 
     var parser = new ConfigYamlParser();
     var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
@@ -1094,14 +1291,17 @@ public class ConfigYamlParserTest {
   @Test
   void errorsIfProgrammeChannelNameResolverTypeIsNotString() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
-          guildId: some-guild-id
-          databasePath: some-db-path
-          programme:
-            programmeUrl: https://example.com/some-programme-url
-            channelNameResolver:
-              type: 10
-          """);
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+        guildId: some-guild-id
+        databasePath: some-db-path
+        programme:
+          programmeUrl: https://example.com/some-programme-url
+          channelNameResolver:
+            type: 10
+        """);
 
     var parser = new ConfigYamlParser();
     var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
@@ -1112,25 +1312,33 @@ public class ConfigYamlParserTest {
   @Test
   void errorsIfProgrammeChannelNameResolverTypeIsInvalidType() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
-          guildId: some-guild-id
-          databasePath: some-db-path
-          programme:
-            programmeUrl: https://example.com/some-programme-url
-            channelNameResolver:
-              type: invalid
-          """);
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+        guildId: some-guild-id
+        databasePath: some-db-path
+        programme:
+          programmeUrl: https://example.com/some-programme-url
+          channelNameResolver:
+            type: invalid
+        """);
 
     var parser = new ConfigYamlParser();
     var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
 
-    assertEquals("Malformed value for programme.channelNameResolver.type: Unknown resolver invalid", thrown.getMessage());
+    assertEquals(
+        "Malformed value for programme.channelNameResolver.type: Unknown resolver invalid",
+        thrown.getMessage());
   }
 
   @Test
   void parsesProgrammeDayChannelNameResolver() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         programme:
@@ -1149,7 +1357,10 @@ public class ConfigYamlParserTest {
   @Test
   void parsesProgrammeDayTodChannelNameResolver() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         programme:
@@ -1172,8 +1383,8 @@ public class ConfigYamlParserTest {
     var config = parser.parse(jsonConfig, dotenv);
 
     assertTrue(config.programme().isPresent(), "programme config is present");
-    assertInstanceOf(DayTodChannelNameResolver.class,
-        config.programme().get().channelNameResolver());
+    assertInstanceOf(
+        DayTodChannelNameResolver.class, config.programme().get().channelNameResolver());
 
     var resolver = (DayTodChannelNameResolver) config.programme().get().channelNameResolver();
     assertEquals(3, resolver.thresholds().size(), "resolver has 3 thresholds");
@@ -1189,9 +1400,13 @@ public class ConfigYamlParserTest {
   }
 
   @Test
-  void errorsIfProgrammeDayTodChannelNameResolverThresholdsAreMissing() throws JsonProcessingException {
+  void errorsIfProgrammeDayTodChannelNameResolverThresholdsAreMissing()
+      throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         programme:
@@ -1207,9 +1422,13 @@ public class ConfigYamlParserTest {
   }
 
   @Test
-  void errorsIfProgrammeDayTodChannelNameResolverThresholdsIsNotAList() throws JsonProcessingException {
+  void errorsIfProgrammeDayTodChannelNameResolverThresholdsIsNotAList()
+      throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         programme:
@@ -1226,9 +1445,13 @@ public class ConfigYamlParserTest {
   }
 
   @Test
-  void errorsIfProgrammeDayTodChannelNameResolverThresholdsContainsNonObjectValues() throws JsonProcessingException {
+  void errorsIfProgrammeDayTodChannelNameResolverThresholdsContainsNonObjectValues()
+      throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         programme:
@@ -1242,14 +1465,17 @@ public class ConfigYamlParserTest {
     var parser = new ConfigYamlParser();
     var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
 
-    assertEquals("programme.channelNameResolver.thresholds[0] must be an object",
-        thrown.getMessage());
+    assertEquals(
+        "programme.channelNameResolver.thresholds[0] must be an object", thrown.getMessage());
   }
 
   @Test
   void errorsIfThresholdIsMissingLabel() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         programme:
@@ -1264,14 +1490,17 @@ public class ConfigYamlParserTest {
     var parser = new ConfigYamlParser();
     var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
 
-    assertEquals("programme.channelNameResolver.thresholds[0].label is required",
-        thrown.getMessage());
+    assertEquals(
+        "programme.channelNameResolver.thresholds[0].label is required", thrown.getMessage());
   }
 
   @Test
   void errorsIfThresholdLabelIsNotString() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         programme:
@@ -1287,14 +1516,17 @@ public class ConfigYamlParserTest {
     var parser = new ConfigYamlParser();
     var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
 
-    assertEquals("programme.channelNameResolver.thresholds[0].label must be a string",
-        thrown.getMessage());
+    assertEquals(
+        "programme.channelNameResolver.thresholds[0].label must be a string", thrown.getMessage());
   }
 
   @Test
   void errorsIfThresholdIsMissingStart() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         programme:
@@ -1309,14 +1541,17 @@ public class ConfigYamlParserTest {
     var parser = new ConfigYamlParser();
     var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
 
-    assertEquals("programme.channelNameResolver.thresholds[0].start is required",
-        thrown.getMessage());
+    assertEquals(
+        "programme.channelNameResolver.thresholds[0].start is required", thrown.getMessage());
   }
 
   @Test
   void errorsIfThresholdStartIsNotString() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         programme:
@@ -1332,14 +1567,17 @@ public class ConfigYamlParserTest {
     var parser = new ConfigYamlParser();
     var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
 
-    assertEquals("programme.channelNameResolver.thresholds[0].start must be a string",
-        thrown.getMessage());
+    assertEquals(
+        "programme.channelNameResolver.thresholds[0].start must be a string", thrown.getMessage());
   }
 
   @Test
   void errorsIfThresholdStartIsWrongFormat() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         programme:
@@ -1355,14 +1593,18 @@ public class ConfigYamlParserTest {
     var parser = new ConfigYamlParser();
     var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
 
-    assertEquals("Malformed value for programme.channelNameResolver.thresholds[0].start: must be in the format hh:mm",
+    assertEquals(
+        "Malformed value for programme.channelNameResolver.thresholds[0].start: must be in the format hh:mm",
         thrown.getMessage());
   }
 
   @Test
   void errorsIfThresholdIsMissingEnd() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         programme:
@@ -1377,14 +1619,17 @@ public class ConfigYamlParserTest {
     var parser = new ConfigYamlParser();
     var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
 
-    assertEquals("programme.channelNameResolver.thresholds[0].end is required",
-        thrown.getMessage());
+    assertEquals(
+        "programme.channelNameResolver.thresholds[0].end is required", thrown.getMessage());
   }
 
   @Test
   void errorsIfThresholdEndIsNotString() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         programme:
@@ -1400,14 +1645,17 @@ public class ConfigYamlParserTest {
     var parser = new ConfigYamlParser();
     var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
 
-    assertEquals("programme.channelNameResolver.thresholds[0].end must be a string",
-        thrown.getMessage());
+    assertEquals(
+        "programme.channelNameResolver.thresholds[0].end must be a string", thrown.getMessage());
   }
 
   @Test
   void errorsIfThresholdEndIsWrongFormat() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         programme:
@@ -1423,14 +1671,18 @@ public class ConfigYamlParserTest {
     var parser = new ConfigYamlParser();
     var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
 
-    assertEquals("Malformed value for programme.channelNameResolver.thresholds[0].end: must be in the format hh:mm",
+    assertEquals(
+        "Malformed value for programme.channelNameResolver.thresholds[0].end: must be in the format hh:mm",
         thrown.getMessage());
   }
 
   @Test
   void errorsIfThresholdsOverlap() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig = new YAMLMapper().readTree("""
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
         guildId: some-guild-id
         databasePath: some-db-path
         programme:

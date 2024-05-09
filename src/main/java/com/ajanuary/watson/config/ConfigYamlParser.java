@@ -18,10 +18,17 @@ public class ConfigYamlParser {
     var guildId = configParser.get("guildId").string().required().value();
     var databasePath = configParser.get("databasePath").string().required().value();
     var alarmsConfig = configParser.get("alarms").object().map(AlarmsConfigYamlParser::parse);
-    var membershipConfig = configParser.get("membership").object().map(membershipConfigObj -> MembershipConfigYamlParser.parse(membershipConfigObj, dotenv));
-    var programmeConfig = configParser.get("programme").object().map(ProgrammeConfigYamlParser::parse);
+    var membershipConfig =
+        configParser
+            .get("membership")
+            .object()
+            .map(
+                membershipConfigObj ->
+                    MembershipConfigYamlParser.parse(membershipConfigObj, dotenv));
+    var programmeConfig =
+        configParser.get("programme").object().map(ProgrammeConfigYamlParser::parse);
 
-    return new Config(discordBotToken, guildId, databasePath, alarmsConfig, membershipConfig,
-        programmeConfig);
+    return new Config(
+        discordBotToken, guildId, databasePath, alarmsConfig, membershipConfig, programmeConfig);
   }
 }

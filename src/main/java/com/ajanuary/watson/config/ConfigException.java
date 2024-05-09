@@ -1,6 +1,7 @@
 package com.ajanuary.watson.config;
 
 public class ConfigException extends RuntimeException {
+
   public ConfigException(String message) {
     super(message);
   }
@@ -9,4 +10,3 @@ public class ConfigException extends RuntimeException {
     super(message, cause);
   }
 }
-

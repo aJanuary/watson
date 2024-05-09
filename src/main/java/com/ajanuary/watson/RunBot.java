@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 
 public class RunBot {
+
   public static void main(String[] args) throws IOException, InterruptedException {
     var dotenv = Dotenv.configure().directory(args[0]).load();
 

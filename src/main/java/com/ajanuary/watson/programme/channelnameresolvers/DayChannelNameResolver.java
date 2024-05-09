@@ -15,5 +15,4 @@ public class DayChannelNameResolver implements ChannelNameResolver {
   public Set<String> getPossibleNames() {
     return Set.of("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday");
   }
-
 }

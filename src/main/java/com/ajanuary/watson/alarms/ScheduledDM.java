@@ -11,6 +11,4 @@ public record ScheduledDM(
     String title,
     String jumpUrl,
     String contents,
-    Optional<String> tags
-) {
-}
+    Optional<String> tags) {}

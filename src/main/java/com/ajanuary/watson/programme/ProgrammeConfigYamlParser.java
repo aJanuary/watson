@@ -10,46 +10,72 @@ import java.util.Optional;
 
 public class ProgrammeConfigYamlParser {
 
-  private ProgrammeConfigYamlParser() {
-  }
+  private ProgrammeConfigYamlParser() {}
 
   public static ProgrammeConfig parse(ObjectConfigParserWithValue configParser) {
     var programmeUrl = configParser.get("programmeUrl").string().required().value();
-    var majorAnnouncementsChannel = configParser.get("majorAnnouncementsChannel").string()
-        .defaultingTo("programme-announcements").value();
+    var majorAnnouncementsChannel =
+        configParser
+            .get("majorAnnouncementsChannel")
+            .string()
+            .defaultingTo("programme-announcements")
+            .value();
 
-    var channelNameResolver = configParser.get("channelNameResolver").object()
-        .map(channelNameResolverConfig -> channelNameResolverConfig.get("type").string().required()
-            .map(resolverType -> switch (resolverType) {
-              case "day" -> new DayChannelNameResolver();
-              case "day-tod" -> parseDayTodChannelNameResolver(channelNameResolverConfig);
-              default -> throw new IllegalArgumentException(
-                  "Unknown resolver " + resolverType);
-            })).orElseGet(DayChannelNameResolver::new);
+    var channelNameResolver =
+        configParser
+            .get("channelNameResolver")
+            .object()
+            .map(
+                channelNameResolverConfig ->
+                    channelNameResolverConfig
+                        .get("type")
+                        .string()
+                        .required()
+                        .map(
+                            resolverType ->
+                                switch (resolverType) {
+                                  case "day" -> new DayChannelNameResolver();
+                                  case "day-tod" ->
+                                      parseDayTodChannelNameResolver(channelNameResolverConfig);
+                                  default ->
+                                      throw new IllegalArgumentException(
+                                          "Unknown resolver " + resolverType);
+                                }))
+            .orElseGet(DayChannelNameResolver::new);
 
-    var hasPerformedFirstLoadNode = configParser.get("hasPerformedFirstLoad").bool()
-        .defaultingTo(true).value();
+    var hasPerformedFirstLoadNode =
+        configParser.get("hasPerformedFirstLoad").bool().defaultingTo(true).value();
 
     return new ProgrammeConfig(
-        programmeUrl,
-        majorAnnouncementsChannel,
-        channelNameResolver,
-        hasPerformedFirstLoadNode
-    );
+        programmeUrl, majorAnnouncementsChannel, channelNameResolver, hasPerformedFirstLoadNode);
   }
 
   private static ChannelNameResolver parseDayTodChannelNameResolver(
       ObjectConfigParserWithValue configParser) {
     var thresholdsConfig = configParser.get("thresholds").list().required();
-    var thresholds = thresholdsConfig.value().stream().map(thresholdConfig -> {
-      var thresholdConfigObj = thresholdConfig.object().required();
-      var label = thresholdConfigObj.get("label").string().required().value();
-      var start = thresholdConfigObj.get("start").string().required()
-          .validate(ProgrammeConfigYamlParser::validateTime).value();
-      var end = thresholdConfigObj.get("end").string().required()
-          .validate(ProgrammeConfigYamlParser::validateTime).value();
-      return new Threshold(label, start, end);
-    }).toList();
+    var thresholds =
+        thresholdsConfig.value().stream()
+            .map(
+                thresholdConfig -> {
+                  var thresholdConfigObj = thresholdConfig.object().required();
+                  var label = thresholdConfigObj.get("label").string().required().value();
+                  var start =
+                      thresholdConfigObj
+                          .get("start")
+                          .string()
+                          .required()
+                          .validate(ProgrammeConfigYamlParser::validateTime)
+                          .value();
+                  var end =
+                      thresholdConfigObj
+                          .get("end")
+                          .string()
+                          .required()
+                          .validate(ProgrammeConfigYamlParser::validateTime)
+                          .value();
+                  return new Threshold(label, start, end);
+                })
+            .toList();
 
     for (int i = 0; i < thresholds.size(); i++) {
       for (int j = i + 1; j < thresholds.size(); j++) {

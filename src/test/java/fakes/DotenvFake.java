@@ -7,7 +7,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class DotenvFake implements Dotenv  {
+public class DotenvFake implements Dotenv {
+
   private final Map<String, String> env = new HashMap<>();
 
   public DotenvFake add(String key, String value) {
@@ -17,8 +18,9 @@ public class DotenvFake implements Dotenv  {
 
   @Override
   public Set<DotenvEntry> entries() {
-    return env.entrySet().stream().map(entry -> new DotenvEntry(entry.getKey(), entry.getValue())).collect(
-        Collectors.toSet());
+    return env.entrySet().stream()
+        .map(entry -> new DotenvEntry(entry.getKey(), entry.getValue()))
+        .collect(Collectors.toSet());
   }
 
   @Override

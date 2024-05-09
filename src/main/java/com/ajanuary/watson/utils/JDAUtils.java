@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 
 public class JDAUtils {
+
   private final JDA jda;
   private final Config config;
 
