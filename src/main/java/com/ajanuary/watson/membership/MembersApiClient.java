@@ -34,7 +34,7 @@ public class MembersApiClient {
   public Map<String, Optional<MemberDetails>> getMemberStatus(Collection<String> discordUserIds)
       throws IOException, InterruptedException {
     var postData = "{\"discordUserIds\": [" + String.join(", ", discordUserIds) + "]}";
-    var uri = URI.create(config.membersApiKey());
+    var uri = URI.create(config.membersApiUrl());
     var now =
         ZonedDateTime.now(java.time.ZoneOffset.UTC)
             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"));
