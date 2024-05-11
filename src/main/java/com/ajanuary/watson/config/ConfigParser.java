@@ -248,7 +248,8 @@ public abstract class ConfigParser {
     }
 
     public BooleanConfigParserWithValue defaultingTo(boolean defaultValue) {
-      return new BooleanConfigParserWithValue(defaultValue, path);
+      var value = node == null || node.isNull() ? defaultValue : node.booleanValue();
+      return new BooleanConfigParserWithValue(value, path);
     }
   }
 
