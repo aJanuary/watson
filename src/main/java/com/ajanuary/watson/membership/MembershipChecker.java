@@ -39,16 +39,17 @@ public class MembershipChecker {
     logger.info("Checking memberships for users: {}", discordUserIds);
     try {
       var results = membersApiClient.getMemberStatus(discordUserIds);
+
+      var guild = jda.getGuildById(config.guildId());
+      if (guild == null) {
+        logger.error("Could not find guild with ID {}", config.guildId());
+        return;
+      }
+
+      var modsChannel = jdaUtils.getTextChannel(membershipConfig.discordModsChannel());
+
       for (var entry : results.entrySet()) {
         try {
-          var guild = jda.getGuildById(config.guildId());
-          if (guild == null) {
-            logger.error("Could not find guild with ID {}", config.guildId());
-            return;
-          }
-
-          var modsChannel = jdaUtils.getTextChannel(membershipConfig.discordModsChannel());
-
           var userId = entry.getKey();
           var membership = entry.getValue();
           membership.ifPresentOrElse(
