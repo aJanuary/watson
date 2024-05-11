@@ -83,17 +83,22 @@ public class ProgrammeModule {
   }
 
   @NotNull
-  private static String makeDescription(ProgrammeItem newItem, CopyDown mdConverter) {
+  private static String makeDescription(
+      ProgrammeItem newItem, CopyDown mdConverter, boolean hasAlarmsConfigured) {
     var descMd = mdConverter.convert(newItem.desc());
     var people = newItem.people() == null ? List.<String>of() : newItem.people();
-    return descMd
-        + "\n\n\n"
-        + newItem.mins()
-        + " min, "
-        + newItem.loc()
-        + "\n\n"
-        + String.join(", ", people)
-        + "\n\nReact with :alarm_clock: to be reminded when this item starts";
+    var desc =
+        descMd
+            + "\n\n\n"
+            + newItem.mins()
+            + " min, "
+            + newItem.loc()
+            + "\n\n"
+            + String.join(", ", people);
+    if (hasAlarmsConfigured) {
+      desc += "\n\nReact with :alarm_clock: to be reminded when this item starts";
+    }
+    return desc;
   }
 
   private void pollProgramme() {
@@ -137,7 +142,7 @@ public class ProgrammeModule {
             }
           }
 
-          var desc = makeDescription(newItem, mdConverter);
+          var desc = makeDescription(newItem, mdConverter, config.alarms().isPresent());
           var tags = getTags(newItem, channel);
           var forumPost =
               channel
@@ -201,7 +206,7 @@ public class ProgrammeModule {
             }
           }
 
-          var desc = makeDescription(newItem, mdConverter);
+          var desc = makeDescription(newItem, mdConverter, config.alarms().isPresent());
 
           threadChannel.getManager().setName(title).setAppliedTags(newTags).complete();
           threadChannel.editMessageById(existingThread.get().discordMessageId(), desc).complete();
