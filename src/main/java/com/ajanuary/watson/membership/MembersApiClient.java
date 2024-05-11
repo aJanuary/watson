@@ -59,33 +59,33 @@ public class MembersApiClient {
 
     var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
     if (response.statusCode() != 200) {
-      throw new IOException("Error checking membership: " + response.body());
-    } else {
-      var memberships = new HashMap<String, Optional<MemberDetails>>();
-
-      var responseData = objectMapper.readTree(response.body());
-      responseData
-          .fields()
-          .forEachRemaining(
-              entry -> {
-                if (entry.getValue().isNull()) {
-                  memberships.put(entry.getKey(), Optional.empty());
-                } else {
-                  var name = entry.getValue().get("name").asText();
-                  var roles = new ArrayList<String>();
-                  entry
-                      .getValue()
-                      .get("roles")
-                      .elements()
-                      .forEachRemaining(
-                          role -> {
-                            roles.add(role.asText());
-                          });
-                  memberships.put(entry.getKey(), Optional.of(new MemberDetails(name, roles)));
-                }
-              });
-      return memberships;
+      throw new IOException(
+          "Error checking membership: [" + response.statusCode() + "]" + response.body());
     }
+    var memberships = new HashMap<String, Optional<MemberDetails>>();
+
+    var responseData = objectMapper.readTree(response.body());
+    responseData
+        .fields()
+        .forEachRemaining(
+            entry -> {
+              if (entry.getValue().isNull()) {
+                memberships.put(entry.getKey(), Optional.empty());
+              } else {
+                var name = entry.getValue().get("name").asText();
+                var roles = new ArrayList<String>();
+                entry
+                    .getValue()
+                    .get("roles")
+                    .elements()
+                    .forEachRemaining(
+                        role -> {
+                          roles.add(role.asText());
+                        });
+                memberships.put(entry.getKey(), Optional.of(new MemberDetails(name, roles)));
+              }
+            });
+    return memberships;
   }
 
   private String calculateSignature(String dataToSign) {
