@@ -12,7 +12,6 @@ import java.util.Set;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.events.session.SessionResumeEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
 import org.junit.jupiter.api.Test;
@@ -21,7 +20,7 @@ import support.TestConfigBuilder;
 
 public class MembershipModuleTest {
   @Test
-  void onReadyVerifiesAllUsers() {
+  void onStartupVerifiesAllUsers() {
     var config = new TestConfigBuilder().withGuildId("the-guild-id").build();
 
     var jda = mock(JDA.class);
@@ -40,25 +39,13 @@ public class MembershipModuleTest {
     when(membershipChecker.shouldCheckMember(member1)).thenReturn(true);
     when(membershipChecker.shouldCheckMember(member2)).thenReturn(false);
 
-    // Invoke the listener with a ReadyEvent as soon as it's attached.
-    // This is slightly different to the real behaviour, which will invoke the listener on a
-    // separate thread, but invoking it directly makes the tests easier to manage.
-    doAnswer(
-            invocation -> {
-              var listener = (EventListener) invocation.getArgument(0);
-              listener.onEvent(mock(ReadyEvent.class));
-              return null;
-            })
-        .when(jda)
-        .addEventListener(any());
-
     new MembershipModule(jda, config, membershipChecker);
 
     verify(membershipChecker, timeout(100)).checkMembership(Set.of("the-member1-id"));
   }
 
   @Test
-  void onSessionResultVerifiedAllUsers() {
+  void onSessionResumeVerifiesAllUsers() {
     var config = new TestConfigBuilder().withGuildId("the-guild-id").build();
 
     var jda = mock(JDA.class);
@@ -72,7 +59,9 @@ public class MembershipModuleTest {
     when(member1.getId()).thenReturn("the-member1-id");
     when(member2.getId()).thenReturn("the-member2-id");
 
-    when(guild.loadMembers()).thenReturn(new ResolvedTask<>(List.of(member1, member2)));
+    when(guild.loadMembers())
+        .thenReturn(new ResolvedTask<>(List.of()))
+        .thenReturn(new ResolvedTask<>(List.of(member1, member2)));
 
     when(membershipChecker.shouldCheckMember(member1)).thenReturn(true);
     when(membershipChecker.shouldCheckMember(member2)).thenReturn(false);

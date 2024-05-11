@@ -10,7 +10,6 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
-import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.events.session.SessionResumeEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
 import org.jetbrains.annotations.NotNull;
@@ -63,7 +62,7 @@ public class MembershipModule implements EventListener {
 
   @Override
   public void onEvent(@NotNull GenericEvent event) {
-    if (event instanceof ReadyEvent || event instanceof SessionResumeEvent) {
+    if (event instanceof SessionResumeEvent) {
       checkAllMembers();
     } else if (event instanceof GuildMemberJoinEvent guildMemberJoinEvent) {
       var member = guildMemberJoinEvent.getMember();
