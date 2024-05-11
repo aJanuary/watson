@@ -70,6 +70,7 @@ public class MembershipModule implements EventListener {
       lock.lock();
       try {
         membersToCheck.add(member.getId());
+        hasMembersToCheck.signal();
       } finally {
         lock.unlock();
       }
