@@ -2,13 +2,12 @@ package com.ajanuary.watson;
 
 import com.ajanuary.watson.alarms.AlarmsModule;
 import com.ajanuary.watson.config.Config;
-import com.ajanuary.watson.db.DatabaseConnection;
+import com.ajanuary.watson.db.DatabaseManager;
 import com.ajanuary.watson.membership.MembersApiClient;
 import com.ajanuary.watson.membership.MembershipChecker;
 import com.ajanuary.watson.membership.MembershipModule;
 import com.ajanuary.watson.notification.EventDispatcher;
 import com.ajanuary.watson.programme.ProgrammeModule;
-import java.io.IOException;
 import java.net.http.HttpClient;
 import java.sql.SQLException;
 import net.dv8tion.jda.api.JDABuilder;
@@ -23,9 +22,11 @@ import org.slf4j.LoggerFactory;
 public class Bot {
 
   public Bot(Config config) throws InterruptedException {
-    try (var db = new DatabaseConnection(config.databasePath())) {
-      db.init();
-    } catch (SQLException | IOException e) {
+    DatabaseManager databaseManager;
+    try {
+      databaseManager = new DatabaseManager(config.databasePath());
+      databaseManager.init();
+    } catch (SQLException e) {
       throw new RuntimeException(e);
     }
 
@@ -51,7 +52,8 @@ public class Bot {
     var eventDispatcher = new EventDispatcher();
     config
         .alarms()
-        .ifPresent(alarmsConfig -> new AlarmsModule(jda, alarmsConfig, config, eventDispatcher));
+        .ifPresent(
+            alarmsConfig -> new AlarmsModule(jda, alarmsConfig, databaseManager, eventDispatcher));
     config
         .membership()
         .ifPresent(
@@ -64,6 +66,8 @@ public class Bot {
     config
         .programme()
         .ifPresent(
-            programmeConfig -> new ProgrammeModule(jda, programmeConfig, config, eventDispatcher));
+            programmeConfig ->
+                new ProgrammeModule(
+                    jda, programmeConfig, config, databaseManager, eventDispatcher));
   }
 }

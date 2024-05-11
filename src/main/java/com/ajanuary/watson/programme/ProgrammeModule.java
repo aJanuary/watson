@@ -1,7 +1,7 @@
 package com.ajanuary.watson.programme;
 
 import com.ajanuary.watson.config.Config;
-import com.ajanuary.watson.db.DatabaseConnection;
+import com.ajanuary.watson.db.DatabaseManager;
 import com.ajanuary.watson.notification.EventDispatcher;
 import com.ajanuary.watson.notification.EventType;
 import com.ajanuary.watson.utils.JDAUtils;
@@ -45,14 +45,20 @@ public class ProgrammeModule {
   private final JDAUtils jdaUtils;
   private final ProgrammeConfig programmeConfig;
   private final Config config;
+  private final DatabaseManager databaseManager;
   private final EventDispatcher eventDispatcher;
 
   public ProgrammeModule(
-      JDA jda, ProgrammeConfig programmeConfig, Config config, EventDispatcher eventDispatcher) {
+      JDA jda,
+      ProgrammeConfig programmeConfig,
+      Config config,
+      DatabaseManager databaseManager,
+      EventDispatcher eventDispatcher) {
     this.jda = jda;
     this.jdaUtils = new JDAUtils(jda, config);
     this.programmeConfig = programmeConfig;
     this.config = config;
+    this.databaseManager = databaseManager;
     this.eventDispatcher = eventDispatcher;
     Executors.newSingleThreadScheduledExecutor()
         .scheduleWithFixedDelay(this::pollProgramme, 0, 1, TimeUnit.MINUTES);
@@ -91,7 +97,7 @@ public class ProgrammeModule {
   }
 
   private void pollProgramme() {
-    try (var db = new DatabaseConnection(config.databasePath())) {
+    try (var conn = databaseManager.getConnection()) {
       var mdConverter = new CopyDown();
       var guild = jda.getGuildById(config.guildId());
       assert guild != null;
@@ -103,7 +109,7 @@ public class ProgrammeModule {
       var newProgrammeItems = getNewProgrammeItems();
 
       for (var newItem : newProgrammeItems) {
-        var existingThread = db.getDiscordThread(newItem.id());
+        var existingThread = conn.getDiscordThread(newItem.id());
         var newDiscordItem =
             new DiscordItem(
                 newItem.id(),
@@ -148,7 +154,7 @@ public class ProgrammeModule {
 
           String discordThreadId = forumPost.getThreadChannel().getId();
           String discordMessageId = forumPost.getMessage().getId();
-          db.insertDiscordThread(
+          conn.insertDiscordThread(
               new DiscordThread(
                   discordThreadId, discordMessageId, Status.SCHEDULED, newDiscordItem));
           eventDispatcher.dispatch(EventType.ITEMS_CHANGED);
@@ -200,7 +206,7 @@ public class ProgrammeModule {
           threadChannel.getManager().setName(title).setAppliedTags(newTags).complete();
           threadChannel.editMessageById(existingThread.get().discordMessageId(), desc).complete();
 
-          db.updateDiscordThread(
+          conn.updateDiscordThread(
               new DiscordThread(
                   existingThread.get().discordThreadId(),
                   existingThread.get().discordMessageId(),
@@ -249,9 +255,9 @@ public class ProgrammeModule {
         }
       }
 
-      for (var oldItemId : db.getAllProgrammeItemIds()) {
+      for (var oldItemId : conn.getAllProgrammeItemIds()) {
         if (newProgrammeItems.stream().noneMatch(newItem -> newItem.id().equals(oldItemId))) {
-          var existingThreadM = db.getDiscordThread(oldItemId);
+          var existingThreadM = conn.getDiscordThread(oldItemId);
           if (existingThreadM.isEmpty()) {
             logger.error("Existing to find item for {} but not found", oldItemId);
             continue;
@@ -261,7 +267,7 @@ public class ProgrammeModule {
             Objects.requireNonNull(jda.getThreadChannelById(existingThread.discordThreadId()))
                 .delete()
                 .complete();
-            db.deleteDiscordThread(oldItemId);
+            conn.deleteDiscordThread(oldItemId);
           } else {
             if (existingThread.status() != Status.CANCELLED) {
               logger.info("Cancel item [{}] '{}'", oldItemId, existingThread.item().title());
@@ -278,7 +284,7 @@ public class ProgrammeModule {
                   .setName(title)
                   .complete();
 
-              db.updateDiscordThread(
+              conn.updateDiscordThread(
                   new DiscordThread(
                       existingThread.discordThreadId(),
                       existingThread.discordMessageId(),

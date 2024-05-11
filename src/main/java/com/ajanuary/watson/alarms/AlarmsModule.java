@@ -1,7 +1,6 @@
 package com.ajanuary.watson.alarms;
 
-import com.ajanuary.watson.config.Config;
-import com.ajanuary.watson.db.DatabaseConnection;
+import com.ajanuary.watson.db.DatabaseManager;
 import com.ajanuary.watson.notification.EventDispatcher;
 import com.ajanuary.watson.notification.EventType;
 import com.ajanuary.watson.programme.DiscordThread;
@@ -25,14 +24,17 @@ public class AlarmsModule {
 
   private final JDA jda;
   private final AlarmsConfig alarmsConfig;
-  private final Config config;
+  private final DatabaseManager databaseManager;
   private final Scheduler<WithId<ScheduledDM>> dmScheduler;
 
   public AlarmsModule(
-      JDA jda, AlarmsConfig alarmsConfig, Config config, EventDispatcher eventDispatcher) {
+      JDA jda,
+      AlarmsConfig alarmsConfig,
+      DatabaseManager databaseManager,
+      EventDispatcher eventDispatcher) {
     this.jda = jda;
     this.alarmsConfig = alarmsConfig;
-    this.config = config;
+    this.databaseManager = databaseManager;
 
     var itemScheduler =
         new Scheduler<>(
@@ -56,21 +58,21 @@ public class AlarmsModule {
   }
 
   private Optional<LocalDateTime> getNextItemTime() throws SQLException, IOException {
-    try (var db = new DatabaseConnection(config.databasePath())) {
-      return db.getNextItemTime().map(t -> t.minus(alarmsConfig.timeBeforeToNotify()));
+    try (var conn = databaseManager.getConnection()) {
+      return conn.getNextItemTime().map(t -> t.minus(alarmsConfig.timeBeforeToNotify()));
     }
   }
 
   private List<DiscordThread> getItemsBefore(LocalDateTime time) throws SQLException, IOException {
-    try (var db = new DatabaseConnection(config.databasePath())) {
-      return db.getItemsBefore(time.plus(alarmsConfig.timeBeforeToNotify()));
+    try (var conn = databaseManager.getConnection()) {
+      return conn.getItemsBefore(time.plus(alarmsConfig.timeBeforeToNotify()));
     }
   }
 
   private void handleItem(DiscordThread discordThread) {
-    try (var db = new DatabaseConnection(config.databasePath())) {
-      db.markThreadAsProcessed(discordThread.item().id());
-    } catch (SQLException | IOException e) {
+    try (var conn = databaseManager.getConnection()) {
+      conn.markThreadAsProcessed(discordThread.item().id());
+    } catch (SQLException e) {
       logger.error("Error marking thread as processed", e);
       return;
     }
@@ -103,7 +105,7 @@ public class AlarmsModule {
                   .retrieveUsers()
                   .queue(
                       users -> {
-                        try (var db = new DatabaseConnection(config.databasePath())) {
+                        try (var conn = databaseManager.getConnection()) {
                           for (var user : users) {
                             if (user.isBot()) {
                               continue;
@@ -122,9 +124,9 @@ public class AlarmsModule {
                                     threadChannel.getJumpUrl(),
                                     message.getContentRaw(),
                                     tags);
-                            db.addScheduledDM(scheduledDM);
+                            conn.addScheduledDM(scheduledDM);
                           }
-                        } catch (SQLException | IOException e) {
+                        } catch (SQLException e) {
                           logger.error("Error adding DM for item {}", discordThread.item().id(), e);
                         }
 
@@ -142,22 +144,22 @@ public class AlarmsModule {
   }
 
   private Optional<LocalDateTime> getNextScheduledDMTime() throws SQLException, IOException {
-    try (var db = new DatabaseConnection(config.databasePath())) {
-      return db.getNextScheduledDMTime();
+    try (var conn = databaseManager.getConnection()) {
+      return conn.getNextScheduledDMTime();
     }
   }
 
   private List<WithId<ScheduledDM>> getScheduledDMsBefore(LocalDateTime localDateTime)
       throws SQLException, IOException {
-    try (var db = new DatabaseConnection(config.databasePath())) {
-      return db.getScheduledDMsBefore(localDateTime);
+    try (var conn = databaseManager.getConnection()) {
+      return conn.getScheduledDMsBefore(localDateTime);
     }
   }
 
   private void sendDM(WithId<ScheduledDM> dmWithId) {
-    try (var db = new DatabaseConnection(config.databasePath())) {
-      db.deleteScheduledDM(dmWithId.id());
-    } catch (SQLException | IOException e) {
+    try (var conn = databaseManager.getConnection()) {
+      conn.deleteScheduledDM(dmWithId.id());
+    } catch (SQLException e) {
       logger.error("Error deleting scheduled DM {}", dmWithId.id(), e);
       return;
     }
