@@ -11,7 +11,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
-import net.dv8tion.jda.api.JDA;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +23,6 @@ public class Scheduler<T> {
 
   public Scheduler(
       String name,
-      JDA jda,
       ZoneId zoneId,
       TemporalAmount minTimeBetweenEvents,
       NextEventTimeGetter getNextEventTime,
@@ -78,7 +76,6 @@ public class Scheduler<T> {
                         hadError = true;
                       }
                     }
-                    jda.awaitReady();
                     List<T> events = eventsGetter.getEventsBefore(LocalDateTime.now(zoneId));
                     for (T event : events) {
                       Thread.sleep(

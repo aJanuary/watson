@@ -39,7 +39,6 @@ public class AlarmsModule {
     var itemScheduler =
         new Scheduler<>(
             "item",
-            jda,
             alarmsConfig.timezone(),
             Duration.ZERO,
             this::getNextItemTime,
@@ -49,7 +48,6 @@ public class AlarmsModule {
     this.dmScheduler =
         new Scheduler<>(
             "dm",
-            jda,
             alarmsConfig.timezone(),
             alarmsConfig.minTimeBetweenDMs(),
             this::getNextScheduledDMTime,
