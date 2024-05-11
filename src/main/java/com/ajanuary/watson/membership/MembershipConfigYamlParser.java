@@ -15,7 +15,7 @@ public class MembershipConfigYamlParser {
       throw new ConfigException("MEMBERS_API_KEY is required");
     }
 
-    var membersApiRoot = configParser.get("membersApiRoot").string().required().value();
+    var membersApiUrl = configParser.get("membersApiUrl").string().required().value();
     var discordModsChannel =
         configParser.get("discordModsChannel").string().defaultingTo("discord-mods").value();
     var memberRole = configParser.get("memberRole").string().defaultingTo("member").value();
@@ -32,7 +32,7 @@ public class MembershipConfigYamlParser {
             .orElse(Map.of());
 
     return new MembershipConfig(
-        membersApiRoot,
+        membersApiUrl,
         membersApiKey,
         discordModsChannel,
         memberRole,

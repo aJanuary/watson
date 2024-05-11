@@ -1,4 +1,4 @@
-package fakes;
+package support;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import io.github.cdimascio.dotenv.DotenvEntry;

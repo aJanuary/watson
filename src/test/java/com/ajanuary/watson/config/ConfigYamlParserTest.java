@@ -9,9 +9,9 @@ import com.ajanuary.watson.programme.channelnameresolvers.DayChannelNameResolver
 import com.ajanuary.watson.programme.channelnameresolvers.DayTodChannelNameResolver;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-import fakes.DotenvFake;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import org.junit.jupiter.api.Test;
+import support.DotenvFake;
 
 public class ConfigYamlParserTest {
 
@@ -647,7 +647,7 @@ public class ConfigYamlParserTest {
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
-          membersApiRoot: https://example.com
+          membersApiUrl: https://example.com
         """);
 
     var parser = new ConfigYamlParser();
@@ -667,7 +667,7 @@ public class ConfigYamlParserTest {
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
-          membersApiRoot: https://example.com/the-api-root
+          membersApiUrl: https://example.com/the-api-root
         """);
 
     var parser = new ConfigYamlParser();
@@ -688,14 +688,14 @@ public class ConfigYamlParserTest {
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
-          membersApiRoot: https://example.com/the-api-root
+          membersApiUrl: https://example.com/the-api-root
         """);
 
     var parser = new ConfigYamlParser();
     var config = parser.parse(jsonConfig, dotenv);
 
     assertTrue(config.membership().isPresent(), "membership config is present");
-    assertEquals("https://example.com/the-api-root", config.membership().get().membersApiRoot());
+    assertEquals("https://example.com/the-api-root", config.membership().get().membersApiUrl());
   }
 
   @Test
@@ -714,7 +714,7 @@ public class ConfigYamlParserTest {
     var parser = new ConfigYamlParser();
     var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
 
-    assertEquals("membership.membersApiRoot is required", thrown.getMessage());
+    assertEquals("membership.membersApiUrl is required", thrown.getMessage());
   }
 
   @Test
@@ -728,13 +728,13 @@ public class ConfigYamlParserTest {
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
-          membersApiRoot: 10
+          membersApiUrl: 10
         """);
 
     var parser = new ConfigYamlParser();
     var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
 
-    assertEquals("membership.membersApiRoot must be a string", thrown.getMessage());
+    assertEquals("membership.membersApiUrl must be a string", thrown.getMessage());
   }
 
   @Test
@@ -748,7 +748,7 @@ public class ConfigYamlParserTest {
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
-          membersApiRoot: https://example.com/some-api-root
+          membersApiUrl: https://example.com/some-api-root
           discordModsChannel: the-mods-channel
         """);
 
@@ -770,7 +770,7 @@ public class ConfigYamlParserTest {
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
-          membersApiRoot: https://example.com/some-api-root
+          membersApiUrl: https://example.com/some-api-root
         """);
 
     var parser = new ConfigYamlParser();
@@ -791,7 +791,7 @@ public class ConfigYamlParserTest {
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
-          membersApiRoot: https://example.com/some-api-root
+          membersApiUrl: https://example.com/some-api-root
           discordModsChannel: 10
         """);
 
@@ -812,7 +812,7 @@ public class ConfigYamlParserTest {
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
-          membersApiRoot: https://example.com/some-api-root
+          membersApiUrl: https://example.com/some-api-root
           memberRole: the-member-role
         """);
 
@@ -834,7 +834,7 @@ public class ConfigYamlParserTest {
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
-          membersApiRoot: https://example.com/some-api-root
+          membersApiUrl: https://example.com/some-api-root
         """);
 
     var parser = new ConfigYamlParser();
@@ -855,7 +855,7 @@ public class ConfigYamlParserTest {
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
-          membersApiRoot: https://example.com/some-api-root
+          membersApiUrl: https://example.com/some-api-root
           memberRole: 10
         """);
 
@@ -876,7 +876,7 @@ public class ConfigYamlParserTest {
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
-          membersApiRoot: https://example.com/some-api-root
+          membersApiUrl: https://example.com/some-api-root
           unverifiedRole: the-unverified-role
         """);
 
@@ -898,7 +898,7 @@ public class ConfigYamlParserTest {
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
-          membersApiRoot: https://example.com/some-api-root
+          membersApiUrl: https://example.com/some-api-root
         """);
 
     var parser = new ConfigYamlParser();
@@ -919,7 +919,7 @@ public class ConfigYamlParserTest {
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
-          membersApiRoot: https://example.com/some-api-root
+          membersApiUrl: https://example.com/some-api-root
           unverifiedRole: 10
         """);
 
@@ -940,7 +940,7 @@ public class ConfigYamlParserTest {
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
-          membersApiRoot: https://example.com/some-api-root
+          membersApiUrl: https://example.com/some-api-root
           additionalRoles:
             role1: the-role-1
             role2: the-role-2
@@ -967,7 +967,7 @@ public class ConfigYamlParserTest {
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
-          membersApiRoot: https://example.com/some-api-root
+          membersApiUrl: https://example.com/some-api-root
           additionalRoles: 10
         """);
 
@@ -988,7 +988,7 @@ public class ConfigYamlParserTest {
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
-          membersApiRoot: https://example.com/some-api-root
+          membersApiUrl: https://example.com/some-api-root
           additionalRoles:
             role1: the-role-1
             role2: 10
@@ -1011,7 +1011,7 @@ public class ConfigYamlParserTest {
         guildId: some-guild-id
         databasePath: some-db-path
         membership:
-          membersApiRoot: https://example.com/some-api-root
+          membersApiUrl: https://example.com/some-api-root
         """);
 
     var parser = new ConfigYamlParser();

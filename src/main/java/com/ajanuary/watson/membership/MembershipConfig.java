@@ -4,7 +4,7 @@ import com.ajanuary.watson.utils.JDAUtils;
 import java.util.Map;
 
 public record MembershipConfig(
-    String membersApiRoot,
+    String membersApiUrl,
     String membersApiKey,
     String discordModsChannel,
     String memberRole,
