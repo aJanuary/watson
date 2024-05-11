@@ -58,33 +58,13 @@ public class MembershipModule implements EventListener {
     pollingThread.start();
 
     jda.addEventListener(this);
+    checkAllMembers();
   }
 
   @Override
   public void onEvent(@NotNull GenericEvent event) {
     if (event instanceof ReadyEvent || event instanceof SessionResumeEvent) {
-      var guild = jda.getGuildById(config.guildId());
-      if (guild == null) {
-        logger.error("Could not find guild with ID {}", config.guildId());
-        return;
-      }
-
-      guild
-          .loadMembers()
-          .onSuccess(
-              members -> {
-                lock.lock();
-                try {
-                  members.stream()
-                      .filter(membershipChecker::shouldCheckMember)
-                      .map(Member::getId)
-                      .forEach(membersToCheck::add);
-                  hasMembersToCheck.signal();
-                } finally {
-                  lock.unlock();
-                }
-              })
-          .onError(e -> logger.error("Error loading members", e));
+      checkAllMembers();
     } else if (event instanceof GuildMemberJoinEvent guildMemberJoinEvent) {
       var member = guildMemberJoinEvent.getMember();
       lock.lock();
@@ -94,5 +74,30 @@ public class MembershipModule implements EventListener {
         lock.unlock();
       }
     }
+  }
+
+  private void checkAllMembers() {
+    var guild = jda.getGuildById(config.guildId());
+    if (guild == null) {
+      logger.error("Could not find guild with ID {}", config.guildId());
+      return;
+    }
+
+    guild
+        .loadMembers()
+        .onSuccess(
+            members -> {
+              lock.lock();
+              try {
+                members.stream()
+                    .filter(membershipChecker::shouldCheckMember)
+                    .map(Member::getId)
+                    .forEach(membersToCheck::add);
+                hasMembersToCheck.signal();
+              } finally {
+                lock.unlock();
+              }
+            })
+        .onError(e -> logger.error("Error loading members", e));
   }
 }
