@@ -400,5 +400,48 @@ public class DatabaseManager {
         statement.executeUpdate();
       }
     }
+
+    public Optional<String> getPrivateThread(String userId, String purpose) throws SQLException {
+      try (var connection = dataSource.getConnection();
+          var statement =
+              connection.prepareStatement(
+                  """
+          select
+            discord_thread_id
+          from
+            private_threads
+          where
+            user_id = ?
+            and purpose = ?
+          """)) {
+        statement.setString(1, userId);
+        statement.setString(2, purpose);
+        var rs = statement.executeQuery();
+        if (!rs.next()) {
+          return Optional.empty();
+        }
+        return Optional.of(rs.getString(1));
+      }
+    }
+
+    public void insertPrivateThread(String userId, String purpose, String threadId)
+        throws SQLException {
+      try (var connection = dataSource.getConnection();
+          var statement =
+              connection.prepareStatement(
+                  """
+          insert or replace into private_threads(
+            user_id,
+            purpose,
+            discord_thread_id
+          )
+          values (?, ?, ?)
+          """)) {
+        statement.setString(1, userId);
+        statement.setString(2, purpose);
+        statement.setString(3, threadId);
+        statement.executeUpdate();
+      }
+    }
   }
 }

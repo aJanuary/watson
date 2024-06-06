@@ -25,6 +25,7 @@ public record Config(
     }
 
     var jdaUtils = new JDAUtils(jda, this);
+    alarms().ifPresent(alarmsConfig -> alarmsConfig.validateDiscordConfig(jdaUtils));
     membership().ifPresent(membershipConfig -> membershipConfig.validateDiscordConfig(jdaUtils));
     programme().ifPresent(programmeConfig -> programmeConfig.validateDiscordConfig(jdaUtils));
   }

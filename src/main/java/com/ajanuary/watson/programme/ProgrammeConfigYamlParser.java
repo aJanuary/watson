@@ -20,6 +20,8 @@ public class ProgrammeConfigYamlParser {
             .string()
             .defaultingTo("programme-announcements")
             .value();
+    var nowNextChannel =
+        configParser.get("nowNextChannel").string().defaultingTo("now-and-next").value();
 
     var channelNameResolver =
         configParser
@@ -47,7 +49,11 @@ public class ProgrammeConfigYamlParser {
         configParser.get("hasPerformedFirstLoad").bool().defaultingTo(true).value();
 
     return new ProgrammeConfig(
-        programmeUrl, majorAnnouncementsChannel, channelNameResolver, hasPerformedFirstLoadNode);
+        programmeUrl,
+        majorAnnouncementsChannel,
+        nowNextChannel,
+        channelNameResolver,
+        hasPerformedFirstLoadNode);
   }
 
   private static ChannelNameResolver parseDayTodChannelNameResolver(

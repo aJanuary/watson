@@ -1,9 +1,12 @@
 package com.ajanuary.watson.alarms;
 
+import com.ajanuary.watson.config.Config;
 import com.ajanuary.watson.db.DatabaseManager;
 import com.ajanuary.watson.notification.EventDispatcher;
 import com.ajanuary.watson.notification.EventType;
+import com.ajanuary.watson.privatethreads.PrivateThreadManager;
 import com.ajanuary.watson.programme.DiscordThread;
+import com.ajanuary.watson.utils.JDAUtils;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.Duration;
@@ -13,6 +16,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import org.slf4j.Logger;
@@ -23,16 +27,21 @@ public class AlarmsModule {
   private final Logger logger = LoggerFactory.getLogger(Scheduler.class);
 
   private final JDA jda;
+  private final JDAUtils jdaUtils;
   private final AlarmsConfig alarmsConfig;
   private final DatabaseManager databaseManager;
   private final Scheduler<WithId<ScheduledDM>> dmScheduler;
+  private final PrivateThreadManager privateThreadManager;
 
   public AlarmsModule(
       JDA jda,
       AlarmsConfig alarmsConfig,
+      Config config,
       DatabaseManager databaseManager,
       EventDispatcher eventDispatcher) {
     this.jda = jda;
+    this.jdaUtils = new JDAUtils(jda, config);
+    ;
     this.alarmsConfig = alarmsConfig;
     this.databaseManager = databaseManager;
 
@@ -53,6 +62,8 @@ public class AlarmsModule {
             this::getNextScheduledDMTime,
             this::getScheduledDMsBefore,
             this::sendDM);
+
+    this.privateThreadManager = new PrivateThreadManager(jda, "alarms");
   }
 
   private Optional<LocalDateTime> getNextItemTime() throws SQLException, IOException {
@@ -156,59 +167,63 @@ public class AlarmsModule {
 
   private void sendDM(WithId<ScheduledDM> dmWithId) {
     try (var conn = databaseManager.getConnection()) {
-      conn.deleteScheduledDM(dmWithId.id());
+      try {
+        conn.deleteScheduledDM(dmWithId.id());
+      } catch (SQLException e) {
+        logger.error("Error deleting scheduled DM {}", dmWithId.id(), e);
+        return;
+      }
+
+      var dm = dmWithId.value();
+      if (!dm.messageTime()
+          .plus(alarmsConfig.timeBeforeToNotify())
+          .plus(alarmsConfig.maxTimeAfterToNotify())
+          .isAfter(LocalDateTime.now(alarmsConfig.timezone()))) {
+        logger.warn(
+            "DM {} is being processed too late after it's scheduled time of {}. Ignoring",
+            dmWithId.id(),
+            dm.messageTime());
+        return;
+      }
+
+      ThreadChannel thread;
+      try {
+        thread =
+            privateThreadManager.createThread(
+                conn,
+                dm.userId(),
+                () -> {
+                  var nowNextChannel = jdaUtils.getTextChannel(alarmsConfig.alarmsChannel());
+                  return nowNextChannel.createThreadChannel("reminders", true).complete();
+                });
+      } catch (SQLException e) {
+        logger.error("Error recording private thread for user {}", dm.userId(), e);
+        return;
+      }
+
+      var embedBuilder =
+          new EmbedBuilder()
+              .setTitle(dm.title(), dm.jumpUrl())
+              .addField("Description", dm.contents(), false);
+      dm.tags().ifPresent(tags -> embedBuilder.addField("Tags", tags, false));
+
+      thread
+          .sendMessage(
+              new MessageCreateBuilder()
+                  .addContent("<@" + dm.userId() + "> You asked me to remind you about this event:")
+                  .addEmbeds(embedBuilder.build())
+                  .build())
+          .queue(
+              success -> {},
+              error ->
+                  logger.error(
+                      "Error sending message to user {} message {}",
+                      dm.userId(),
+                      dmWithId.id(),
+                      error));
     } catch (SQLException e) {
-      logger.error("Error deleting scheduled DM {}", dmWithId.id(), e);
-      return;
+      logger.error("Error sending DM {}", dmWithId.id(), e);
     }
-
-    var dm = dmWithId.value();
-    if (!dm.messageTime()
-        .plus(alarmsConfig.timeBeforeToNotify())
-        .plus(alarmsConfig.maxTimeAfterToNotify())
-        .isAfter(LocalDateTime.now(alarmsConfig.timezone()))) {
-      logger.warn(
-          "DM {} is being processed too late after it's scheduled time of {}. Ignoring",
-          dmWithId.id(),
-          dm.messageTime());
-      return;
-    }
-
-    jda.retrieveUserById(dm.userId())
-        .queue(
-            user ->
-                user.openPrivateChannel()
-                    .queue(
-                        channel -> {
-                          var embedBuilder =
-                              new EmbedBuilder()
-                                  .setTitle(dm.title(), dm.jumpUrl())
-                                  .addField("Description", dm.contents(), false);
-                          dm.tags().ifPresent(tags -> embedBuilder.addField("Tags", tags, false));
-
-                          channel
-                              .sendMessage(
-                                  new MessageCreateBuilder()
-                                      .addContent("You asked me to remind you about this event:")
-                                      .addEmbeds(embedBuilder.build())
-                                      .build())
-                              .queue(
-                                  success -> {},
-                                  error ->
-                                      logger.error(
-                                          "Error sending message to user {} message {}",
-                                          user.getName(),
-                                          dmWithId.id(),
-                                          error));
-                        },
-                        error ->
-                            logger.error(
-                                "Error opening private channel with user {} for dm {}",
-                                dm.userId(),
-                                dmWithId.id(),
-                                error)),
-            error ->
-                logger.error("Error getting user {} for dm {}", dm.userId(), dmWithId.id(), error));
   }
 
   private String formatTag(ForumTag tag) {

@@ -53,7 +53,8 @@ public class Bot {
     config
         .alarms()
         .ifPresent(
-            alarmsConfig -> new AlarmsModule(jda, alarmsConfig, databaseManager, eventDispatcher));
+            alarmsConfig ->
+                new AlarmsModule(jda, alarmsConfig, config, databaseManager, eventDispatcher));
     config
         .membership()
         .ifPresent(

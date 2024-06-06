@@ -421,35 +421,8 @@ public class ConfigTest {
     var jda = mock(JDA.class);
     var guild = mock(Guild.class);
     when(jda.getGuildById("the-guild-id")).thenReturn(guild);
-    when(guild.getTextChannelById("the-channel-id")).thenReturn(null);
-
-    var config =
-        new Config(
-            "some-token",
-            "the-guild-id",
-            "some-database-path",
-            Optional.empty(),
-            Optional.empty(),
-            Optional.of(
-                new ProgrammeConfig(
-                    "https://example.com/some-api-root",
-                    "the-channel-id",
-                    new DayChannelNameResolver(),
-                    false)));
-    var thrown =
-        assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
-
-    assertEquals("Channel not found: the-channel-id", thrown.getMessage());
-  }
-
-  @Test
-  void validateDoesNotErrorIfMajorAnnouncementsChannelFound() {
-    var jda = mock(JDA.class);
-    var guild = mock(Guild.class);
-    when(jda.getGuildById("the-guild-id")).thenReturn(guild);
-    // Just mock any roles, as we don't care about them for this test
-    when(guild.getRolesByName(any(), anyBoolean())).thenReturn(List.of(mock(Role.class)));
-    when(guild.getTextChannelsByName(eq("the-channel-id"), anyBoolean()))
+    when(guild.getTextChannelById("the-major-announcements-channel-id")).thenReturn(null);
+    when(guild.getTextChannelsByName(eq("the-now-next-channel"), anyBoolean()))
         .thenReturn(List.of(mock(TextChannel.class)));
 
     var config =
@@ -462,7 +435,40 @@ public class ConfigTest {
             Optional.of(
                 new ProgrammeConfig(
                     "https://example.com/some-api-root",
-                    "the-channel-id",
+                    "the-major-announcements-channel-id",
+                    "the-now-next-channel",
+                    new DayChannelNameResolver(),
+                    false)));
+    var thrown =
+        assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
+
+    assertEquals("Channel not found: the-major-announcements-channel-id", thrown.getMessage());
+  }
+
+  @Test
+  void validateDoesNotErrorIfAllChannelsFound() {
+    var jda = mock(JDA.class);
+    var guild = mock(Guild.class);
+    when(jda.getGuildById("the-guild-id")).thenReturn(guild);
+    // Just mock any roles, as we don't care about them for this test
+    when(guild.getRolesByName(any(), anyBoolean())).thenReturn(List.of(mock(Role.class)));
+    when(guild.getTextChannelsByName(eq("the-major-announcements-channel-id"), anyBoolean()))
+        .thenReturn(List.of(mock(TextChannel.class)));
+    when(guild.getTextChannelsByName(eq("the-now-next-channel"), anyBoolean()))
+        .thenReturn(List.of(mock(TextChannel.class)));
+
+    var config =
+        new Config(
+            "some-token",
+            "the-guild-id",
+            "some-database-path",
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(
+                new ProgrammeConfig(
+                    "https://example.com/some-api-root",
+                    "the-major-announcements-channel-id",
+                    "the-now-next-channel",
                     new DayChannelNameResolver(),
                     false)));
 
@@ -476,7 +482,72 @@ public class ConfigTest {
     when(jda.getGuildById("the-guild-id")).thenReturn(guild);
     // Just mock any roles, as we don't care about them for this test
     when(guild.getRolesByName(any(), anyBoolean())).thenReturn(List.of(mock(Role.class)));
-    when(guild.getTextChannelsByName(eq("the-channel-id"), anyBoolean()))
+    when(guild.getTextChannelsByName(eq("the-major-announcements-channel-id"), anyBoolean()))
+        .thenReturn(List.of(mock(TextChannel.class), mock(TextChannel.class)));
+    when(guild.getTextChannelsByName(eq("the-now-next-channel"), anyBoolean()))
+        .thenReturn(List.of(mock(TextChannel.class)));
+
+    var config =
+        new Config(
+            "some-token",
+            "the-guild-id",
+            "some-database-path",
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(
+                new ProgrammeConfig(
+                    "https://example.com/some-api-root",
+                    "the-major-announcements-channel-id",
+                    "the-now-next-channel",
+                    new DayChannelNameResolver(),
+                    false)));
+    var thrown =
+        assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
+
+    assertEquals(
+        "Multiple channels found with the name: the-major-announcements-channel-id",
+        thrown.getMessage());
+  }
+
+  @Test
+  void validateErrorsINowNextChannelNotFound() {
+    var jda = mock(JDA.class);
+    var guild = mock(Guild.class);
+    when(jda.getGuildById("the-guild-id")).thenReturn(guild);
+    when(guild.getTextChannelsByName(eq("the-major-announcements-channel-id"), anyBoolean()))
+        .thenReturn(List.of(mock(TextChannel.class)));
+    when(guild.getTextChannelById("the-now-next-channel")).thenReturn(null);
+
+    var config =
+        new Config(
+            "some-token",
+            "the-guild-id",
+            "some-database-path",
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(
+                new ProgrammeConfig(
+                    "https://example.com/some-api-root",
+                    "the-major-announcements-channel-id",
+                    "the-now-next-channel",
+                    new DayChannelNameResolver(),
+                    false)));
+    var thrown =
+        assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
+
+    assertEquals("Channel not found: the-now-next-channel", thrown.getMessage());
+  }
+
+  @Test
+  void validateErrorsIfMultipleNowNextChannelsFound() {
+    var jda = mock(JDA.class);
+    var guild = mock(Guild.class);
+    when(jda.getGuildById("the-guild-id")).thenReturn(guild);
+    // Just mock any roles, as we don't care about them for this test
+    when(guild.getRolesByName(any(), anyBoolean())).thenReturn(List.of(mock(Role.class)));
+    when(guild.getTextChannelsByName(eq("the-major-announcements-channel-id"), anyBoolean()))
+        .thenReturn(List.of(mock(TextChannel.class)));
+    when(guild.getTextChannelsByName(eq("the-now-next-channel"), anyBoolean()))
         .thenReturn(List.of(mock(TextChannel.class), mock(TextChannel.class)));
 
     var config =
@@ -489,12 +560,14 @@ public class ConfigTest {
             Optional.of(
                 new ProgrammeConfig(
                     "https://example.com/some-api-root",
-                    "the-channel-id",
+                    "the-major-announcements-channel-id",
+                    "the-now-next-channel",
                     new DayChannelNameResolver(),
                     false)));
     var thrown =
         assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
-    assertEquals("Multiple channels found with the name: the-channel-id", thrown.getMessage());
+    assertEquals(
+        "Multiple channels found with the name: the-now-next-channel", thrown.getMessage());
   }
 }

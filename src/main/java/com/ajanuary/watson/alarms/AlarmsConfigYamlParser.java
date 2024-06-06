@@ -13,6 +13,8 @@ public class AlarmsConfigYamlParser {
     var timezone = configParser.get("timezone").string().required().map(ZoneId::of);
     var alarmEmoji =
         configParser.get("alarmEmoji").string().defaultingTo("U+23F0").map(Emoji::fromUnicode);
+    var alarmsChannel =
+        configParser.get("alarmsChannel").string().defaultingTo("now-and-next").value();
     var timeBeforeToNotify =
         configParser
             .get("timeBeforeToNotify")
@@ -32,7 +34,12 @@ public class AlarmsConfigYamlParser {
             .required()
             .map(AlarmsConfigYamlParser::parseDuration);
     return new AlarmsConfig(
-        timezone, alarmEmoji, timeBeforeToNotify, maxTimeAfterToNotify, minTimeBetweenDMs);
+        timezone,
+        alarmEmoji,
+        alarmsChannel,
+        timeBeforeToNotify,
+        maxTimeAfterToNotify,
+        minTimeBetweenDMs);
   }
 
   private static Duration parseDuration(String value) {

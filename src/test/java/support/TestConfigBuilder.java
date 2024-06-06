@@ -81,13 +81,19 @@ public class TestConfigBuilder {
   public static class TestAlarmsConfigBuilder {
     private ZoneId timezone = ZoneId.of("UTC");
     private Emoji alarmsEmoji = Emoji.fromUnicode("⏰");
+    private String alarmsChannel = "some-alarms-channel";
     private TemporalAmount timeBeforeToNotify = Duration.ofMinutes(5);
     private TemporalAmount maxTimeAfterToNotify = Duration.ofMinutes(15);
     private TemporalAmount minTimeBetweenDMs = Duration.ofSeconds(0, 500000000);
 
     public AlarmsConfig build() {
       return new AlarmsConfig(
-          timezone, alarmsEmoji, timeBeforeToNotify, maxTimeAfterToNotify, minTimeBetweenDMs);
+          timezone,
+          alarmsEmoji,
+          alarmsChannel,
+          timeBeforeToNotify,
+          maxTimeAfterToNotify,
+          minTimeBetweenDMs);
     }
 
     public TestAlarmsConfigBuilder withTimezone(ZoneId timezone) {
@@ -97,6 +103,11 @@ public class TestConfigBuilder {
 
     public TestAlarmsConfigBuilder withAlarmsEmoji(Emoji alarmsEmoji) {
       this.alarmsEmoji = alarmsEmoji;
+      return this;
+    }
+
+    public TestAlarmsConfigBuilder withAlarmsChannel(String alarmsChannel) {
+      this.alarmsChannel = alarmsChannel;
       return this;
     }
 
@@ -168,12 +179,17 @@ public class TestConfigBuilder {
   public static class TestProgrammeConfigBuilder {
     private String programmeApiRoot = "https://example.com/some-api-root";
     private String majorAnnouncementChannel = "some-major-announcement-channel";
+    private String nowNextChannel = "some-now-next-channel";
     private ChannelNameResolver channelNameResolver = new DayChannelNameResolver();
     private boolean hasPerformedFirstLoad = true;
 
     public ProgrammeConfig build() {
       return new ProgrammeConfig(
-          programmeApiRoot, majorAnnouncementChannel, channelNameResolver, hasPerformedFirstLoad);
+          programmeApiRoot,
+          majorAnnouncementChannel,
+          nowNextChannel,
+          channelNameResolver,
+          hasPerformedFirstLoad);
     }
 
     public TestProgrammeConfigBuilder withProgrammeApiRoot(String programmeApiRoot) {
@@ -184,6 +200,11 @@ public class TestConfigBuilder {
     public TestProgrammeConfigBuilder withMajorAnnouncementChannel(
         String majorAnnouncementChannel) {
       this.majorAnnouncementChannel = majorAnnouncementChannel;
+      return this;
+    }
+
+    public TestProgrammeConfigBuilder withNowNextChannel(String nowNextChannel) {
+      this.nowNextChannel = nowNextChannel;
       return this;
     }
 
