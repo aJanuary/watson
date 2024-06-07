@@ -10,7 +10,10 @@ import static org.mockito.Mockito.when;
 
 import com.ajanuary.watson.membership.MembershipConfig;
 import com.ajanuary.watson.programme.ProgrammeConfig;
+import com.ajanuary.watson.programme.ProgrammeConfig.NowOnConfig;
 import com.ajanuary.watson.programme.channelnameresolvers.DayChannelNameResolver;
+import java.time.Duration;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -32,6 +35,7 @@ public class ConfigTest {
             "some-token",
             "the-guild-id",
             "some-database-path",
+            ZoneId.of("UTC"),
             Optional.empty(),
             Optional.empty(),
             Optional.empty());
@@ -52,6 +56,7 @@ public class ConfigTest {
             "some-token",
             "the-guild-id",
             "some-database-path",
+            ZoneId.of("UTC"),
             Optional.empty(),
             Optional.empty(),
             Optional.empty());
@@ -71,6 +76,7 @@ public class ConfigTest {
             "some-token",
             "the-guild-id",
             "some-database-path",
+            ZoneId.of("UTC"),
             Optional.empty(),
             Optional.of(
                 new MembershipConfig(
@@ -102,6 +108,7 @@ public class ConfigTest {
             "some-token",
             "the-guild-id",
             "some-database-path",
+            ZoneId.of("UTC"),
             Optional.empty(),
             Optional.of(
                 new MembershipConfig(
@@ -131,6 +138,7 @@ public class ConfigTest {
             "some-token",
             "the-guild-id",
             "some-database-path",
+            ZoneId.of("UTC"),
             Optional.empty(),
             Optional.of(
                 new MembershipConfig(
@@ -162,6 +170,7 @@ public class ConfigTest {
             "some-token",
             "the-guild-id",
             "some-database-path",
+            ZoneId.of("UTC"),
             Optional.empty(),
             Optional.of(
                 new MembershipConfig(
@@ -200,6 +209,7 @@ public class ConfigTest {
             "some-token",
             "the-guild-id",
             "some-database-path",
+            ZoneId.of("UTC"),
             Optional.empty(),
             Optional.of(
                 new MembershipConfig(
@@ -240,6 +250,7 @@ public class ConfigTest {
             "some-token",
             "the-guild-id",
             "some-database-path",
+            ZoneId.of("UTC"),
             Optional.empty(),
             Optional.of(
                 new MembershipConfig(
@@ -280,6 +291,7 @@ public class ConfigTest {
             "some-token",
             "the-guild-id",
             "some-database-path",
+            ZoneId.of("UTC"),
             Optional.empty(),
             Optional.of(
                 new MembershipConfig(
@@ -320,6 +332,7 @@ public class ConfigTest {
             "some-token",
             "the-guild-id",
             "some-database-path",
+            ZoneId.of("UTC"),
             Optional.empty(),
             Optional.of(
                 new MembershipConfig(
@@ -360,6 +373,7 @@ public class ConfigTest {
             "some-token",
             "the-guild-id",
             "some-database-path",
+            ZoneId.of("UTC"),
             Optional.empty(),
             Optional.of(
                 new MembershipConfig(
@@ -400,6 +414,7 @@ public class ConfigTest {
             "some-token",
             "the-guild-id",
             "some-database-path",
+            ZoneId.of("UTC"),
             Optional.empty(),
             Optional.of(
                 new MembershipConfig(
@@ -430,13 +445,14 @@ public class ConfigTest {
             "some-token",
             "the-guild-id",
             "some-database-path",
+            ZoneId.of("UTC"),
             Optional.empty(),
             Optional.empty(),
             Optional.of(
                 new ProgrammeConfig(
                     "https://example.com/some-api-root",
                     "the-major-announcements-channel-id",
-                    "the-now-next-channel",
+                    Optional.empty(),
                     new DayChannelNameResolver(),
                     false)));
     var thrown =
@@ -462,13 +478,14 @@ public class ConfigTest {
             "some-token",
             "the-guild-id",
             "some-database-path",
+            ZoneId.of("UTC"),
             Optional.empty(),
             Optional.empty(),
             Optional.of(
                 new ProgrammeConfig(
                     "https://example.com/some-api-root",
                     "the-major-announcements-channel-id",
-                    "the-now-next-channel",
+                    Optional.empty(),
                     new DayChannelNameResolver(),
                     false)));
 
@@ -492,13 +509,14 @@ public class ConfigTest {
             "some-token",
             "the-guild-id",
             "some-database-path",
+            ZoneId.of("UTC"),
             Optional.empty(),
             Optional.empty(),
             Optional.of(
                 new ProgrammeConfig(
                     "https://example.com/some-api-root",
                     "the-major-announcements-channel-id",
-                    "the-now-next-channel",
+                    Optional.empty(),
                     new DayChannelNameResolver(),
                     false)));
     var thrown =
@@ -523,13 +541,16 @@ public class ConfigTest {
             "some-token",
             "the-guild-id",
             "some-database-path",
+            ZoneId.of("UTC"),
             Optional.empty(),
             Optional.empty(),
             Optional.of(
                 new ProgrammeConfig(
                     "https://example.com/some-api-root",
                     "the-major-announcements-channel-id",
-                    "the-now-next-channel",
+                    Optional.of(
+                        new NowOnConfig(
+                            "the-now-next-channel", Duration.ofMinutes(5), Duration.ofMinutes(15))),
                     new DayChannelNameResolver(),
                     false)));
     var thrown =
@@ -555,13 +576,16 @@ public class ConfigTest {
             "some-token",
             "the-guild-id",
             "some-database-path",
+            ZoneId.of("UTC"),
             Optional.empty(),
             Optional.empty(),
             Optional.of(
                 new ProgrammeConfig(
                     "https://example.com/some-api-root",
                     "the-major-announcements-channel-id",
-                    "the-now-next-channel",
+                    Optional.of(
+                        new NowOnConfig(
+                            "the-now-next-channel", Duration.ofMinutes(5), Duration.ofMinutes(15))),
                     new DayChannelNameResolver(),
                     false)));
     var thrown =

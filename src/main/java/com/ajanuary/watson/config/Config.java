@@ -4,6 +4,7 @@ import com.ajanuary.watson.alarms.AlarmsConfig;
 import com.ajanuary.watson.membership.MembershipConfig;
 import com.ajanuary.watson.programme.ProgrammeConfig;
 import com.ajanuary.watson.utils.JDAUtils;
+import java.time.ZoneId;
 import java.util.Optional;
 import net.dv8tion.jda.api.JDA;
 
@@ -11,6 +12,7 @@ public record Config(
     String discordBotToken,
     String guildId,
     String databasePath,
+    ZoneId timezone,
     Optional<AlarmsConfig> alarms,
     Optional<MembershipConfig> membership,
     Optional<ProgrammeConfig> programme) {

@@ -4,6 +4,7 @@ import com.ajanuary.watson.alarms.AlarmsConfig;
 import com.ajanuary.watson.config.Config;
 import com.ajanuary.watson.membership.MembershipConfig;
 import com.ajanuary.watson.programme.ProgrammeConfig;
+import com.ajanuary.watson.programme.ProgrammeConfig.NowOnConfig;
 import com.ajanuary.watson.programme.channelnameresolvers.ChannelNameResolver;
 import com.ajanuary.watson.programme.channelnameresolvers.DayChannelNameResolver;
 import java.time.Duration;
@@ -19,6 +20,7 @@ public class TestConfigBuilder {
   private String discordBotToken = "some-discord-bot-token";
   private String guildId = "some-guild-id";
   private String databasePath = "some-database-path";
+  private ZoneId timezone = ZoneId.of("UTC");
   private TestAlarmsConfigBuilder alarmsConfigBuilder = new TestAlarmsConfigBuilder();
   private TestMembershipConfigBuilder membershipConfigBuilder = new TestMembershipConfigBuilder();
   private TestProgrammeConfigBuilder programmeConfigBuilder = new TestProgrammeConfigBuilder();
@@ -28,6 +30,7 @@ public class TestConfigBuilder {
         discordBotToken,
         guildId,
         databasePath,
+        timezone,
         Optional.ofNullable(alarmsConfigBuilder).map(TestAlarmsConfigBuilder::build),
         Optional.ofNullable(membershipConfigBuilder).map(TestMembershipConfigBuilder::build),
         Optional.ofNullable(programmeConfigBuilder).map(TestProgrammeConfigBuilder::build));
@@ -45,6 +48,11 @@ public class TestConfigBuilder {
 
   public TestConfigBuilder withDatabasePath(String databasePath) {
     this.databasePath = databasePath;
+    return this;
+  }
+
+  public TestConfigBuilder withTimezone(ZoneId timezone) {
+    this.timezone = timezone;
     return this;
   }
 
@@ -79,7 +87,6 @@ public class TestConfigBuilder {
   }
 
   public static class TestAlarmsConfigBuilder {
-    private ZoneId timezone = ZoneId.of("UTC");
     private Emoji alarmsEmoji = Emoji.fromUnicode("⏰");
     private String alarmsChannel = "some-alarms-channel";
     private TemporalAmount timeBeforeToNotify = Duration.ofMinutes(5);
@@ -88,17 +95,7 @@ public class TestConfigBuilder {
 
     public AlarmsConfig build() {
       return new AlarmsConfig(
-          timezone,
-          alarmsEmoji,
-          alarmsChannel,
-          timeBeforeToNotify,
-          maxTimeAfterToNotify,
-          minTimeBetweenDMs);
-    }
-
-    public TestAlarmsConfigBuilder withTimezone(ZoneId timezone) {
-      this.timezone = timezone;
-      return this;
+          alarmsEmoji, alarmsChannel, timeBeforeToNotify, maxTimeAfterToNotify, minTimeBetweenDMs);
     }
 
     public TestAlarmsConfigBuilder withAlarmsEmoji(Emoji alarmsEmoji) {
@@ -179,7 +176,7 @@ public class TestConfigBuilder {
   public static class TestProgrammeConfigBuilder {
     private String programmeApiRoot = "https://example.com/some-api-root";
     private String majorAnnouncementChannel = "some-major-announcement-channel";
-    private String nowNextChannel = "some-now-next-channel";
+    private Optional<NowOnConfig> nowOnConfig = Optional.empty();
     private ChannelNameResolver channelNameResolver = new DayChannelNameResolver();
     private boolean hasPerformedFirstLoad = true;
 
@@ -187,7 +184,7 @@ public class TestConfigBuilder {
       return new ProgrammeConfig(
           programmeApiRoot,
           majorAnnouncementChannel,
-          nowNextChannel,
+          nowOnConfig,
           channelNameResolver,
           hasPerformedFirstLoad);
     }
@@ -203,8 +200,10 @@ public class TestConfigBuilder {
       return this;
     }
 
-    public TestProgrammeConfigBuilder withNowNextChannel(String nowNextChannel) {
-      this.nowNextChannel = nowNextChannel;
+    public TestProgrammeConfigBuilder withNowOn(Consumer<TestNowOnConfigBuilder> configure) {
+      var builder = new TestNowOnConfigBuilder();
+      configure.accept(builder);
+      this.nowOnConfig = Optional.of(builder.build());
       return this;
     }
 
@@ -216,6 +215,31 @@ public class TestConfigBuilder {
 
     public TestProgrammeConfigBuilder withHasPerformedFirstLoad(boolean hasPerformedFirstLoad) {
       this.hasPerformedFirstLoad = hasPerformedFirstLoad;
+      return this;
+    }
+  }
+
+  public static class TestNowOnConfigBuilder {
+    private String channel = "some-channel";
+    private TemporalAmount timeBeforeToAdd = Duration.ofMinutes(5);
+    private TemporalAmount timeAfterToKeep = Duration.ofMinutes(15);
+
+    public NowOnConfig build() {
+      return new NowOnConfig(channel, timeBeforeToAdd, timeAfterToKeep);
+    }
+
+    public TestNowOnConfigBuilder withChannel(String channel) {
+      this.channel = channel;
+      return this;
+    }
+
+    public TestNowOnConfigBuilder withTimeBeforeToAdd(TemporalAmount timeBeforeToAdd) {
+      this.timeBeforeToAdd = timeBeforeToAdd;
+      return this;
+    }
+
+    public TestNowOnConfigBuilder withTimeAfterToKeep(TemporalAmount timeAfterToKeep) {
+      this.timeAfterToKeep = timeAfterToKeep;
       return this;
     }
   }

@@ -6,7 +6,8 @@ create table discord_threads (
   desc blob not null,
   loc string not null,
   time string not null,
-  date_time string not null,
+  start_time string not null,
+  end_time string not null,
   status string not null,
   processed_alarms tinyint not null default 0
 );

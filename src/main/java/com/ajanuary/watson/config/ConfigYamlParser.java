@@ -5,6 +5,7 @@ import com.ajanuary.watson.membership.MembershipConfigYamlParser;
 import com.ajanuary.watson.programme.ProgrammeConfigYamlParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.github.cdimascio.dotenv.Dotenv;
+import java.time.ZoneId;
 
 public class ConfigYamlParser {
 
@@ -17,6 +18,7 @@ public class ConfigYamlParser {
     var configParser = ConfigParser.parse(jsonConfig);
     var guildId = configParser.get("guildId").string().required().value();
     var databasePath = configParser.get("databasePath").string().required().value();
+    var timezone = configParser.get("timezone").string().required().map(ZoneId::of);
     var alarmsConfig = configParser.get("alarms").object().map(AlarmsConfigYamlParser::parse);
     var membershipConfig =
         configParser
@@ -29,6 +31,12 @@ public class ConfigYamlParser {
         configParser.get("programme").object().map(ProgrammeConfigYamlParser::parse);
 
     return new Config(
-        discordBotToken, guildId, databasePath, alarmsConfig, membershipConfig, programmeConfig);
+        discordBotToken,
+        guildId,
+        databasePath,
+        timezone,
+        alarmsConfig,
+        membershipConfig,
+        programmeConfig);
   }
 }

@@ -29,6 +29,7 @@ public class AlarmsModule {
   private final JDA jda;
   private final JDAUtils jdaUtils;
   private final AlarmsConfig alarmsConfig;
+  private final Config config;
   private final DatabaseManager databaseManager;
   private final Scheduler<WithId<ScheduledDM>> dmScheduler;
   private final PrivateThreadManager privateThreadManager;
@@ -41,14 +42,14 @@ public class AlarmsModule {
       EventDispatcher eventDispatcher) {
     this.jda = jda;
     this.jdaUtils = new JDAUtils(jda, config);
-    ;
     this.alarmsConfig = alarmsConfig;
+    this.config = config;
     this.databaseManager = databaseManager;
 
     var itemScheduler =
         new Scheduler<>(
             "item",
-            alarmsConfig.timezone(),
+            config.timezone(),
             Duration.ZERO,
             this::getNextItemTime,
             this::getItemsBefore,
@@ -57,7 +58,7 @@ public class AlarmsModule {
     this.dmScheduler =
         new Scheduler<>(
             "dm",
-            alarmsConfig.timezone(),
+            config.timezone(),
             alarmsConfig.minTimeBetweenDMs(),
             this::getNextScheduledDMTime,
             this::getScheduledDMsBefore,
@@ -127,7 +128,7 @@ public class AlarmsModule {
                                     user.getId(),
                                     discordThread
                                         .item()
-                                        .dateTime()
+                                        .startTime()
                                         .minus(alarmsConfig.timeBeforeToNotify()),
                                     threadChannel.getName(),
                                     threadChannel.getJumpUrl(),
@@ -178,7 +179,7 @@ public class AlarmsModule {
       if (!dm.messageTime()
           .plus(alarmsConfig.timeBeforeToNotify())
           .plus(alarmsConfig.maxTimeAfterToNotify())
-          .isAfter(LocalDateTime.now(alarmsConfig.timezone()))) {
+          .isAfter(LocalDateTime.now(config.timezone()))) {
         logger.warn(
             "DM {} is being processed too late after it's scheduled time of {}. Ignoring",
             dmWithId.id(),

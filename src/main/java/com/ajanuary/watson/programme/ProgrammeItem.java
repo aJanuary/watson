@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.util.StdConverter;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -22,8 +23,12 @@ public record ProgrammeItem(
     String desc,
     List<String> links) {
 
-  public LocalDateTime dateTime() {
+  public LocalDateTime startTime() {
     return LocalDateTime.of(date, LocalTime.parse(time));
+  }
+
+  public LocalDateTime endTime() {
+    return startTime().plus(Duration.ofMinutes(mins));
   }
 
   private static final class DateConverter extends StdConverter<String, LocalDate> {

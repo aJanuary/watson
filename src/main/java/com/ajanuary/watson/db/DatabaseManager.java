@@ -9,6 +9,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.LocalDateTime;
+import java.time.temporal.TemporalAmount;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -59,7 +60,8 @@ public class DatabaseManager {
             desc,
             loc,
             time,
-            date_time,
+            start_time,
+            end_time,
             status
           from
             discord_threads
@@ -77,14 +79,15 @@ public class DatabaseManager {
         var desc = new String(rs.getBytes(4));
         var loc = rs.getString(5);
         var time = rs.getString(6);
-        var dateTime = LocalDateTime.parse(rs.getString(7));
-        var status = Status.valueOf(rs.getString(8));
+        var startTime = LocalDateTime.parse(rs.getString(7));
+        var endTime = LocalDateTime.parse(rs.getString(8));
+        var status = Status.valueOf(rs.getString(9));
         return Optional.of(
             new DiscordThread(
                 threadId,
                 messageId,
                 status,
-                new DiscordItem(programmeItemId, title, desc, loc, time, dateTime)));
+                new DiscordItem(programmeItemId, title, desc, loc, time, startTime, endTime)));
       }
     }
 
@@ -101,10 +104,11 @@ public class DatabaseManager {
             desc,
             loc,
             time,
-            date_time,
+            start_time,
+            end_time,
             status
           )
-          values (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           """)) {
         statement.setString(1, discordThread.item().id());
         statement.setString(2, discordThread.discordThreadId());
@@ -113,8 +117,9 @@ public class DatabaseManager {
         statement.setBytes(5, discordThread.item().body().getBytes());
         statement.setString(6, discordThread.item().loc());
         statement.setString(7, discordThread.item().time());
-        statement.setString(8, discordThread.item().dateTime().toString());
-        statement.setString(9, discordThread.status().toString());
+        statement.setString(8, discordThread.item().startTime().toString());
+        statement.setString(9, discordThread.item().endTime().toString());
+        statement.setString(10, discordThread.status().toString());
 
         var rowsAffected = statement.executeUpdate();
         if (rowsAffected != 1) {
@@ -136,7 +141,8 @@ public class DatabaseManager {
             desc = ?,
             loc = ?,
             time = ?,
-            date_time = ?,
+            start_time = ?,
+            end_time = ?,
             status = ?
           where
             programme_item_id = ?
@@ -147,9 +153,10 @@ public class DatabaseManager {
         statement.setBytes(4, discordThread.item().body().getBytes());
         statement.setString(5, discordThread.item().loc());
         statement.setString(6, discordThread.item().time());
-        statement.setString(7, discordThread.item().dateTime().toString());
-        statement.setString(8, discordThread.status().toString());
-        statement.setString(9, discordThread.item().id());
+        statement.setString(7, discordThread.item().startTime().toString());
+        statement.setString(8, discordThread.item().endTime().toString());
+        statement.setString(9, discordThread.status().toString());
+        statement.setString(10, discordThread.item().id());
 
         var rowsAffected = statement.executeUpdate();
         if (rowsAffected != 1) {
@@ -191,12 +198,13 @@ public class DatabaseManager {
             desc,
             loc,
             time,
-            date_time,
+            start_time,
+            end_time,
             status
           from
             discord_threads
           where
-            date_time <= ?
+            start_time <= ?
             and processed_alarms = 0
           """)) {
         statement.setString(1, maxTime.toString());
@@ -210,14 +218,15 @@ public class DatabaseManager {
           var desc = new String(rs.getBytes(5));
           var loc = rs.getString(6);
           var time = rs.getString(7);
-          var dateTime = LocalDateTime.parse(rs.getString(8));
-          var status = Status.valueOf(rs.getString(9));
+          var startTime = LocalDateTime.parse(rs.getString(8));
+          var endTime = LocalDateTime.parse(rs.getString(9));
+          var status = Status.valueOf(rs.getString(10));
           results.add(
               new DiscordThread(
                   threadId,
                   messageId,
                   status,
-                  new DiscordItem(programmeItemId, title, desc, loc, time, dateTime)));
+                  new DiscordItem(programmeItemId, title, desc, loc, time, startTime, endTime)));
         }
         return results;
       }
@@ -229,7 +238,7 @@ public class DatabaseManager {
               connection.prepareStatement(
                   """
           select
-            min(date_time)
+            min(start_time)
           from
             discord_threads
           where
@@ -440,6 +449,142 @@ public class DatabaseManager {
         statement.setString(1, userId);
         statement.setString(2, purpose);
         statement.setString(3, threadId);
+        statement.executeUpdate();
+      }
+    }
+
+    public Optional<LocalDateTime> getNextNowOnEnd() throws SQLException {
+      try (var connection = dataSource.getConnection();
+          var statement =
+              connection.prepareStatement(
+                  """
+          select
+            min(end_time)
+          from
+            now_on
+          """)) {
+        var rs = statement.executeQuery();
+        if (!rs.next()) {
+          return Optional.empty();
+        }
+        var time = rs.getString(1);
+        if (time == null) {
+          return Optional.empty();
+        }
+        return Optional.of(LocalDateTime.parse(time));
+      }
+    }
+
+    public List<DiscordThread> getNowOn(
+        LocalDateTime now, TemporalAmount timeBeforeToAdd, TemporalAmount timeAfterToKeep)
+        throws SQLException {
+      try (var connection = dataSource.getConnection();
+          var statement =
+              connection.prepareStatement(
+                  """
+          select
+            programme_item_id,
+            thread_id,
+            message_id,
+            title,
+            desc,
+            loc,
+            time,
+            start_time,
+            end_time,
+            status
+          from
+            discord_threads
+          where
+            start_time <= ? and end_time > ? and not exists (
+              select
+                1
+              from
+                now_on
+              where
+                discord_threads.programme_item_id = now_on.programme_item_id
+            )
+            order by
+              start_time, loc
+          """)) {
+        statement.setString(1, now.plus(timeBeforeToAdd).toString());
+        statement.setString(2, now.minus(timeAfterToKeep).toString());
+        var rs = statement.executeQuery();
+        var results = new ArrayList<DiscordThread>();
+        while (rs.next()) {
+          var programmeItemId = rs.getString(1);
+          var threadId = rs.getString(2);
+          var messageId = rs.getString(3);
+          var title = rs.getString(4);
+          var desc = new String(rs.getBytes(5));
+          var loc = rs.getString(6);
+          var time = rs.getString(7);
+          var startTime = LocalDateTime.parse(rs.getString(8));
+          var endTime = LocalDateTime.parse(rs.getString(9));
+          var status = Status.valueOf(rs.getString(10));
+          results.add(
+              new DiscordThread(
+                  threadId,
+                  messageId,
+                  status,
+                  new DiscordItem(programmeItemId, title, desc, loc, time, startTime, endTime)));
+        }
+        return results;
+      }
+    }
+
+    public List<String> getExpiredNowOnMessages(LocalDateTime time) throws SQLException {
+      try (var connection = dataSource.getConnection();
+          var statement =
+              connection.prepareStatement(
+                  """
+          select
+            discord_message_id
+          from
+            now_on
+          where
+            end_time <= ?
+          """)) {
+        statement.setString(1, time.toString());
+        var rs = statement.executeQuery();
+        var results = new ArrayList<String>();
+        while (rs.next()) {
+          results.add(rs.getString(1));
+        }
+        return results;
+      }
+    }
+
+    public void insertNowOnMessage(
+        String programmeItemId, String discordMessageId, LocalDateTime endTime)
+        throws SQLException {
+      try (var connection = dataSource.getConnection();
+          var statement =
+              connection.prepareStatement(
+                  """
+          insert into now_on(
+            programme_item_id,
+            discord_message_id,
+            end_time
+          )
+          values (?, ?, ?)
+          """)) {
+        statement.setString(1, programmeItemId);
+        statement.setString(2, discordMessageId);
+        statement.setString(3, endTime.toString());
+        statement.executeUpdate();
+      }
+    }
+
+    public void deleteNowOnMessage(String messageId) throws SQLException {
+      try (var connection = dataSource.getConnection();
+          var statement =
+              connection.prepareStatement(
+                  """
+          delete from now_on
+          where discord_message_id = ?
+          """)) {
+        statement.setString(1, messageId);
         statement.executeUpdate();
       }
     }

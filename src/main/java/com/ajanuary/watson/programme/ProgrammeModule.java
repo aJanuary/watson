@@ -1,5 +1,6 @@
 package com.ajanuary.watson.programme;
 
+import com.ajanuary.watson.alarms.Scheduler;
 import com.ajanuary.watson.config.Config;
 import com.ajanuary.watson.db.DatabaseManager;
 import com.ajanuary.watson.notification.EventDispatcher;
@@ -16,12 +17,18 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.sql.SQLException;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
@@ -35,6 +42,7 @@ public class ProgrammeModule {
 
   private static final int MAX_THREAD_TITLE_LEN = 100;
   private final Logger logger = LoggerFactory.getLogger(ProgrammeModule.class);
+  private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
   private final ObjectMapper objectMapper =
       JsonMapper.builder()
           .addModule(new JavaTimeModule())
@@ -47,6 +55,8 @@ public class ProgrammeModule {
   private final Config config;
   private final DatabaseManager databaseManager;
   private final EventDispatcher eventDispatcher;
+
+  private boolean doneFirstOnNowPoll = false;
 
   public ProgrammeModule(
       JDA jda,
@@ -62,6 +72,18 @@ public class ProgrammeModule {
     this.eventDispatcher = eventDispatcher;
     Executors.newSingleThreadScheduledExecutor()
         .scheduleWithFixedDelay(this::pollProgramme, 0, 1, TimeUnit.MINUTES);
+
+    if (programmeConfig.nowOn().isPresent()) {
+      var scheduler =
+          new Scheduler<>(
+              "item",
+              config.timezone(),
+              Duration.ZERO,
+              this::getNextNowOnTime,
+              this::getNowOn,
+              this::handleNowOn);
+      eventDispatcher.register(EventType.ITEMS_CHANGED, scheduler::notifyOfDbChange);
+    }
   }
 
   @NotNull
@@ -122,7 +144,8 @@ public class ProgrammeModule {
                 newItem.desc(),
                 newItem.loc(),
                 newItem.time(),
-                newItem.dateTime());
+                newItem.startTime(),
+                newItem.endTime());
         if (existingThread.isEmpty()) {
           logger.info("Add item [{}] '{}'", newItem.id(), newItem.title());
 
@@ -185,7 +208,8 @@ public class ProgrammeModule {
           var newTags = getTags(newItem, forumChannel);
           var existingTags = threadChannel.getAppliedTags();
 
-          boolean timeChanged = !existingThread.get().item().dateTime().equals(newItem.dateTime());
+          boolean timeChanged =
+              !existingThread.get().item().startTime().equals(newItem.startTime());
           boolean noLongerCancelled = existingThread.get().status() == Status.CANCELLED;
           boolean roomDifferent = !existingThread.get().item().loc().equals(newItem.loc());
           var tagChanges = getTagChanges(newTags, existingTags);
@@ -346,7 +370,129 @@ public class ProgrammeModule {
     }
     var items =
         objectMapper.readValue(response.body(), new TypeReference<List<ProgrammeItem>>() {});
-    return items.stream().sorted(Comparator.comparing(ProgrammeItem::dateTime).reversed()).toList();
+    return items.stream()
+        .sorted(Comparator.comparing(ProgrammeItem::startTime).reversed())
+        .toList();
+  }
+
+  private Optional<LocalDateTime> getNextNowOnTime() throws SQLException {
+    if (!doneFirstOnNowPoll) {
+      // When we start up we want to check what messages we should be posting.
+      // It could be that we were down when an event started, so we need to catch up and post it.
+      doneFirstOnNowPoll = true;
+      return Optional.of(LocalDateTime.MIN);
+    }
+
+    try (var conn = databaseManager.getConnection()) {
+      var nextItemStart =
+          conn.getNextItemTime().map(t -> t.minus(programmeConfig.nowOn().get().timeBeforeToAdd()));
+      var nextNowOnEnd =
+          conn.getNextNowOnEnd().map(t -> t.plus(programmeConfig.nowOn().get().timeAfterToKeep()));
+
+      if (nextItemStart.isEmpty()) {
+        return nextNowOnEnd;
+      }
+
+      return nextNowOnEnd
+          .map(
+              localDateTime ->
+                  nextItemStart.get().isBefore(localDateTime) ? nextItemStart.get() : localDateTime)
+          .or(() -> nextItemStart);
+    }
+  }
+
+  private static class NowOnAction {
+    private final DiscordThread discordThreadToPost;
+    private final String discordMessageIdToDelete;
+
+    private NowOnAction(DiscordThread discordThreadToPost, String discordMessageIdToDelete) {
+      this.discordThreadToPost = discordThreadToPost;
+      this.discordMessageIdToDelete = discordMessageIdToDelete;
+    }
+
+    public static NowOnAction post(DiscordThread discordThreadToPost) {
+      return new NowOnAction(discordThreadToPost, null);
+    }
+
+    public static NowOnAction delete(String discordMessageIdToDelete) {
+      return new NowOnAction(null, discordMessageIdToDelete);
+    }
+
+    public DiscordThread discordThreadToPost() {
+      return discordThreadToPost;
+    }
+
+    public String discordMessageIdToDelete() {
+      return discordMessageIdToDelete;
+    }
+  }
+
+  private List<NowOnAction> getNowOn(LocalDateTime time) throws SQLException {
+    try (var conn = databaseManager.getConnection()) {
+      return Stream.concat(
+              conn
+                  .getNowOn(
+                      time,
+                      programmeConfig.nowOn().get().timeBeforeToAdd(),
+                      programmeConfig.nowOn().get().timeAfterToKeep())
+                  .stream()
+                  .map(NowOnAction::post),
+              conn.getExpiredNowOnMessages(time).stream().map(NowOnAction::delete))
+          .toList();
+    }
+  }
+
+  private void handleNowOn(NowOnAction action) {
+    if (action.discordThreadToPost() != null) {
+      handleNowOnPost(action.discordThreadToPost());
+    } else if (action.discordMessageIdToDelete() != null) {
+      handleNowOnDelete(action.discordMessageIdToDelete());
+    }
+  }
+
+  private void handleNowOnPost(DiscordThread discordThread) {
+    var start = discordThread.item().startTime().format(TIME_FORMATTER);
+    var end = discordThread.item().endTime().format(TIME_FORMATTER);
+    var message =
+        jdaUtils
+            .getTextChannel(programmeConfig.nowOn().get().channel())
+            .sendMessage(
+                "**"
+                    + start
+                    + " - "
+                    + end
+                    + " "
+                    + discordThread.item().title()
+                    + "**\n"
+                    + discordThread.item().loc()
+                    + " | [Discuss](https://discord.com/channels/"
+                    + config.guildId()
+                    + "/"
+                    + discordThread.discordThreadId()
+                    + ")")
+            .complete();
+    try (var conn = databaseManager.getConnection()) {
+      conn.insertNowOnMessage(
+          discordThread.item().id(), message.getId(), discordThread.item().endTime());
+    } catch (SQLException e) {
+      logger.error("Failed to insert now on message", e);
+    }
+  }
+
+  private void handleNowOnDelete(String messageId) {
+    jdaUtils
+        .getTextChannel(programmeConfig.nowOn().get().channel())
+        .retrieveMessageById(messageId)
+        .queue(
+            message -> {
+              message.delete().queue();
+            });
+
+    try (var conn = databaseManager.getConnection()) {
+      conn.deleteNowOnMessage(messageId);
+    } catch (SQLException e) {
+      logger.error("Failed to delete now on message", e);
+    }
   }
 
   private record TagChange(String tag, boolean added) {}

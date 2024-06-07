@@ -24,6 +24,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         """);
 
     var parser = new ConfigYamlParser();
@@ -41,6 +42,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         """);
 
     var parser = new ConfigYamlParser();
@@ -58,6 +60,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: the-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         """);
 
     var parser = new ConfigYamlParser();
@@ -75,6 +78,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: 10
         databasePath: some-db-path
+        timezone: America/New_York
         """);
 
     var parser = new ConfigYamlParser();
@@ -91,6 +95,7 @@ public class ConfigYamlParserTest {
             .readTree(
                 """
         databasePath: test.db
+        timezone: America/New_York
         """);
 
     var parser = new ConfigYamlParser();
@@ -108,6 +113,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: the-db-path
+        timezone: America/New_York
         """);
 
     var parser = new ConfigYamlParser();
@@ -125,6 +131,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: 10
+        timezone: America/New_York
         """);
 
     var parser = new ConfigYamlParser();
@@ -141,12 +148,65 @@ public class ConfigYamlParserTest {
             .readTree(
                 """
         guildId: some-guild-id
+        timezone: America/New_York
         """);
 
     var parser = new ConfigYamlParser();
     var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
 
     assertEquals("databasePath is required", thrown.getMessage());
+  }
+
+  @Test
+  void errorsIfTimezoneIsMissing() throws JsonProcessingException {
+    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+        guildId: some-guild-id
+        databasePath: some-db-path
+        """);
+
+    var parser = new ConfigYamlParser();
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+
+    assertEquals("timezone is required", thrown.getMessage());
+  }
+
+  @Test
+  void errorsIfTimezoneIsNotString() throws JsonProcessingException {
+    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+        guildId: some-guild-id
+        databasePath: some-db-path
+        timezone: 10
+        """);
+
+    var parser = new ConfigYamlParser();
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+
+    assertEquals("timezone must be a string", thrown.getMessage());
+  }
+
+  void errorsIfTimezoneIsInvalid() throws JsonProcessingException {
+    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+        guildId: some-guild-id
+        databasePath: some-db-path
+        timezone: Invalid/Timezone
+        """);
+
+    var parser = new ConfigYamlParser();
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+
+    assertEquals("Invalid timezone: Invalid/Timezone", thrown.getMessage());
   }
 
   @Test
@@ -158,102 +218,13 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         """);
 
     var parser = new ConfigYamlParser();
     var config = parser.parse(jsonConfig, dotenv);
 
     assertTrue(config.alarms().isEmpty(), "no alarms config");
-  }
-
-  @Test
-  void parsesAlarmsTimezone() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig =
-        new YAMLMapper()
-            .readTree(
-                """
-        guildId: some-guild-id
-        databasePath: some-db-path
-        alarms:
-          timezone: America/New_York
-          timeBeforeToNotify: 15m
-          maxTimeAfterToNotify: 5m
-          minTimeBetweenDMs: 0.5s
-        """);
-
-    var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
-
-    assertTrue(config.alarms().isPresent(), "alarms config is present");
-    assertEquals("America/New_York", config.alarms().get().timezone().getId());
-  }
-
-  @Test
-  void errorsIfAlarmsTimezoneIsMissing() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig =
-        new YAMLMapper()
-            .readTree(
-                """
-        guildId: some-guild-id
-        databasePath: some-db-path
-        alarms:
-          timeBeforeToNotify: 15m
-          maxTimeAfterToNotify: 5m
-          minTimeBetweenDMs: 0.5s
-        """);
-
-    var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
-
-    assertEquals("alarms.timezone is required", thrown.getMessage());
-  }
-
-  @Test
-  void errorsIfAlarmsTimezoneIsNotString() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig =
-        new YAMLMapper()
-            .readTree(
-                """
-        guildId: some-guild-id
-        databasePath: some-db-path
-        alarms:
-          timezone: 10
-          timeBeforeToNotify: 15m
-          maxTimeAfterToNotify: 5m
-          minTimeBetweenDMs: 0.5s
-        """);
-
-    var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
-
-    assertEquals("alarms.timezone must be a string", thrown.getMessage());
-  }
-
-  @Test
-  void errorsIfAlarmsTimezoneIsInvalid() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
-    var jsonConfig =
-        new YAMLMapper()
-            .readTree(
-                """
-        guildId: some-guild-id
-        databasePath: some-db-path
-        alarms:
-          timezone: Invalid/Timezone
-          timeBeforeToNotify: 15m
-          maxTimeAfterToNotify: 5m
-          minTimeBetweenDMs: 0.5s
-        """);
-
-    var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
-
-    assertEquals(
-        "Malformed value for alarms.timezone: Unknown time-zone ID: Invalid/Timezone",
-        thrown.getMessage());
   }
 
   @Test
@@ -265,8 +236,8 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         alarms:
-          timezone: America/New_York
           timeBeforeToNotify: 15m
           maxTimeAfterToNotify: 5m
           minTimeBetweenDMs: 0.5s
@@ -288,8 +259,8 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         alarms:
-          timezone: America/New_York
           maxTimeAfterToNotify: 5m
           minTimeBetweenDMs: 0.5s
         """);
@@ -309,8 +280,8 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         alarms:
-          timezone: America/New_York
           timeBeforeToNotify: 15
           maxTimeAfterToNotify: 5m
           minTimeBetweenDMs: 0.5s
@@ -331,8 +302,8 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         alarms:
-          timezone: America/New_York
           timeBeforeToNotify: 15x
           maxTimeAfterToNotify: 5m
           minTimeBetweenDMs: 0.5s
@@ -355,8 +326,8 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         alarms:
-          timezone: America/New_York
           timeBeforeToNotify: 15m
           maxTimeAfterToNotify: 5m
           minTimeBetweenDMs: 0.5s
@@ -378,8 +349,8 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         alarms:
-          timezone: America/New_York
           timeBeforeToNotify: 15m
           minTimeBetweenDMs: 0.5s
         """);
@@ -399,8 +370,8 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         alarms:
-          timezone: America/New_York
           timeBeforeToNotify: 15m
           maxTimeAfterToNotify: 5
           minTimeBetweenDMs: 0.5s
@@ -421,8 +392,8 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         alarms:
-          timezone: America/New_York
           timeBeforeToNotify: 15m
           maxTimeAfterToNotify: 5x
           minTimeBetweenDMs: 0.5s
@@ -445,8 +416,8 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         alarms:
-          timezone: America/New_York
           timeBeforeToNotify: 15m
           maxTimeAfterToNotify: 5m
           minTimeBetweenDMs: 0.5s
@@ -468,8 +439,8 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         alarms:
-          timezone: America/New_York
           timeBeforeToNotify: 15m
           maxTimeAfterToNotify: 5m
         """);
@@ -489,8 +460,8 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         alarms:
-          timezone: America/New_York
           timeBeforeToNotify: 15m
           maxTimeAfterToNotify: 5m
           minTimeBetweenDMs: 0.5
@@ -511,8 +482,8 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         alarms:
-          timezone: America/New_York
           timeBeforeToNotify: 15m
           maxTimeAfterToNotify: 5m
           minTimeBetweenDMs: 0.5x
@@ -535,8 +506,8 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         alarms:
-          timezone: America/New_York
           timeBeforeToNotify: 15m
           maxTimeAfterToNotify: 5m
           minTimeBetweenDMs: 0.5s
@@ -559,8 +530,8 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         alarms:
-          timezone: America/New_York
           timeBeforeToNotify: 15m
           maxTimeAfterToNotify: 5m
           minTimeBetweenDMs: 0.5s
@@ -582,8 +553,8 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         alarms:
-          timezone: America/New_York
           timeBeforeToNotify: 15m
           maxTimeAfterToNotify: 5m
           minTimeBetweenDMs: 0.5s
@@ -605,8 +576,8 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         alarms:
-          timezone: America/New_York
           timeBeforeToNotify: 15m
           maxTimeAfterToNotify: 5m
           minTimeBetweenDMs: 0.5s
@@ -621,6 +592,76 @@ public class ConfigYamlParserTest {
   }
 
   @Test
+  void parsesAlarmsAlarmsChannel() throws JsonProcessingException {
+    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+        guildId: some-guild-id
+        databasePath: some-db-path
+        timezone: America/New_York
+        alarms:
+          timeBeforeToNotify: 15m
+          maxTimeAfterToNotify: 5m
+          minTimeBetweenDMs: 0.5s
+          alarmsChannel: the-alarms-channel
+        """);
+
+    var parser = new ConfigYamlParser();
+    var config = parser.parse(jsonConfig, dotenv);
+
+    assertTrue(config.alarms().isPresent(), "alarms config is present");
+    assertEquals("the-alarms-channel", config.alarms().get().alarmsChannel());
+  }
+
+  @Test
+  void defaultsAlarmsAlarmsChannelToReminders() throws JsonProcessingException {
+    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+        guildId: some-guild-id
+        databasePath: some-db-path
+        timezone: America/New_York
+        alarms:
+          timeBeforeToNotify: 15m
+          maxTimeAfterToNotify: 5m
+          minTimeBetweenDMs: 0.5s
+        """);
+
+    var parser = new ConfigYamlParser();
+    var config = parser.parse(jsonConfig, dotenv);
+
+    assertTrue(config.alarms().isPresent(), "alarms config is present");
+    assertEquals("reminders", config.alarms().get().alarmsChannel());
+  }
+
+  @Test
+  void errorsIfAlarmsAlarmsChannelIsNotString() throws JsonProcessingException {
+    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+        guildId: some-guild-id
+        databasePath: some-db-path
+        timezone: America/New_York
+        alarms:
+          timeBeforeToNotify: 15m
+          maxTimeAfterToNotify: 5m
+          minTimeBetweenDMs: 0.5s
+          alarmsChannel: 10
+        """);
+
+    var parser = new ConfigYamlParser();
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+
+    assertEquals("alarms.alarmsChannel must be a string", thrown.getMessage());
+  }
+
+  @Test
   void membershipConfigIsOptional() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
     var jsonConfig =
@@ -629,6 +670,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         """);
 
     var parser = new ConfigYamlParser();
@@ -646,6 +688,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         membership:
           membersApiUrl: https://example.com
         """);
@@ -666,6 +709,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         membership:
           membersApiUrl: https://example.com/the-api-root
         """);
@@ -687,6 +731,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         membership:
           membersApiUrl: https://example.com/the-api-root
         """);
@@ -708,6 +753,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         membership: {}
         """);
 
@@ -727,6 +773,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         membership:
           membersApiUrl: 10
         """);
@@ -747,6 +794,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         membership:
           membersApiUrl: https://example.com/some-api-root
           discordModsChannel: the-mods-channel
@@ -769,6 +817,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         membership:
           membersApiUrl: https://example.com/some-api-root
         """);
@@ -790,6 +839,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         membership:
           membersApiUrl: https://example.com/some-api-root
           discordModsChannel: 10
@@ -811,6 +861,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         membership:
           membersApiUrl: https://example.com/some-api-root
           memberRole: the-member-role
@@ -833,6 +884,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         membership:
           membersApiUrl: https://example.com/some-api-root
         """);
@@ -854,6 +906,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         membership:
           membersApiUrl: https://example.com/some-api-root
           memberRole: 10
@@ -875,6 +928,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         membership:
           membersApiUrl: https://example.com/some-api-root
           unverifiedRole: the-unverified-role
@@ -897,6 +951,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         membership:
           membersApiUrl: https://example.com/some-api-root
         """);
@@ -918,6 +973,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         membership:
           membersApiUrl: https://example.com/some-api-root
           unverifiedRole: 10
@@ -939,6 +995,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         membership:
           membersApiUrl: https://example.com/some-api-root
           additionalRoles:
@@ -966,6 +1023,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         membership:
           membersApiUrl: https://example.com/some-api-root
           additionalRoles: 10
@@ -987,6 +1045,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         membership:
           membersApiUrl: https://example.com/some-api-root
           additionalRoles:
@@ -1010,6 +1069,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         membership:
           membersApiUrl: https://example.com/some-api-root
         """);
@@ -1030,6 +1090,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         """);
 
     var parser = new ConfigYamlParser();
@@ -1047,6 +1108,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         programme:
           programmeUrl: https://example.com/the-programme-url
         """);
@@ -1067,6 +1129,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         programme: {}
         """);
 
@@ -1085,6 +1148,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         programme:
           programmeUrl: 10
         """);
@@ -1096,6 +1160,292 @@ public class ConfigYamlParserTest {
   }
 
   @Test
+  void nowOnConfigIsOptional() throws JsonProcessingException {
+    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+        guildId: some-guild-id
+        databasePath: some-db-path
+        timezone: America/New_York
+        programme:
+          programmeUrl: https://example.com/the-programme-url
+        """);
+
+    var parser = new ConfigYamlParser();
+    var config = parser.parse(jsonConfig, dotenv);
+
+    assertTrue(config.programme().isPresent(), "programme config is present");
+    assertTrue(config.programme().get().nowOn().isEmpty(), "nowOn config is not present");
+  }
+
+  @Test
+  void parsesNoOnChannelId() throws JsonProcessingException {
+    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+        guildId: some-guild-id
+        databasePath: some-db-path
+        timezone: America/New_York
+        programme:
+          programmeUrl: https://example.com/the-programme-url
+          nowOn:
+            channel: the-now-on-channel-id
+            timeBeforeToAdd: 15m
+            timeAfterToKeep: 15m
+        """);
+
+    var parser = new ConfigYamlParser();
+    var config = parser.parse(jsonConfig, dotenv);
+
+    assertTrue(config.programme().isPresent(), "programme config is present");
+    assertTrue(config.programme().get().nowOn().isPresent(), "nowOn config is present");
+    assertEquals("the-now-on-channel-id", config.programme().get().nowOn().get().channel());
+  }
+
+  @Test
+  void nowOnChannelDefaultsToNowOn() throws JsonProcessingException {
+    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+        guildId: some-guild-id
+        databasePath: some-db-path
+        timezone: America/New_York
+        programme:
+          programmeUrl: https://example.com/the-programme-url
+          nowOn:
+            timeBeforeToAdd: 15m
+            timeAfterToKeep: 15m
+        """);
+
+    var parser = new ConfigYamlParser();
+    var config = parser.parse(jsonConfig, dotenv);
+
+    assertTrue(config.programme().isPresent(), "programme config is present");
+    assertTrue(config.programme().get().nowOn().isPresent(), "nowOn config is present");
+    assertEquals("now-on", config.programme().get().nowOn().get().channel());
+  }
+
+  @Test
+  void errorsIfNowOnChannelIdIsNotString() throws JsonProcessingException {
+    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+        guildId: some-guild-id
+        databasePath: some-db-path
+        timezone: America/New_York
+        programme:
+          programmeUrl: https://example.com/the-programme-url
+          nowOn:
+            channel: 10
+            timeBeforeToAdd: 15m
+            timeAfterToKeep: 15m
+        """);
+
+    var parser = new ConfigYamlParser();
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+
+    assertEquals("programme.nowOn.channel must be a string", thrown.getMessage());
+  }
+
+  @Test
+  void parsesProgrammeNowOnTimeBeforeToAdd() throws JsonProcessingException {
+    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+        guildId: some-guild-id
+        databasePath: some-db-path
+        timezone: America/New_York
+        programme:
+          programmeUrl: https://example.com/the-programme-url
+          nowOn:
+            timeBeforeToAdd: 15m
+            timeAfterToKeep: 15m
+        """);
+
+    var parser = new ConfigYamlParser();
+    var config = parser.parse(jsonConfig, dotenv);
+
+    assertTrue(config.programme().isPresent(), "programme config is present");
+    assertTrue(config.programme().get().nowOn().isPresent(), "nowOn config is present");
+    assertEquals("PT15M", config.programme().get().nowOn().get().timeBeforeToAdd().toString());
+  }
+
+  @Test
+  void errorsIfProgrammeNowOnTimeBeforeToAddIsMissing() throws JsonProcessingException {
+    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+        guildId: some-guild-id
+        databasePath: some-db-path
+        timezone: America/New_York
+        programme:
+          programmeUrl: https://example.com/the-programme-url
+          nowOn:
+            timeAfterToKeep: 15m
+        """);
+
+    var parser = new ConfigYamlParser();
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+
+    assertEquals("programme.nowOn.timeBeforeToAdd is required", thrown.getMessage());
+  }
+
+  @Test
+  void errorsIfProgrammeNowOnTimeBeforeToAddIsNotString() throws JsonProcessingException {
+    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+        guildId: some-guild-id
+        databasePath: some-db-path
+        timezone: America/New_York
+        programme:
+          programmeUrl: https://example.com/the-programme-url
+          nowOn:
+            timeBeforeToAdd: 15
+            timeAfterToKeep: 15m
+        """);
+
+    var parser = new ConfigYamlParser();
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+
+    assertEquals("programme.nowOn.timeBeforeToAdd must be a string", thrown.getMessage());
+  }
+
+  @Test
+  void errorsIfProgrammeNowOnTimeBeforeToAddIsInvalidDuration() throws JsonProcessingException {
+    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+        guildId: some-guild-id
+        databasePath: some-db-path
+        timezone: America/New_York
+        programme:
+          programmeUrl: https://example.com/the-programme-url
+          nowOn:
+            timeBeforeToAdd: 15x
+            timeAfterToKeep: 15m
+        """);
+
+    var parser = new ConfigYamlParser();
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+
+    assertEquals(
+        "Malformed value for programme.nowOn.timeBeforeToAdd: Text cannot be parsed to a Duration",
+        thrown.getMessage());
+  }
+
+  @Test
+  void parsesProgrammeNowOnTimeAfterToKeep() throws JsonProcessingException {
+    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+        guildId: some-guild-id
+        databasePath: some-db-path
+        timezone: America/New_York
+        programme:
+          programmeUrl: https://example.com/the-programme-url
+          nowOn:
+            timeBeforeToAdd: 15m
+            timeAfterToKeep: 15m
+        """);
+
+    var parser = new ConfigYamlParser();
+    var config = parser.parse(jsonConfig, dotenv);
+
+    assertTrue(config.programme().isPresent(), "programme config is present");
+    assertTrue(config.programme().get().nowOn().isPresent(), "nowOn config is present");
+    assertEquals("PT15M", config.programme().get().nowOn().get().timeAfterToKeep().toString());
+  }
+
+  @Test
+  void errorsIfProgrammeNowOnTimeAfterToKeepIsMissing() throws JsonProcessingException {
+    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+        guildId: some-guild-id
+        databasePath: some-db-path
+        timezone: America/New_York
+        programme:
+          programmeUrl: https://example.com/the-programme-url
+          nowOn:
+            timeBeforeToAdd: 15m
+        """);
+
+    var parser = new ConfigYamlParser();
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+
+    assertEquals("programme.nowOn.timeAfterToKeep is required", thrown.getMessage());
+  }
+
+  @Test
+  void errorsIfProgrammeNowOnTimeAfterToKeepIsNotString() throws JsonProcessingException {
+    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+        guildId: some-guild-id
+        databasePath: some-db-path
+        timezone: America/New_York
+        programme:
+          programmeUrl: https://example.com/the-programme-url
+          nowOn:
+            timeBeforeToAdd: 15m
+            timeAfterToKeep: 15
+        """);
+
+    var parser = new ConfigYamlParser();
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+
+    assertEquals("programme.nowOn.timeAfterToKeep must be a string", thrown.getMessage());
+  }
+
+  @Test
+  void errorsIfProgrammeNowOnTimeAfterToKeepIsInvalidDuration() throws JsonProcessingException {
+    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+        guildId: some-guild-id
+        databasePath: some-db-path
+        timezone: America/New_York
+        programme:
+          programmeUrl: https://example.com/the-programme-url
+          nowOn:
+            timeBeforeToAdd: 15m
+            timeAfterToKeep: 15x
+        """);
+
+    var parser = new ConfigYamlParser();
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+
+    assertEquals(
+        "Malformed value for programme.nowOn.timeAfterToKeep: Text cannot be parsed to a Duration",
+        thrown.getMessage());
+  }
+
+  @Test
   void parsesProgrammeMajorAnnouncementsChannel() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
     var jsonConfig =
@@ -1104,6 +1454,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
           majorAnnouncementsChannel: the-major-announcements-channel
@@ -1127,8 +1478,11 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          timeBeforeToAddToNowOn: 15m
+          timeAfterToKeepInNowOn: 15m
         """);
 
     var parser = new ConfigYamlParser();
@@ -1147,6 +1501,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
           majorAnnouncementsChannel: 10
@@ -1165,14 +1520,12 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-        {
-          "guildId": "some-guild-id",
-          "databasePath": "some-db-path",
-          "programme": {
-            "programmeUrl": "https://example.com/some-programme-url",
-            "hasPerformedFirstLoad": true
-          }
-        }
+          guildId: some-guild-id
+          databasePath: some-db-path
+          timezone: America/New_York
+          programme:
+            programmeUrl: https://example.com/some-programme-url
+            hasPerformedFirstLoad: true
         """);
 
     var parser = new ConfigYamlParser();
@@ -1189,13 +1542,11 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-        {
-          "guildId": "some-guild-id",
-          "databasePath": "some-db-path",
-          "programme": {
-            "programmeUrl": "https://example.com/some-programme-url"
-          }
-        }
+          guildId: some-guild-id,
+          databasePath: some-db-path,
+          timezone: America/New_York
+          programme:
+            programmeUrl: https://example.com/some-programme-url
         """);
 
     var parser = new ConfigYamlParser();
@@ -1212,14 +1563,12 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-        {
-          "guildId": "some-guild-id",
-          "databasePath": "some-db-path",
-          "programme": {
-            "programmeUrl": "https://example.com/some-programme-url",
-            "hasPerformedFirstLoad": 10
-          }
-        }
+          guildId: some-guild-id,
+          databasePath: some-db-path,
+          timezone: America/New_York
+          programme:
+            programmeUrl: https://example.com/some-programme-url
+            hasPerformedFirstLoad: 10
         """);
 
     var parser = new ConfigYamlParser();
@@ -1237,6 +1586,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
         """);
@@ -1257,6 +1607,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
           channelNameResolver: 10
@@ -1277,6 +1628,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
           channelNameResolver: {}
@@ -1297,6 +1649,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
           channelNameResolver:
@@ -1318,6 +1671,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
           channelNameResolver:
@@ -1341,6 +1695,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
           channelNameResolver:
@@ -1363,6 +1718,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
           channelNameResolver:
@@ -1409,6 +1765,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
           channelNameResolver:
@@ -1431,6 +1788,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
           channelNameResolver:
@@ -1454,6 +1812,7 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
           channelNameResolver:
@@ -1478,8 +1837,11 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          timeBeforeToAddToNowOn: 15m
+          timeAfterToKeepInNowOn: 15m
           channelNameResolver:
             type: day-tod
             thresholds:
@@ -1503,8 +1865,11 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          timeBeforeToAddToNowOn: 15m
+          timeAfterToKeepInNowOn: 15m
           channelNameResolver:
             type: day-tod
             thresholds:
@@ -1529,8 +1894,11 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          timeBeforeToAddToNowOn: 15m
+          timeAfterToKeepInNowOn: 15m
           channelNameResolver:
             type: day-tod
             thresholds:
@@ -1554,8 +1922,11 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          timeBeforeToAddToNowOn: 15m
+          timeAfterToKeepInNowOn: 15m
           channelNameResolver:
             type: day-tod
             thresholds:
@@ -1580,8 +1951,11 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          timeBeforeToAddToNowOn: 15m
+          timeAfterToKeepInNowOn: 15m
           channelNameResolver:
             type: day-tod
             thresholds:
@@ -1607,8 +1981,11 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          timeBeforeToAddToNowOn: 15m
+          timeAfterToKeepInNowOn: 15m
           channelNameResolver:
             type: day-tod
             thresholds:
@@ -1632,8 +2009,11 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          timeBeforeToAddToNowOn: 15m
+          timeAfterToKeepInNowOn: 15m
           channelNameResolver:
             type: day-tod
             thresholds:
@@ -1658,8 +2038,11 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          timeBeforeToAddToNowOn: 15m
+          timeAfterToKeepInNowOn: 15m
           channelNameResolver:
             type: day-tod
             thresholds:
@@ -1685,8 +2068,11 @@ public class ConfigYamlParserTest {
                 """
         guildId: some-guild-id
         databasePath: some-db-path
+        timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          timeBeforeToAddToNowOn: 15m
+          timeAfterToKeepInNowOn: 15m
           channelNameResolver:
             type: day-tod
             thresholds:

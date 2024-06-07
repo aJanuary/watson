@@ -6,6 +6,7 @@ import com.ajanuary.watson.programme.channelnameresolvers.ChannelNameResolver;
 import com.ajanuary.watson.programme.channelnameresolvers.DayChannelNameResolver;
 import com.ajanuary.watson.programme.channelnameresolvers.DayTodChannelNameResolver;
 import com.ajanuary.watson.programme.channelnameresolvers.DayTodChannelNameResolver.Threshold;
+import java.time.Duration;
 import java.util.Optional;
 
 public class ProgrammeConfigYamlParser {
@@ -20,8 +21,26 @@ public class ProgrammeConfigYamlParser {
             .string()
             .defaultingTo("programme-announcements")
             .value();
-    var nowNextChannel =
-        configParser.get("nowNextChannel").string().defaultingTo("now-and-next").value();
+
+    var nowOnConfig =
+        configParser
+            .get("nowOn")
+            .object()
+            .map(
+                p -> {
+                  var channel = p.get("channel").string().defaultingTo("now-on").value();
+                  var timeBeforeToAdd =
+                      p.get("timeBeforeToAdd")
+                          .string()
+                          .required()
+                          .map(ProgrammeConfigYamlParser::parseDuration);
+                  var timeAfterToKeep =
+                      p.get("timeAfterToKeep")
+                          .string()
+                          .required()
+                          .map(ProgrammeConfigYamlParser::parseDuration);
+                  return new ProgrammeConfig.NowOnConfig(channel, timeBeforeToAdd, timeAfterToKeep);
+                });
 
     var channelNameResolver =
         configParser
@@ -51,7 +70,7 @@ public class ProgrammeConfigYamlParser {
     return new ProgrammeConfig(
         programmeUrl,
         majorAnnouncementsChannel,
-        nowNextChannel,
+        nowOnConfig,
         channelNameResolver,
         hasPerformedFirstLoadNode);
   }
@@ -103,5 +122,9 @@ public class ProgrammeConfigYamlParser {
     } else {
       return Optional.empty();
     }
+  }
+
+  private static Duration parseDuration(String value) {
+    return Duration.parse("PT" + value);
   }
 }
