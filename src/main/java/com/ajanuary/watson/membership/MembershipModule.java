@@ -9,6 +9,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.events.guild.GenericGuildEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.api.events.session.SessionResumeEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
@@ -62,6 +63,12 @@ public class MembershipModule implements EventListener {
 
   @Override
   public void onEvent(@NotNull GenericEvent event) {
+    if (event instanceof GenericGuildEvent guildEvent) {
+      if (!guildEvent.getGuild().getId().equals(config.guildId())) {
+        return;
+      }
+    }
+
     if (event instanceof SessionResumeEvent) {
       checkAllMembers();
     } else if (event instanceof GuildMemberJoinEvent guildMemberJoinEvent) {
