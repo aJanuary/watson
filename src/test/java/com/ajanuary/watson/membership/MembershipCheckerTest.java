@@ -7,11 +7,13 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.ajanuary.watson.db.DatabaseManager;
 import com.ajanuary.watson.membership.MembersApiClient.MemberDetails;
+import com.ajanuary.watson.membership.MembersApiClient.MembershipStatus;
+import com.ajanuary.watson.membership.MembershipChecker.DiscordUser;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -36,7 +38,11 @@ public class MembershipCheckerTest {
 
     var membershipChecker =
         new MembershipChecker(
-            mock(JDA.class), config.membership().get(), config, mock(MembersApiClient.class));
+            mock(JDA.class),
+            config.membership().get(),
+            config,
+            mock(MembersApiClient.class),
+            mock(DatabaseManager.class));
 
     assertFalse(membershipChecker.shouldCheckMember(member), "member should not be checked");
   }
@@ -59,7 +65,11 @@ public class MembershipCheckerTest {
 
     var membershipChecker =
         new MembershipChecker(
-            mock(JDA.class), config.membership().get(), config, mock(MembersApiClient.class));
+            mock(JDA.class),
+            config.membership().get(),
+            config,
+            mock(MembersApiClient.class),
+            mock(DatabaseManager.class));
 
     assertFalse(membershipChecker.shouldCheckMember(member), "member should not be checked");
   }
@@ -82,7 +92,11 @@ public class MembershipCheckerTest {
 
     var membershipChecker =
         new MembershipChecker(
-            mock(JDA.class), config.membership().get(), config, mock(MembersApiClient.class));
+            mock(JDA.class),
+            config.membership().get(),
+            config,
+            mock(MembersApiClient.class),
+            mock(DatabaseManager.class));
 
     assertFalse(membershipChecker.shouldCheckMember(member), "member should not be checked");
   }
@@ -99,7 +113,11 @@ public class MembershipCheckerTest {
 
     var membershipChecker =
         new MembershipChecker(
-            mock(JDA.class), config.membership().get(), config, mock(MembersApiClient.class));
+            mock(JDA.class),
+            config.membership().get(),
+            config,
+            mock(MembersApiClient.class),
+            mock(DatabaseManager.class));
 
     assertTrue(membershipChecker.shouldCheckMember(member), "member should be checked");
   }
@@ -118,7 +136,11 @@ public class MembershipCheckerTest {
 
     var membershipChecker =
         new MembershipChecker(
-            mock(JDA.class), config.membership().get(), config, mock(MembersApiClient.class));
+            mock(JDA.class),
+            config.membership().get(),
+            config,
+            mock(MembersApiClient.class),
+            mock(DatabaseManager.class));
 
     assertTrue(membershipChecker.shouldCheckMember(member), "member should be checked");
   }
@@ -154,8 +176,8 @@ public class MembershipCheckerTest {
     when(guild.addRoleToMember(member, unverifiedRole)).thenReturn(addRoleToMemberAction.action());
     when(guild.getTextChannelsByName("the-mods-channel", true)).thenReturn(List.of(modsChannel));
 
-    when(apiClient.getMemberStatus(List.of("the-member")))
-        .thenReturn(Map.of("the-member", Optional.empty()));
+    when(apiClient.getMemberStatus(List.of(new DiscordUser("the-id", "the-member"))))
+        .thenReturn(Map.of("the-member", MembershipStatus.verification("some-verification-url")));
 
     when(member.getEffectiveName()).thenReturn("the-member-name");
 
@@ -163,8 +185,9 @@ public class MembershipCheckerTest {
     when(modsChannel.sendMessage(any(String.class))).thenReturn(sendMessageAction.action());
 
     var membershipChecker =
-        new MembershipChecker(jda, config.membership().get(), config, apiClient);
-    membershipChecker.checkMembership(List.of("the-member"));
+        new MembershipChecker(
+            jda, config.membership().get(), config, apiClient, mock(DatabaseManager.class));
+    membershipChecker.checkMembership(List.of(new DiscordUser("the-id", "the-member")));
 
     assertTrue(
         addRoleToMemberAction.wasInvoked(), "addRoleToMember action was scheduled for execution");
@@ -202,8 +225,8 @@ public class MembershipCheckerTest {
     when(guild.addRoleToMember(member, unverifiedRole)).thenReturn(addRoleToMemberAction.action());
     when(guild.getTextChannelsByName("the-mods-channel", true)).thenReturn(List.of(modsChannel));
 
-    when(apiClient.getMemberStatus(List.of("the-member")))
-        .thenReturn(Map.of("the-member", Optional.empty()));
+    when(apiClient.getMemberStatus(List.of(new DiscordUser("the-id", "the-member"))))
+        .thenReturn(Map.of("the-member", MembershipStatus.verification("some-verification-url")));
 
     when(member.getEffectiveName()).thenReturn("the-member-name");
 
@@ -211,8 +234,9 @@ public class MembershipCheckerTest {
     when(modsChannel.sendMessage(any(String.class))).thenReturn(sendMessageAction.action());
 
     var membershipChecker =
-        new MembershipChecker(jda, config.membership().get(), config, apiClient);
-    membershipChecker.checkMembership(List.of("the-member"));
+        new MembershipChecker(
+            jda, config.membership().get(), config, apiClient, mock(DatabaseManager.class));
+    membershipChecker.checkMembership(List.of(new DiscordUser("the-id", "the-member")));
 
     assertTrue(
         modifyNicknameAction.wasInvoked(), "modifyNickname action was scheduled for execution");
@@ -249,8 +273,8 @@ public class MembershipCheckerTest {
     when(guild.addRoleToMember(member, unverifiedRole)).thenReturn(addRoleToMemberAction.action());
     when(guild.getTextChannelsByName("the-mods-channel", true)).thenReturn(List.of(modsChannel));
 
-    when(apiClient.getMemberStatus(List.of("the-member")))
-        .thenReturn(Map.of("the-member", Optional.empty()));
+    when(apiClient.getMemberStatus(List.of(new DiscordUser("the-id", "the-member"))))
+        .thenReturn(Map.of("the-member", MembershipStatus.verification("some-verification-url")));
 
     when(member.getEffectiveName()).thenReturn("the-member-name [the-unverified-role]");
 
@@ -258,8 +282,9 @@ public class MembershipCheckerTest {
     when(modsChannel.sendMessage(any(String.class))).thenReturn(sendMessageAction.action());
 
     var membershipChecker =
-        new MembershipChecker(jda, config.membership().get(), config, apiClient);
-    membershipChecker.checkMembership(List.of("the-member"));
+        new MembershipChecker(
+            jda, config.membership().get(), config, apiClient, mock(DatabaseManager.class));
+    membershipChecker.checkMembership(List.of(new DiscordUser("the-id", "the-member")));
 
     assertFalse(
         modifyNicknameAction.wasInvoked(),
@@ -297,8 +322,8 @@ public class MembershipCheckerTest {
     when(guild.addRoleToMember(member, unverifiedRole)).thenReturn(addRoleToMemberAction.action());
     when(guild.getTextChannelsByName("the-mods-channel", true)).thenReturn(List.of(modsChannel));
 
-    when(apiClient.getMemberStatus(List.of("the-member")))
-        .thenReturn(Map.of("the-member", Optional.empty()));
+    when(apiClient.getMemberStatus(List.of(new DiscordUser("the-id", "the-member"))))
+        .thenReturn(Map.of("the-member", MembershipStatus.verification("some-verification-url")));
 
     when(member.getEffectiveName()).thenReturn("the-member-name [the-unverified-role]");
 
@@ -307,8 +332,9 @@ public class MembershipCheckerTest {
         .thenReturn(sendMessageAction.action());
 
     var membershipChecker =
-        new MembershipChecker(jda, config.membership().get(), config, apiClient);
-    membershipChecker.checkMembership(List.of("the-member"));
+        new MembershipChecker(
+            jda, config.membership().get(), config, apiClient, mock(DatabaseManager.class));
+    membershipChecker.checkMembership(List.of(new DiscordUser("the-id", "the-member")));
 
     assertTrue(sendMessageAction.wasInvoked(), "sendMessage action was scheduled for execution");
   }
@@ -344,9 +370,11 @@ public class MembershipCheckerTest {
     when(guild.addRoleToMember(member, memberRole)).thenReturn(addRoleToMemberAction.action());
     when(guild.getTextChannelsByName("the-mods-channel", true)).thenReturn(List.of(modsChannel));
 
-    when(apiClient.getMemberStatus(List.of("the-member")))
+    when(apiClient.getMemberStatus(List.of(new DiscordUser("the-id", "the-member"))))
         .thenReturn(
-            Map.of("the-member", Optional.of(new MemberDetails("some-username", List.of()))));
+            Map.of(
+                "the-member",
+                MembershipStatus.member(new MemberDetails("some-username", List.of()))));
 
     when(member.getEffectiveName()).thenReturn("the-member-name");
 
@@ -354,8 +382,9 @@ public class MembershipCheckerTest {
     when(modsChannel.sendMessage(any(String.class))).thenReturn(sendMessageAction.action());
 
     var membershipChecker =
-        new MembershipChecker(jda, config.membership().get(), config, apiClient);
-    membershipChecker.checkMembership(List.of("the-member"));
+        new MembershipChecker(
+            jda, config.membership().get(), config, apiClient, mock(DatabaseManager.class));
+    membershipChecker.checkMembership(List.of(new DiscordUser("the-id", "the-member")));
 
     assertTrue(
         addRoleToMemberAction.wasInvoked(), "addRoleToMember action was scheduled for execution");
@@ -392,9 +421,11 @@ public class MembershipCheckerTest {
     when(guild.addRoleToMember(member, memberRole)).thenReturn(addRoleToMemberAction.action());
     when(guild.getTextChannelsByName("the-mods-channel", true)).thenReturn(List.of(modsChannel));
 
-    when(apiClient.getMemberStatus(List.of("the-member")))
+    when(apiClient.getMemberStatus(List.of(new DiscordUser("the-id", "the-member"))))
         .thenReturn(
-            Map.of("the-member", Optional.of(new MemberDetails("the-badge-name", List.of()))));
+            Map.of(
+                "the-member",
+                MembershipStatus.member(new MemberDetails("the-badge-name", List.of()))));
 
     when(member.getEffectiveName()).thenReturn("the-member-name");
 
@@ -402,8 +433,9 @@ public class MembershipCheckerTest {
     when(modsChannel.sendMessage(any(String.class))).thenReturn(sendMessageAction.action());
 
     var membershipChecker =
-        new MembershipChecker(jda, config.membership().get(), config, apiClient);
-    membershipChecker.checkMembership(List.of("the-member"));
+        new MembershipChecker(
+            jda, config.membership().get(), config, apiClient, mock(DatabaseManager.class));
+    membershipChecker.checkMembership(List.of(new DiscordUser("the-id", "the-member")));
 
     assertTrue(
         modifyNicknameAction.wasInvoked(), "modifyNickname action was scheduled for execution");
@@ -448,11 +480,11 @@ public class MembershipCheckerTest {
     when(guild.addRoleToMember(member, role2)).thenReturn(addRole2ToMemberAction.action());
     when(guild.getTextChannelsByName("the-mods-channel", true)).thenReturn(List.of(modsChannel));
 
-    when(apiClient.getMemberStatus(List.of("the-member")))
+    when(apiClient.getMemberStatus(List.of(new DiscordUser("the-id", "the-member"))))
         .thenReturn(
             Map.of(
                 "the-member",
-                Optional.of(
+                MembershipStatus.member(
                     new MemberDetails(
                         "some-username", List.of("role-1-name", "role-2-name", "role-3-name")))));
 
@@ -462,8 +494,9 @@ public class MembershipCheckerTest {
     when(modsChannel.sendMessage(any(String.class))).thenReturn(sendMessageAction.action());
 
     var membershipChecker =
-        new MembershipChecker(jda, config.membership().get(), config, apiClient);
-    membershipChecker.checkMembership(List.of("the-member"));
+        new MembershipChecker(
+            jda, config.membership().get(), config, apiClient, mock(DatabaseManager.class));
+    membershipChecker.checkMembership(List.of(new DiscordUser("the-id", "the-member")));
 
     assertTrue(
         addRole1ToMemberAction.wasInvoked(),
@@ -506,9 +539,11 @@ public class MembershipCheckerTest {
     when(guild.addRoleToMember(member, memberRole)).thenReturn(addRoleToMemberAction.action());
     when(guild.getTextChannelsByName("the-mods-channel", true)).thenReturn(List.of(modsChannel));
 
-    when(apiClient.getMemberStatus(List.of("the-member")))
+    when(apiClient.getMemberStatus(List.of(new DiscordUser("the-id", "the-member"))))
         .thenReturn(
-            Map.of("the-member", Optional.of(new MemberDetails("some-username", List.of()))));
+            Map.of(
+                "the-member",
+                MembershipStatus.member(new MemberDetails("some-username", List.of()))));
 
     when(member.getEffectiveName()).thenReturn("the-member-name");
 
@@ -516,8 +551,9 @@ public class MembershipCheckerTest {
     when(modsChannel.sendMessage(any(String.class))).thenReturn(sendMessageAction.action());
 
     var membershipChecker =
-        new MembershipChecker(jda, config.membership().get(), config, apiClient);
-    membershipChecker.checkMembership(List.of("the-member"));
+        new MembershipChecker(
+            jda, config.membership().get(), config, apiClient, mock(DatabaseManager.class));
+    membershipChecker.checkMembership(List.of(new DiscordUser("the-id", "the-member")));
 
     assertTrue(
         addRoleToMemberAction.wasInvoked(), "addRoleToMember action was scheduled for execution");
@@ -564,11 +600,11 @@ public class MembershipCheckerTest {
     when(guild.addRoleToMember(member, role2)).thenReturn(addRole2ToMemberAction.action());
     when(guild.getTextChannelsByName("the-mods-channel", true)).thenReturn(List.of(modsChannel));
 
-    when(apiClient.getMemberStatus(List.of("the-member")))
+    when(apiClient.getMemberStatus(List.of(new DiscordUser("the-id", "the-member"))))
         .thenReturn(
             Map.of(
                 "the-member",
-                Optional.of(
+                MembershipStatus.member(
                     new MemberDetails(
                         "some-username", List.of("role-1-name", "role-2-name", "role-3-name")))));
 
@@ -578,8 +614,9 @@ public class MembershipCheckerTest {
     when(modsChannel.sendMessage(any(String.class))).thenReturn(sendMessageAction.action());
 
     var membershipChecker =
-        new MembershipChecker(jda, config.membership().get(), config, apiClient);
-    membershipChecker.checkMembership(List.of("the-member"));
+        new MembershipChecker(
+            jda, config.membership().get(), config, apiClient, mock(DatabaseManager.class));
+    membershipChecker.checkMembership(List.of(new DiscordUser("the-id", "the-member")));
 
     assertTrue(
         addRole2ToMemberAction.wasInvoked(),
@@ -621,13 +658,16 @@ public class MembershipCheckerTest {
     when(guild.addRoleToMember(member, memberRole)).thenReturn(addRoleToMemberAction.action());
     when(guild.getTextChannelsByName("the-mods-channel", true)).thenReturn(List.of(modsChannel));
 
-    when(apiClient.getMemberStatus(List.of("the-member-1", "the-member-2")))
+    when(apiClient.getMemberStatus(
+            List.of(
+                new DiscordUser("the-id-1", "the-member-1"),
+                new DiscordUser("the-id-2", "the-member-2"))))
         .thenReturn(
             Map.of(
                 "the-member-1",
-                Optional.of(new MemberDetails("some-username", List.of())),
+                MembershipStatus.member(new MemberDetails("some-username", List.of())),
                 "the-member-2",
-                Optional.of(new MemberDetails("some-username", List.of()))));
+                MembershipStatus.member(new MemberDetails("some-username", List.of()))));
 
     when(member.getEffectiveName()).thenReturn("the-member-name");
 
@@ -635,8 +675,12 @@ public class MembershipCheckerTest {
     when(modsChannel.sendMessage(any(String.class))).thenReturn(sendMessageAction.action());
 
     var membershipChecker =
-        new MembershipChecker(jda, config.membership().get(), config, apiClient);
-    membershipChecker.checkMembership(List.of("the-member-1", "the-member-2"));
+        new MembershipChecker(
+            jda, config.membership().get(), config, apiClient, mock(DatabaseManager.class));
+    membershipChecker.checkMembership(
+        List.of(
+            new DiscordUser("the-id-1", "the-member-1"),
+            new DiscordUser("the-id-2", "the-member-2")));
 
     assertTrue(
         addRoleToMemberAction.wasInvoked(), "addRoleToMember action was scheduled for execution");

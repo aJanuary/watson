@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.ajanuary.watson.api.ApiConfig;
 import com.ajanuary.watson.membership.MembershipConfig;
 import com.ajanuary.watson.programme.ProgrammeConfig;
 import com.ajanuary.watson.programme.ProgrammeConfig.NowOnConfig;
@@ -38,6 +39,7 @@ public class ConfigTest {
             ZoneId.of("UTC"),
             Optional.empty(),
             Optional.empty(),
+            Optional.empty(),
             Optional.empty());
     var thrown = assertThrows(IllegalStateException.class, () -> config.validateDiscordConfig(jda));
 
@@ -59,17 +61,21 @@ public class ConfigTest {
             ZoneId.of("UTC"),
             Optional.empty(),
             Optional.empty(),
+            Optional.empty(),
             Optional.empty());
 
     config.validateDiscordConfig(jda);
   }
 
   @Test
-  void validateErrorsIfDiscordModsChannelNotFound() {
+  void validateErrorsIfCommsChannelNotFound() {
     var jda = mock(JDA.class);
     var guild = mock(Guild.class);
     when(jda.getGuildById("the-guild-id")).thenReturn(guild);
-    when(guild.getTextChannelById("the-channel-id")).thenReturn(null);
+    // Just mock any roles, as we don't care about them for this test
+    when(guild.getRolesByName(any(), anyBoolean())).thenReturn(List.of(mock(Role.class)));
+    when(guild.getTextChannelsByName(eq("the-mods-channel-id"), anyBoolean()))
+        .thenReturn(List.of(mock(TextChannel.class)));
 
     var config =
         new Config(
@@ -78,14 +84,8 @@ public class ConfigTest {
             "some-database-path",
             ZoneId.of("UTC"),
             Optional.empty(),
-            Optional.of(
-                new MembershipConfig(
-                    "https://example.com/some-api-root",
-                    "some-api-key",
-                    "the-channel-id",
-                    "some-mods-channel",
-                    "some-unverified-role",
-                    Map.of())),
+            Optional.of(new ApiConfig("the-channel-id")),
+            Optional.empty(),
             Optional.empty());
     var thrown =
         assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
@@ -94,7 +94,7 @@ public class ConfigTest {
   }
 
   @Test
-  void validateDoesNotErrorIfDiscordModsChannelFound() {
+  void validateDoesNotErrorIfApiChannelFound() {
     var jda = mock(JDA.class);
     var guild = mock(Guild.class);
     when(jda.getGuildById("the-guild-id")).thenReturn(guild);
@@ -110,21 +110,15 @@ public class ConfigTest {
             "some-database-path",
             ZoneId.of("UTC"),
             Optional.empty(),
-            Optional.of(
-                new MembershipConfig(
-                    "https://example.com/some-api-root",
-                    "some-api-key",
-                    "the-channel-id",
-                    "some-member-role",
-                    "some-unverified-role",
-                    Map.of())),
+            Optional.of(new ApiConfig("the-channel-id")),
+            Optional.empty(),
             Optional.empty());
 
     config.validateDiscordConfig(jda);
   }
 
   @Test
-  void validateErrorsIfMultipleDiscordModsChannelsFound() {
+  void validateErrorsIfMultipleCommsChannelsFound() {
     var jda = mock(JDA.class);
     var guild = mock(Guild.class);
     when(jda.getGuildById("the-guild-id")).thenReturn(guild);
@@ -140,11 +134,109 @@ public class ConfigTest {
             "some-database-path",
             ZoneId.of("UTC"),
             Optional.empty(),
+            Optional.of(new ApiConfig("the-channel-id")),
+            Optional.empty(),
+            Optional.empty());
+    var thrown =
+        assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
+
+    assertEquals("Multiple channels found with the name: the-channel-id", thrown.getMessage());
+  }
+
+  @Test
+  void validateErrorsIfHelpDeskChannelNotFound() {
+    var jda = mock(JDA.class);
+    var guild = mock(Guild.class);
+    when(jda.getGuildById("the-guild-id")).thenReturn(guild);
+    when(guild.getTextChannelsByName(eq("the-help-desk-channel-id"), anyBoolean()))
+        .thenReturn(List.of());
+    when(guild.getTextChannelsByName(eq("the-mods-channel-id"), anyBoolean()))
+        .thenReturn(List.of(mock(TextChannel.class)));
+
+    var config =
+        new Config(
+            "some-token",
+            "the-guild-id",
+            "some-database-path",
+            ZoneId.of("UTC"),
+            Optional.empty(),
+            Optional.empty(),
             Optional.of(
                 new MembershipConfig(
                     "https://example.com/some-api-root",
                     "some-api-key",
-                    "the-channel-id",
+                    "the-help-desk-channel-id",
+                    "the-mods-channel-id",
+                    "some-mods-channel",
+                    "some-unverified-role",
+                    Map.of())),
+            Optional.empty());
+    var thrown =
+        assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
+
+    assertEquals("Channel not found: the-help-desk-channel-id", thrown.getMessage());
+  }
+
+  @Test
+  void validateDoesNotErrorIfHelpDeskChannelFound() {
+    var jda = mock(JDA.class);
+    var guild = mock(Guild.class);
+    when(jda.getGuildById("the-guild-id")).thenReturn(guild);
+    // Just mock any roles, as we don't care about them for this test
+    when(guild.getRolesByName(any(), anyBoolean())).thenReturn(List.of(mock(Role.class)));
+    when(guild.getTextChannelsByName(eq("the-help-desk-channel-id"), anyBoolean()))
+        .thenReturn(List.of(mock(TextChannel.class)));
+    when(guild.getTextChannelsByName(eq("the-mods-channel-id"), anyBoolean()))
+        .thenReturn(List.of(mock(TextChannel.class)));
+
+    var config =
+        new Config(
+            "some-token",
+            "the-guild-id",
+            "some-database-path",
+            ZoneId.of("UTC"),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(
+                new MembershipConfig(
+                    "https://example.com/some-api-root",
+                    "some-api-key",
+                    "the-help-desk-channel-id",
+                    "the-mods-channel-id",
+                    "some-member-role",
+                    "some-unverified-role",
+                    Map.of())),
+            Optional.empty());
+
+    config.validateDiscordConfig(jda);
+  }
+
+  @Test
+  void validateErrorsIfMultipleHelpDeskChannelsFound() {
+    var jda = mock(JDA.class);
+    var guild = mock(Guild.class);
+    when(jda.getGuildById("the-guild-id")).thenReturn(guild);
+    // Just mock any roles, as we don't care about them for this test
+    when(guild.getRolesByName(any(), anyBoolean())).thenReturn(List.of(mock(Role.class)));
+    when(guild.getTextChannelsByName(eq("the-help-desk-channel-id"), anyBoolean()))
+        .thenReturn(List.of(mock(TextChannel.class), mock(TextChannel.class)));
+    when(guild.getTextChannelsByName(eq("the-mods-channel-id"), anyBoolean()))
+        .thenReturn(List.of(mock(TextChannel.class)));
+
+    var config =
+        new Config(
+            "some-token",
+            "the-guild-id",
+            "some-database-path",
+            ZoneId.of("UTC"),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(
+                new MembershipConfig(
+                    "https://example.com/some-api-root",
+                    "some-api-key",
+                    "the-help-desk-channel-id",
+                    "the-mods-channel-id",
                     "some-member-role",
                     "some-unverified-role",
                     Map.of())),
@@ -152,7 +244,112 @@ public class ConfigTest {
     var thrown =
         assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
-    assertEquals("Multiple channels found with the name: the-channel-id", thrown.getMessage());
+    assertEquals(
+        "Multiple channels found with the name: the-help-desk-channel-id", thrown.getMessage());
+  }
+
+  @Test
+  void validateErrorsIfDiscordModsChannelNotFound() {
+    var jda = mock(JDA.class);
+    var guild = mock(Guild.class);
+    when(jda.getGuildById("the-guild-id")).thenReturn(guild);
+    when(guild.getTextChannelsByName(eq("the-help-desk-channel-id"), anyBoolean()))
+        .thenReturn(List.of(mock(TextChannel.class)));
+    when(guild.getTextChannelsByName(eq("the-mods-channel-id"), anyBoolean()))
+        .thenReturn(List.of());
+
+    var config =
+        new Config(
+            "some-token",
+            "the-guild-id",
+            "some-database-path",
+            ZoneId.of("UTC"),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(
+                new MembershipConfig(
+                    "https://example.com/some-api-root",
+                    "some-api-key",
+                    "the-help-desk-channel-id",
+                    "the-mods-channel-id",
+                    "some-mods-channel",
+                    "some-unverified-role",
+                    Map.of())),
+            Optional.empty());
+    var thrown =
+        assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
+
+    assertEquals("Channel not found: the-mods-channel-id", thrown.getMessage());
+  }
+
+  @Test
+  void validateDoesNotErrorIfDiscordModsChannelFound() {
+    var jda = mock(JDA.class);
+    var guild = mock(Guild.class);
+    when(jda.getGuildById("the-guild-id")).thenReturn(guild);
+    // Just mock any roles, as we don't care about them for this test
+    when(guild.getRolesByName(any(), anyBoolean())).thenReturn(List.of(mock(Role.class)));
+    when(guild.getTextChannelsByName(eq("the-help-desk-channel-id"), anyBoolean()))
+        .thenReturn(List.of(mock(TextChannel.class)));
+    when(guild.getTextChannelsByName(eq("the-mods-channel-id"), anyBoolean()))
+        .thenReturn(List.of(mock(TextChannel.class)));
+
+    var config =
+        new Config(
+            "some-token",
+            "the-guild-id",
+            "some-database-path",
+            ZoneId.of("UTC"),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(
+                new MembershipConfig(
+                    "https://example.com/some-api-root",
+                    "some-api-key",
+                    "the-help-desk-channel-id",
+                    "the-mods-channel-id",
+                    "some-member-role",
+                    "some-unverified-role",
+                    Map.of())),
+            Optional.empty());
+
+    config.validateDiscordConfig(jda);
+  }
+
+  @Test
+  void validateErrorsIfMultipleDiscordModsChannelsFound() {
+    var jda = mock(JDA.class);
+    var guild = mock(Guild.class);
+    when(jda.getGuildById("the-guild-id")).thenReturn(guild);
+    // Just mock any roles, as we don't care about them for this test
+    when(guild.getRolesByName(any(), anyBoolean())).thenReturn(List.of(mock(Role.class)));
+    when(guild.getTextChannelsByName(eq("the-help-desk-channel-id"), anyBoolean()))
+        .thenReturn(List.of(mock(TextChannel.class)));
+    when(guild.getTextChannelsByName(eq("the-mods-channel-id"), anyBoolean()))
+        .thenReturn(List.of(mock(TextChannel.class), mock(TextChannel.class)));
+
+    var config =
+        new Config(
+            "some-token",
+            "the-guild-id",
+            "some-database-path",
+            ZoneId.of("UTC"),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(
+                new MembershipConfig(
+                    "https://example.com/some-api-root",
+                    "some-api-key",
+                    "the-help-desk-channel-id",
+                    "the-mods-channel-id",
+                    "some-member-role",
+                    "some-unverified-role",
+                    Map.of())),
+            Optional.empty());
+    var thrown =
+        assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
+
+    assertEquals("Multiple channels found with the name: the-mods-channel-id", thrown.getMessage());
   }
 
   @Test
@@ -172,10 +369,12 @@ public class ConfigTest {
             "some-database-path",
             ZoneId.of("UTC"),
             Optional.empty(),
+            Optional.empty(),
             Optional.of(
                 new MembershipConfig(
                     "https://example.com/some-api-root",
                     "some-api-key",
+                    "some-help-desk-channel",
                     "some-mods-channel",
                     "the-member-role",
                     "the-unverified-role",
@@ -211,10 +410,12 @@ public class ConfigTest {
             "some-database-path",
             ZoneId.of("UTC"),
             Optional.empty(),
+            Optional.empty(),
             Optional.of(
                 new MembershipConfig(
                     "https://example.com/some-api-root",
                     "some-api-key",
+                    "some-help-desk-channel",
                     "some-mods-channel",
                     "the-member-role",
                     "some-unverified-role",
@@ -252,10 +453,12 @@ public class ConfigTest {
             "some-database-path",
             ZoneId.of("UTC"),
             Optional.empty(),
+            Optional.empty(),
             Optional.of(
                 new MembershipConfig(
                     "https://example.com/some-api-root",
                     "some-api-key",
+                    "some-help-desk-channel",
                     "some-mods-channel",
                     "the-member-role",
                     "some-unverified-role",
@@ -293,10 +496,12 @@ public class ConfigTest {
             "some-database-path",
             ZoneId.of("UTC"),
             Optional.empty(),
+            Optional.empty(),
             Optional.of(
                 new MembershipConfig(
                     "https://example.com/some-api-root",
                     "some-api-key",
+                    "some-help-desk-channel",
                     "some-mods-channel",
                     "some-member-role",
                     "the-unverified-role",
@@ -334,10 +539,12 @@ public class ConfigTest {
             "some-database-path",
             ZoneId.of("UTC"),
             Optional.empty(),
+            Optional.empty(),
             Optional.of(
                 new MembershipConfig(
                     "https://example.com/some-api-root",
                     "some-api-key",
+                    "some-help-desk-channel",
                     "some-mods-channel",
                     "some-member-role",
                     "the-unverified-role",
@@ -375,10 +582,12 @@ public class ConfigTest {
             "some-database-path",
             ZoneId.of("UTC"),
             Optional.empty(),
+            Optional.empty(),
             Optional.of(
                 new MembershipConfig(
                     "https://example.com/some-api-root",
                     "some-api-key",
+                    "some-help-desk-channel",
                     "some-mods-channel",
                     "some-member-role",
                     "some-unverified-role",
@@ -416,10 +625,12 @@ public class ConfigTest {
             "some-database-path",
             ZoneId.of("UTC"),
             Optional.empty(),
+            Optional.empty(),
             Optional.of(
                 new MembershipConfig(
                     "https://example.com/some-api-root",
                     "some-api-key",
+                    "some-help-desk-channel",
                     "some-mods-channel",
                     "some-member-role",
                     "some-unverified-role",
@@ -446,6 +657,7 @@ public class ConfigTest {
             "the-guild-id",
             "some-database-path",
             ZoneId.of("UTC"),
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             Optional.of(
@@ -481,6 +693,7 @@ public class ConfigTest {
             ZoneId.of("UTC"),
             Optional.empty(),
             Optional.empty(),
+            Optional.empty(),
             Optional.of(
                 new ProgrammeConfig(
                     "https://example.com/some-api-root",
@@ -510,6 +723,7 @@ public class ConfigTest {
             "the-guild-id",
             "some-database-path",
             ZoneId.of("UTC"),
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             Optional.of(
@@ -542,6 +756,7 @@ public class ConfigTest {
             "the-guild-id",
             "some-database-path",
             ZoneId.of("UTC"),
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             Optional.of(
@@ -577,6 +792,7 @@ public class ConfigTest {
             "the-guild-id",
             "some-database-path",
             ZoneId.of("UTC"),
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             Optional.of(

@@ -7,11 +7,14 @@ import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.ajanuary.watson.membership.MembershipChecker.DiscordUser;
+import com.ajanuary.watson.notification.EventDispatcher;
 import java.util.List;
 import java.util.Set;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.session.SessionResumeEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
 import org.junit.jupiter.api.Test;
@@ -25,13 +28,21 @@ public class MembershipModuleTest {
 
     var jda = mock(JDA.class);
     var guild = mock(Guild.class);
+    var user1 = mock(User.class);
     var member1 = mock(Member.class);
+    var user2 = mock(User.class);
     var member2 = mock(Member.class);
     var membershipChecker = mock(MembershipChecker.class);
+    var eventDispatcher = mock(EventDispatcher.class);
 
     when(jda.getGuildById("the-guild-id")).thenReturn(guild);
 
+    when(user1.getName()).thenReturn("the-member1-name");
+    when(member1.getUser()).thenReturn(user1);
     when(member1.getId()).thenReturn("the-member1-id");
+
+    when(user2.getName()).thenReturn("the-member2-name");
+    when(member2.getUser()).thenReturn(user2);
     when(member2.getId()).thenReturn("the-member2-id");
 
     when(guild.loadMembers()).thenReturn(new ResolvedTask<>(List.of(member1, member2)));
@@ -39,9 +50,10 @@ public class MembershipModuleTest {
     when(membershipChecker.shouldCheckMember(member1)).thenReturn(true);
     when(membershipChecker.shouldCheckMember(member2)).thenReturn(false);
 
-    new MembershipModule(jda, config, membershipChecker);
+    new MembershipModule(jda, config, membershipChecker, eventDispatcher);
 
-    verify(membershipChecker, timeout(100)).checkMembership(Set.of("the-member1-id"));
+    verify(membershipChecker, timeout(100))
+        .checkMembership(Set.of(new DiscordUser("the-member1-id", "the-member1-name")));
   }
 
   @Test
@@ -50,13 +62,21 @@ public class MembershipModuleTest {
 
     var jda = mock(JDA.class);
     var guild = mock(Guild.class);
+    var user1 = mock(User.class);
     var member1 = mock(Member.class);
+    var user2 = mock(User.class);
     var member2 = mock(Member.class);
     var membershipChecker = mock(MembershipChecker.class);
+    var eventDispatcher = mock(EventDispatcher.class);
 
     when(jda.getGuildById("the-guild-id")).thenReturn(guild);
 
+    when(user1.getName()).thenReturn("the-member1-name");
+    when(member1.getUser()).thenReturn(user1);
     when(member1.getId()).thenReturn("the-member1-id");
+
+    when(user2.getName()).thenReturn("the-member2-name");
+    when(member2.getUser()).thenReturn(user2);
     when(member2.getId()).thenReturn("the-member2-id");
 
     when(guild.loadMembers())
@@ -78,8 +98,9 @@ public class MembershipModuleTest {
         .when(jda)
         .addEventListener(any());
 
-    new MembershipModule(jda, config, membershipChecker);
+    new MembershipModule(jda, config, membershipChecker, eventDispatcher);
 
-    verify(membershipChecker, timeout(100)).checkMembership(Set.of("the-member1-id"));
+    verify(membershipChecker, timeout(100))
+        .checkMembership(Set.of(new DiscordUser("the-member1-id", "the-member1-name")));
   }
 }

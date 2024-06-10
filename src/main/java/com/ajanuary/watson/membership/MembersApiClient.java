@@ -1,5 +1,6 @@
 package com.ajanuary.watson.membership;
 
+import com.ajanuary.watson.membership.MembershipChecker.DiscordUser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.net.URI;
@@ -17,7 +18,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.function.Consumer;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -31,9 +32,22 @@ public class MembersApiClient {
     this.httpClient = httpClient;
   }
 
-  public Map<String, Optional<MemberDetails>> getMemberStatus(Collection<String> discordUserIds)
+  public Map<String, MembershipStatus> getMemberStatus(Collection<DiscordUser> discordUsers)
       throws IOException, InterruptedException {
-    var postData = "{\"discordUserIds\": [" + String.join(", ", discordUserIds) + "]}";
+
+    var postData = new HashMap<String, Object>();
+    postData.put(
+        "discordUsers",
+        discordUsers.stream()
+            .map(
+                discordUser -> {
+                  var discordUserMap = new HashMap<String, String>();
+                  discordUserMap.put("id", discordUser.userId());
+                  discordUserMap.put("username", discordUser.username());
+                  return discordUserMap;
+                })
+            .toList());
+    var postDataStr = objectMapper.writeValueAsString(postData);
     var uri = URI.create(config.membersApiUrl());
     var now =
         ZonedDateTime.now(java.time.ZoneOffset.UTC)
@@ -45,7 +59,7 @@ public class MembersApiClient {
             + "\n"
             + now
             + "\n"
-            + Base64.getEncoder().encodeToString(postData.getBytes());
+            + Base64.getEncoder().encodeToString(postDataStr.getBytes());
     var signature = calculateSignature(dataToSign);
 
     var request =
@@ -54,7 +68,7 @@ public class MembersApiClient {
             .header("X-Members-RequestTime", now)
             .header("Authorization", "members:1 Watson " + signature)
             .header("Content-Type", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(postData))
+            .POST(HttpRequest.BodyPublishers.ofString(postDataStr))
             .build();
 
     var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -62,15 +76,16 @@ public class MembersApiClient {
       throw new IOException(
           "Error checking membership: [" + response.statusCode() + "]" + response.body());
     }
-    var memberships = new HashMap<String, Optional<MemberDetails>>();
+    var memberships = new HashMap<String, MembershipStatus>();
 
     var responseData = objectMapper.readTree(response.body());
     responseData
         .fields()
         .forEachRemaining(
             entry -> {
-              if (entry.getValue().isNull()) {
-                memberships.put(entry.getKey(), Optional.empty());
+              if (entry.getValue().isTextual()) {
+                memberships.put(
+                    entry.getKey(), MembershipStatus.verification(entry.getValue().asText()));
               } else {
                 var name = entry.getValue().get("name").asText();
                 var roles = new ArrayList<String>();
@@ -82,7 +97,8 @@ public class MembersApiClient {
                         role -> {
                           roles.add(role.asText());
                         });
-                memberships.put(entry.getKey(), Optional.of(new MemberDetails(name, roles)));
+                memberships.put(
+                    entry.getKey(), MembershipStatus.member(new MemberDetails(name, roles)));
               }
             });
     return memberships;
@@ -101,6 +117,32 @@ public class MembersApiClient {
       return signature.toString();
     } catch (NoSuchAlgorithmException | InvalidKeyException e) {
       throw new RuntimeException(e);
+    }
+  }
+
+  public static class MembershipStatus {
+    private final MemberDetails details;
+    private final String verificationUrl;
+
+    private MembershipStatus(MemberDetails details, String verificationUrl) {
+      this.details = details;
+      this.verificationUrl = verificationUrl;
+    }
+
+    public static MembershipStatus member(MemberDetails details) {
+      return new MembershipStatus(details, null);
+    }
+
+    public static MembershipStatus verification(String verificationUrl) {
+      return new MembershipStatus(null, verificationUrl);
+    }
+
+    public void map(Consumer<MemberDetails> ifMember, Consumer<String> ifVerification) {
+      if (details != null) {
+        ifMember.accept(details);
+      } else {
+        ifVerification.accept(verificationUrl);
+      }
     }
   }
 

@@ -662,6 +662,88 @@ public class ConfigYamlParserTest {
   }
 
   @Test
+  void apiConfigIsOptional() throws JsonProcessingException {
+    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+        guildId: some-guild-id
+        databasePath: some-db-path
+        timezone: America/New_York
+        """);
+
+    var parser = new ConfigYamlParser();
+    var config = parser.parse(jsonConfig, dotenv);
+
+    assert (config.api().isEmpty());
+  }
+
+  @Test
+  void parsesApiChannel() throws JsonProcessingException {
+    var dotenv =
+        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+        guildId: some-guild-id
+        databasePath: some-db-path
+        timezone: America/New_York
+        api:
+          channel: the-channel
+        """);
+
+    var parser = new ConfigYamlParser();
+    var config = parser.parse(jsonConfig, dotenv);
+
+    assertTrue(config.api().isPresent(), "api config is present");
+    assertEquals("the-channel", config.api().get().channel());
+  }
+
+  @Test
+  void defaultsApiChannelToApiMessages() throws JsonProcessingException {
+    var dotenv =
+        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+        guildId: some-guild-id
+        databasePath: some-db-path
+        timezone: America/New_York
+        api: {}
+        """);
+
+    var parser = new ConfigYamlParser();
+    var config = parser.parse(jsonConfig, dotenv);
+
+    assertTrue(config.api().isPresent(), "api config is present");
+    assertEquals("api-messages", config.api().get().channel());
+  }
+
+  @Test
+  void errorsIfApiChannelIsNotString() throws JsonProcessingException {
+    var dotenv =
+        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+        guildId: some-guild-id
+        databasePath: some-db-path
+        timezone: America/New_York
+        api:
+          channel: 10
+        """);
+
+    var parser = new ConfigYamlParser();
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+
+    assertEquals("api.channel must be a string", thrown.getMessage());
+  }
+
+  @Test
   void membershipConfigIsOptional() throws JsonProcessingException {
     var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
     var jsonConfig =

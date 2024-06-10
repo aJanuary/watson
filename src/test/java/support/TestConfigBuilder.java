@@ -1,6 +1,7 @@
 package support;
 
 import com.ajanuary.watson.alarms.AlarmsConfig;
+import com.ajanuary.watson.api.ApiConfig;
 import com.ajanuary.watson.config.Config;
 import com.ajanuary.watson.membership.MembershipConfig;
 import com.ajanuary.watson.programme.ProgrammeConfig;
@@ -22,6 +23,7 @@ public class TestConfigBuilder {
   private String databasePath = "some-database-path";
   private ZoneId timezone = ZoneId.of("UTC");
   private TestAlarmsConfigBuilder alarmsConfigBuilder = new TestAlarmsConfigBuilder();
+  private TestApiConfigBuilder apiConfigBuilder = new TestApiConfigBuilder();
   private TestMembershipConfigBuilder membershipConfigBuilder = new TestMembershipConfigBuilder();
   private TestProgrammeConfigBuilder programmeConfigBuilder = new TestProgrammeConfigBuilder();
 
@@ -32,6 +34,7 @@ public class TestConfigBuilder {
         databasePath,
         timezone,
         Optional.ofNullable(alarmsConfigBuilder).map(TestAlarmsConfigBuilder::build),
+        Optional.ofNullable(apiConfigBuilder).map(TestApiConfigBuilder::build),
         Optional.ofNullable(membershipConfigBuilder).map(TestMembershipConfigBuilder::build),
         Optional.ofNullable(programmeConfigBuilder).map(TestProgrammeConfigBuilder::build));
   }
@@ -124,9 +127,23 @@ public class TestConfigBuilder {
     }
   }
 
+  public static class TestApiConfigBuilder {
+    private String channel = "some-channel";
+
+    public ApiConfig build() {
+      return new ApiConfig(channel);
+    }
+
+    public TestApiConfigBuilder withChannel(String channel) {
+      this.channel = channel;
+      return this;
+    }
+  }
+
   public static class TestMembershipConfigBuilder {
     private String membersApiUrl = "https://example.com/some-api-root";
     private String membersApiKey = "some-api-key";
+    private String helpDeskChannel = "some-help-desk-channel";
     private String discordModsChannel = "some-discord-mods-channel";
     private String memberRole = "some-member-role";
     private String unverifiedRole = "some-unverified-role";
@@ -136,6 +153,7 @@ public class TestConfigBuilder {
       return new MembershipConfig(
           membersApiUrl,
           membersApiKey,
+          helpDeskChannel,
           discordModsChannel,
           memberRole,
           unverifiedRole,

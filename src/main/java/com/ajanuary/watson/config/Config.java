@@ -1,6 +1,7 @@
 package com.ajanuary.watson.config;
 
 import com.ajanuary.watson.alarms.AlarmsConfig;
+import com.ajanuary.watson.api.ApiConfig;
 import com.ajanuary.watson.membership.MembershipConfig;
 import com.ajanuary.watson.programme.ProgrammeConfig;
 import com.ajanuary.watson.utils.JDAUtils;
@@ -14,6 +15,7 @@ public record Config(
     String databasePath,
     ZoneId timezone,
     Optional<AlarmsConfig> alarms,
+    Optional<ApiConfig> api,
     Optional<MembershipConfig> membership,
     Optional<ProgrammeConfig> programme) {
 
@@ -28,6 +30,7 @@ public record Config(
 
     var jdaUtils = new JDAUtils(jda, this);
     alarms().ifPresent(alarmsConfig -> alarmsConfig.validateDiscordConfig(jdaUtils));
+    api().ifPresent(apiConfig -> apiConfig.validateDiscordConfig(jdaUtils));
     membership().ifPresent(membershipConfig -> membershipConfig.validateDiscordConfig(jdaUtils));
     programme().ifPresent(programmeConfig -> programmeConfig.validateDiscordConfig(jdaUtils));
   }

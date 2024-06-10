@@ -1,13 +1,15 @@
 package com.ajanuary.watson.membership;
 
+import com.ajanuary.watson.api.CheckUserEvent;
 import com.ajanuary.watson.config.Config;
+import com.ajanuary.watson.membership.MembershipChecker.DiscordUser;
+import com.ajanuary.watson.notification.EventDispatcher;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.guild.GenericGuildEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
@@ -24,22 +26,28 @@ public class MembershipModule implements EventListener {
   private final JDA jda;
   private final Config config;
   private final MembershipChecker membershipChecker;
-  private final Lock lock = new ReentrantLock();
-  private final Condition hasMembersToCheck = lock.newCondition();
+  private final Lock membersLock = new ReentrantLock();
+  private final Condition hasMembersToCheck = membersLock.newCondition();
 
-  private Set<String> membersToCheck = new HashSet<>();
+  private Set<DiscordUser> membersToCheck = new HashSet<>();
 
-  public MembershipModule(JDA jda, Config config, MembershipChecker membershipChecker) {
+  public MembershipModule(
+      JDA jda,
+      Config config,
+      MembershipChecker membershipChecker,
+      EventDispatcher eventDispatcher) {
     this.jda = jda;
     this.config = config;
     this.membershipChecker = membershipChecker;
+    eventDispatcher.register(
+        CheckUserEvent.class, e -> membershipChecker.checkMembership(e.users()));
 
     var pollingThread =
         new Thread(
             () -> {
               while (true) {
                 try {
-                  lock.lock();
+                  membersLock.lock();
                   while (membersToCheck.isEmpty()) {
                     hasMembersToCheck.await();
                   }
@@ -50,7 +58,7 @@ public class MembershipModule implements EventListener {
                   Thread.currentThread().interrupt();
                   break;
                 } finally {
-                  lock.unlock();
+                  membersLock.unlock();
                 }
               }
             });
@@ -73,12 +81,12 @@ public class MembershipModule implements EventListener {
       checkAllMembers();
     } else if (event instanceof GuildMemberJoinEvent guildMemberJoinEvent) {
       var member = guildMemberJoinEvent.getMember();
-      lock.lock();
+      membersLock.lock();
       try {
-        membersToCheck.add(member.getId());
+        membersToCheck.add(new DiscordUser(member.getId(), member.getUser().getName()));
         hasMembersToCheck.signal();
       } finally {
-        lock.unlock();
+        membersLock.unlock();
       }
     }
   }
@@ -94,15 +102,15 @@ public class MembershipModule implements EventListener {
         .loadMembers()
         .onSuccess(
             members -> {
-              lock.lock();
+              membersLock.lock();
               try {
                 members.stream()
                     .filter(membershipChecker::shouldCheckMember)
-                    .map(Member::getId)
+                    .map(m -> new DiscordUser(m.getId(), m.getUser().getName()))
                     .forEach(membersToCheck::add);
                 hasMembersToCheck.signal();
               } finally {
-                lock.unlock();
+                membersLock.unlock();
               }
             })
         .onError(e -> logger.error("Error loading members", e));

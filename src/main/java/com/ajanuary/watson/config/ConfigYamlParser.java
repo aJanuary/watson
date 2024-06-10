@@ -1,6 +1,7 @@
 package com.ajanuary.watson.config;
 
 import com.ajanuary.watson.alarms.AlarmsConfigYamlParser;
+import com.ajanuary.watson.api.ApiConfigYamlParser;
 import com.ajanuary.watson.membership.MembershipConfigYamlParser;
 import com.ajanuary.watson.programme.ProgrammeConfigYamlParser;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -20,6 +21,7 @@ public class ConfigYamlParser {
     var databasePath = configParser.get("databasePath").string().required().value();
     var timezone = configParser.get("timezone").string().required().map(ZoneId::of);
     var alarmsConfig = configParser.get("alarms").object().map(AlarmsConfigYamlParser::parse);
+    var apiConfig = configParser.get("api").object().map(ApiConfigYamlParser::parse);
     var membershipConfig =
         configParser
             .get("membership")
@@ -36,6 +38,7 @@ public class ConfigYamlParser {
         databasePath,
         timezone,
         alarmsConfig,
+        apiConfig,
         membershipConfig,
         programmeConfig);
   }

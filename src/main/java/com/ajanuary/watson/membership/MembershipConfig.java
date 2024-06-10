@@ -6,12 +6,14 @@ import java.util.Map;
 public record MembershipConfig(
     String membersApiUrl,
     String membersApiKey,
+    String helpDeskChannel,
     String discordModsChannel,
     String memberRole,
     String unverifiedRole,
     Map<String, String> additionalRoles) {
 
   public void validateDiscordConfig(JDAUtils jdaUtils) {
+    jdaUtils.getTextChannel(helpDeskChannel());
     jdaUtils.getTextChannel(discordModsChannel());
     jdaUtils.getRole(memberRole());
     jdaUtils.getRole(unverifiedRole());

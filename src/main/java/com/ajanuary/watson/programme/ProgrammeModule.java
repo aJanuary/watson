@@ -4,7 +4,6 @@ import com.ajanuary.watson.alarms.Scheduler;
 import com.ajanuary.watson.config.Config;
 import com.ajanuary.watson.db.DatabaseManager;
 import com.ajanuary.watson.notification.EventDispatcher;
-import com.ajanuary.watson.notification.EventType;
 import com.ajanuary.watson.utils.JDAUtils;
 import com.fasterxml.jackson.core.StreamReadFeature;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -82,7 +81,7 @@ public class ProgrammeModule {
               this::getNextNowOnTime,
               this::getNowOn,
               this::handleNowOn);
-      eventDispatcher.register(EventType.ITEMS_CHANGED, scheduler::notifyOfDbChange);
+      eventDispatcher.register(ItemChangedEvent.class, e -> scheduler.notifyOfDbChange());
     }
   }
 
@@ -185,7 +184,7 @@ public class ProgrammeModule {
           conn.insertDiscordThread(
               new DiscordThread(
                   discordThreadId, discordMessageId, Status.SCHEDULED, newDiscordItem));
-          eventDispatcher.dispatch(EventType.ITEMS_CHANGED);
+          eventDispatcher.dispatch(new ItemChangedEvent());
 
           if (programmeConfig.hasPerformedFirstLoad()) {
             var announcementEmbedBuilder = new EmbedBuilder();
@@ -241,7 +240,7 @@ public class ProgrammeModule {
                   existingThread.get().discordMessageId(),
                   isSignificantUpdate ? Status.UPDATED : existingThread.get().status(),
                   newDiscordItem));
-          eventDispatcher.dispatch(EventType.ITEMS_CHANGED);
+          eventDispatcher.dispatch(new ItemChangedEvent());
 
           if (!programmeConfig.hasPerformedFirstLoad() && isSignificantUpdate) {
             var announcementEmbedBuilder = new EmbedBuilder();
@@ -319,7 +318,7 @@ public class ProgrammeModule {
                       existingThread.discordMessageId(),
                       Status.CANCELLED,
                       existingThread.item()));
-              eventDispatcher.dispatch(EventType.ITEMS_CHANGED);
+              eventDispatcher.dispatch(new ItemChangedEvent());
 
               var announcementEmbedBuilder = new EmbedBuilder();
               announcementEmbedBuilder.appendDescription(

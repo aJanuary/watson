@@ -1,12 +1,14 @@
 package com.ajanuary.watson;
 
 import com.ajanuary.watson.alarms.AlarmsModule;
+import com.ajanuary.watson.api.ApiModule;
 import com.ajanuary.watson.config.Config;
 import com.ajanuary.watson.db.DatabaseManager;
 import com.ajanuary.watson.membership.MembersApiClient;
 import com.ajanuary.watson.membership.MembershipChecker;
 import com.ajanuary.watson.membership.MembershipModule;
 import com.ajanuary.watson.notification.EventDispatcher;
+import com.ajanuary.watson.notification.ReadyEvent;
 import com.ajanuary.watson.programme.ProgrammeModule;
 import java.net.http.HttpClient;
 import java.sql.SQLException;
@@ -56,13 +58,17 @@ public class Bot {
             alarmsConfig ->
                 new AlarmsModule(jda, alarmsConfig, config, databaseManager, eventDispatcher));
     config
+        .api()
+        .ifPresent(
+            apiConfig -> new ApiModule(jda, apiConfig, config, databaseManager, eventDispatcher));
+    config
         .membership()
         .ifPresent(
             membershipConfig -> {
               var apiClient = new MembersApiClient(membershipConfig, HttpClient.newHttpClient());
               var membershipChecker =
-                  new MembershipChecker(jda, membershipConfig, config, apiClient);
-              new MembershipModule(jda, config, membershipChecker);
+                  new MembershipChecker(jda, membershipConfig, config, apiClient, databaseManager);
+              new MembershipModule(jda, config, membershipChecker, eventDispatcher);
             });
     config
         .programme()
@@ -70,5 +76,7 @@ public class Bot {
             programmeConfig ->
                 new ProgrammeModule(
                     jda, programmeConfig, config, databaseManager, eventDispatcher));
+
+    eventDispatcher.dispatch(new ReadyEvent());
   }
 }

@@ -16,6 +16,8 @@ import java.util.Optional;
 import javax.sql.DataSource;
 import org.flywaydb.core.Flyway;
 import org.sqlite.SQLiteDataSource;
+import org.sqlite.SQLiteErrorCode;
+import org.sqlite.SQLiteException;
 
 public class DatabaseManager {
 
@@ -586,6 +588,24 @@ public class DatabaseManager {
           """)) {
         statement.setString(1, messageId);
         statement.executeUpdate();
+      }
+    }
+
+    public boolean markCommsLogAsProcessed(String messageId) throws SQLException {
+      try (var connection = dataSource.getConnection();
+          var statement =
+              connection.prepareStatement(
+                  """
+          insert into comms_log(discord_message_id) values (?)
+          """)) {
+        statement.setString(1, messageId);
+        statement.executeUpdate();
+        return true;
+      } catch (SQLiteException e) {
+        if (e.getResultCode() == SQLiteErrorCode.SQLITE_CONSTRAINT_PRIMARYKEY) {
+          return false;
+        }
+        throw e;
       }
     }
   }

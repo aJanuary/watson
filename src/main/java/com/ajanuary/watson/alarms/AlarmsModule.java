@@ -3,9 +3,9 @@ package com.ajanuary.watson.alarms;
 import com.ajanuary.watson.config.Config;
 import com.ajanuary.watson.db.DatabaseManager;
 import com.ajanuary.watson.notification.EventDispatcher;
-import com.ajanuary.watson.notification.EventType;
 import com.ajanuary.watson.privatethreads.PrivateThreadManager;
 import com.ajanuary.watson.programme.DiscordThread;
+import com.ajanuary.watson.programme.ItemChangedEvent;
 import com.ajanuary.watson.utils.JDAUtils;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -54,7 +54,7 @@ public class AlarmsModule {
             this::getNextItemTime,
             this::getItemsBefore,
             this::handleItem);
-    eventDispatcher.register(EventType.ITEMS_CHANGED, itemScheduler::notifyOfDbChange);
+    eventDispatcher.register(ItemChangedEvent.class, e -> itemScheduler.notifyOfDbChange());
     this.dmScheduler =
         new Scheduler<>(
             "dm",
@@ -190,13 +190,15 @@ public class AlarmsModule {
       ThreadChannel thread;
       try {
         thread =
-            privateThreadManager.createThread(
-                conn,
-                dm.userId(),
-                () -> {
-                  var nowNextChannel = jdaUtils.getTextChannel(alarmsConfig.alarmsChannel());
-                  return nowNextChannel.createThreadChannel("reminders", true).complete();
-                });
+            privateThreadManager
+                .createThread(
+                    conn,
+                    dm.userId(),
+                    () -> {
+                      var nowNextChannel = jdaUtils.getTextChannel(alarmsConfig.alarmsChannel());
+                      return nowNextChannel.createThreadChannel("reminders", true).complete();
+                    })
+                .thread();
       } catch (SQLException e) {
         logger.error("Error recording private thread for user {}", dm.userId(), e);
         return;
