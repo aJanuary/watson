@@ -2,7 +2,6 @@ package com.ajanuary.watson.utils;
 
 import com.ajanuary.watson.config.ConfigYamlParser;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-import io.github.cdimascio.dotenv.Dotenv;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.concurrent.ExecutionException;
@@ -14,11 +13,10 @@ public class ClearChannels {
 
   public static void main(String[] args)
       throws IOException, InterruptedException, ExecutionException {
-    var dotenv = Dotenv.configure().directory(args[0]).load();
-
     var objectMapper = new YAMLMapper();
+    var jsonSecrets = objectMapper.readTree(Paths.get(args[0]).toFile());
     var jsonConfig = objectMapper.readTree(Paths.get(args[0], "config.yaml").toFile());
-    var config = new ConfigYamlParser().parse(jsonConfig, dotenv);
+    var config = new ConfigYamlParser().parse(jsonSecrets, jsonConfig);
 
     var possibleNames =
         config.programme().get().channelNameResolver().getPossibleNames().stream()

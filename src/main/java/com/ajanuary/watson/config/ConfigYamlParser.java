@@ -5,16 +5,13 @@ import com.ajanuary.watson.api.ApiConfigYamlParser;
 import com.ajanuary.watson.membership.MembershipConfigYamlParser;
 import com.ajanuary.watson.programme.ProgrammeConfigYamlParser;
 import com.fasterxml.jackson.databind.JsonNode;
-import io.github.cdimascio.dotenv.Dotenv;
 import java.time.ZoneId;
 
 public class ConfigYamlParser {
 
-  public Config parse(JsonNode jsonConfig, Dotenv dotenv) {
-    var discordBotToken = dotenv.get("DISCORD_BOT_TOKEN");
-    if (discordBotToken == null) {
-      throw new ConfigException("DISCORD_BOT_TOKEN is required");
-    }
+  public Config parse(JsonNode jsonSecrets, JsonNode jsonConfig) {
+    var secretsParser = ConfigParser.parse(jsonSecrets);
+    var discordBotToken = secretsParser.get("discordBotToken").string().required().value();
 
     var configParser = ConfigParser.parse(jsonConfig);
     var guildId = configParser.get("guildId").string().required().value();
@@ -28,7 +25,7 @@ public class ConfigYamlParser {
             .object()
             .map(
                 membershipConfigObj ->
-                    MembershipConfigYamlParser.parse(membershipConfigObj, dotenv));
+                    MembershipConfigYamlParser.parse(secretsParser, membershipConfigObj));
     var programmeConfig =
         configParser.get("programme").object().map(ProgrammeConfigYamlParser::parse);
 

@@ -1,19 +1,15 @@
 package com.ajanuary.watson.membership;
 
-import com.ajanuary.watson.config.ConfigException;
 import com.ajanuary.watson.config.ConfigParser.ObjectConfigParserWithValue;
-import io.github.cdimascio.dotenv.Dotenv;
 import java.util.Map;
 
 public class MembershipConfigYamlParser {
 
   private MembershipConfigYamlParser() {}
 
-  public static MembershipConfig parse(ObjectConfigParserWithValue configParser, Dotenv dotenv) {
-    var membersApiKey = dotenv.get("MEMBERS_API_KEY");
-    if (membersApiKey == null) {
-      throw new ConfigException("MEMBERS_API_KEY is required");
-    }
+  public static MembershipConfig parse(
+      ObjectConfigParserWithValue secretsParser, ObjectConfigParserWithValue configParser) {
+    var membersApiKey = secretsParser.get("membersApiKey").string().required().value();
 
     var membersApiUrl = configParser.get("membersApiUrl").string().required().value();
     var helpDeskChannel =

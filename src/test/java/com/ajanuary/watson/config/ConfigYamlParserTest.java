@@ -11,13 +11,17 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import org.junit.jupiter.api.Test;
-import support.DotenvFake;
 
 public class ConfigYamlParserTest {
 
   @Test
   void readsDiscordBotTokenFromDotenv() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "the-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: the-token
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -28,14 +32,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertEquals("the-token", config.discordBotToken());
   }
 
   @Test
   void throwsIfDiscordBotTokenMissing() throws JsonProcessingException {
-    var dotenv = new DotenvFake();
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+    {}
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -46,14 +55,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
-    assertEquals("DISCORD_BOT_TOKEN is required", thrown.getMessage());
+    assertEquals("discordBotToken is required", thrown.getMessage());
   }
 
   @Test
   void readsCoreConfigFrom() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -64,14 +78,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertEquals("the-guild-id", config.guildId());
   }
 
   @Test
   void errorsIfGuildIdIsNotString() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -82,14 +101,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("guildId must be a string", thrown.getMessage());
   }
 
   @Test
   void errorsIfGuildIdIsMissing() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -99,14 +123,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("guildId is required", thrown.getMessage());
   }
 
   @Test
   void readsDatabasePathFromConfig() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -117,14 +146,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertEquals("the-db-path", config.databasePath());
   }
 
   @Test
   void errorsIfDatabasePathIsNotString() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -135,14 +169,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("databasePath must be a string", thrown.getMessage());
   }
 
   @Test
   void errorsIfDatabasePathIsMissing() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -152,14 +191,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("databasePath is required", thrown.getMessage());
   }
 
   @Test
   void errorsIfTimezoneIsMissing() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -169,14 +213,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("timezone is required", thrown.getMessage());
   }
 
   @Test
   void errorsIfTimezoneIsNotString() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -187,13 +236,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("timezone must be a string", thrown.getMessage());
   }
 
+  @Test
   void errorsIfTimezoneIsInvalid() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -204,14 +259,21 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
-    assertEquals("Invalid timezone: Invalid/Timezone", thrown.getMessage());
+    assertEquals(
+        "Malformed value for timezone: Unknown time-zone ID: Invalid/Timezone",
+        thrown.getMessage());
   }
 
   @Test
   void alarmsConfigIsOptional() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -222,14 +284,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.alarms().isEmpty(), "no alarms config");
   }
 
   @Test
   void parsesAlarmsTimeBeforeToNotify() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -244,7 +311,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.alarms().isPresent(), "alarms config is present");
     assertEquals("PT15M", config.alarms().get().timeBeforeToNotify().toString());
@@ -252,7 +319,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfAlarmsTimeBeforeToNotifyIsMissing() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -266,14 +338,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("alarms.timeBeforeToNotify is required", thrown.getMessage());
   }
 
   @Test
   void errorsIfAlarmsTimeBeforeToNotifyIsNotString() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -288,14 +365,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("alarms.timeBeforeToNotify must be a string", thrown.getMessage());
   }
 
   @Test
   void errorsIfAlarmsTimeBeforeToNotifyIsInvalidDuration() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -310,7 +392,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals(
         "Malformed value for alarms.timeBeforeToNotify: Text cannot be parsed to a Duration",
@@ -319,7 +401,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void parsesAlarmsMaxTimeAfterToNotify() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -334,7 +421,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.alarms().isPresent(), "alarms config is present");
     assertEquals("PT5M", config.alarms().get().maxTimeAfterToNotify().toString());
@@ -342,7 +429,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfAlarmsMaxTimeAfterToNotifyIsMissing() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -356,14 +448,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("alarms.maxTimeAfterToNotify is required", thrown.getMessage());
   }
 
   @Test
   void errorsIfAlarmsMaxTimeAfterToNotifyIsNotString() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -378,14 +475,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("alarms.maxTimeAfterToNotify must be a string", thrown.getMessage());
   }
 
   @Test
   void errorsIfAlarmsMaxTimeAfterToNotifyIsInvalidDuration() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -400,7 +502,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals(
         "Malformed value for alarms.maxTimeAfterToNotify: Text cannot be parsed to a Duration",
@@ -409,7 +511,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void parsesAlarmsMinTimeBetweenDMs() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -424,7 +531,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.alarms().isPresent(), "alarms config is present");
     assertEquals("PT0.5S", config.alarms().get().minTimeBetweenDMs().toString());
@@ -432,7 +539,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfAlarmsMinTimeBetweenDMsIsMissing() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -446,14 +558,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("alarms.minTimeBetweenDMs is required", thrown.getMessage());
   }
 
   @Test
   void errorsIfAlarmsMinTimeBetweenDMsIsNotString() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -468,14 +585,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("alarms.minTimeBetweenDMs must be a string", thrown.getMessage());
   }
 
   @Test
   void errorsIfAlarmsMinTimeBetweenDMsIsInvalidDuration() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -490,7 +612,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals(
         "Malformed value for alarms.minTimeBetweenDMs: Text cannot be parsed to a Duration",
@@ -499,7 +621,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void parsesAlarmEmoji() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -515,7 +642,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.alarms().isPresent(), "alarms config is present");
     assertEquals(Emoji.fromUnicode("U+1F514"), config.alarms().get().alarmEmoji());
@@ -523,7 +650,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void defaultsAlarmEmojiToClockEmoji() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -538,7 +670,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.alarms().isPresent(), "alarms config is present");
     assertEquals(Emoji.fromUnicode("U+23F0"), config.alarms().get().alarmEmoji());
@@ -546,7 +678,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfAlarmEmojiIsNotString() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -562,14 +699,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("alarms.alarmEmoji must be a string", thrown.getMessage());
   }
 
   @Test
   void errorsIfAlarmEmojiIsInvalidEmoji() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -585,7 +727,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals(
         "Malformed value for alarms.alarmEmoji: Unicode may not be empty", thrown.getMessage());
@@ -593,7 +735,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void parsesAlarmsAlarmsChannel() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -609,7 +756,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.alarms().isPresent(), "alarms config is present");
     assertEquals("the-alarms-channel", config.alarms().get().alarmsChannel());
@@ -617,7 +764,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void defaultsAlarmsAlarmsChannelToReminders() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -632,7 +784,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.alarms().isPresent(), "alarms config is present");
     assertEquals("reminders", config.alarms().get().alarmsChannel());
@@ -640,7 +792,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfAlarmsAlarmsChannelIsNotString() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -656,14 +813,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("alarms.alarmsChannel must be a string", thrown.getMessage());
   }
 
   @Test
   void apiConfigIsOptional() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -674,15 +836,20 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assert (config.api().isEmpty());
   }
 
   @Test
   void parsesApiChannel() throws JsonProcessingException {
-    var dotenv =
-        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token
+      membersApiKey: some-key
+      """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -695,7 +862,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.api().isPresent(), "api config is present");
     assertEquals("the-channel", config.api().get().channel());
@@ -703,8 +870,13 @@ public class ConfigYamlParserTest {
 
   @Test
   void defaultsApiChannelToApiMessages() throws JsonProcessingException {
-    var dotenv =
-        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token
+      membersApiKey: some-key"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -716,7 +888,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.api().isPresent(), "api config is present");
     assertEquals("api-messages", config.api().get().channel());
@@ -724,8 +896,13 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfApiChannelIsNotString() throws JsonProcessingException {
-    var dotenv =
-        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token
+      membersApiKey: some-key"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -738,14 +915,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("api.channel must be a string", thrown.getMessage());
   }
 
   @Test
   void membershipConfigIsOptional() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -756,14 +938,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assert (config.membership().isEmpty());
   }
 
   @Test
   void membershipModuleRequiresMembersApiKey() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -776,15 +963,20 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
-    assertEquals("MEMBERS_API_KEY is required", thrown.getMessage());
+    assertEquals("membersApiKey is required", thrown.getMessage());
   }
 
   @Test
   void readsMembersApiKeyFromDotenv() throws JsonProcessingException {
-    var dotenv =
-        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "the-key");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token
+      membersApiKey: the-key
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -797,7 +989,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.membership().isPresent(), "membership config is present");
     assertEquals("the-key", config.membership().get().membersApiKey());
@@ -805,8 +997,13 @@ public class ConfigYamlParserTest {
 
   @Test
   void parsesMembershipApiRoot() throws JsonProcessingException {
-    var dotenv =
-        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token
+      membersApiKey: some-key"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -819,7 +1016,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.membership().isPresent(), "membership config is present");
     assertEquals("https://example.com/the-api-root", config.membership().get().membersApiUrl());
@@ -827,8 +1024,13 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfMembershipApiRootIsMissing() throws JsonProcessingException {
-    var dotenv =
-        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token
+      membersApiKey: some-key"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -840,15 +1042,20 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("membership.membersApiUrl is required", thrown.getMessage());
   }
 
   @Test
   void errorsIfMembershipApiRootIsNotString() throws JsonProcessingException {
-    var dotenv =
-        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token
+      membersApiKey: some-key"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -861,15 +1068,20 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("membership.membersApiUrl must be a string", thrown.getMessage());
   }
 
   @Test
   void parsesMembershipDiscordModsChannel() throws JsonProcessingException {
-    var dotenv =
-        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token
+      membersApiKey: some-key"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -883,7 +1095,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.membership().isPresent(), "membership config is present");
     assertEquals("the-mods-channel", config.membership().get().discordModsChannel());
@@ -891,8 +1103,13 @@ public class ConfigYamlParserTest {
 
   @Test
   void defaultsMembershipDiscordModsChannelToDiscordMods() throws JsonProcessingException {
-    var dotenv =
-        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token
+      membersApiKey: some-key"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -905,7 +1122,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.membership().isPresent(), "membership config is present");
     assertEquals("discord-mods", config.membership().get().discordModsChannel());
@@ -913,8 +1130,13 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfMembershipDiscordModsChannelIsNotString() throws JsonProcessingException {
-    var dotenv =
-        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token
+      membersApiKey: some-key"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -928,15 +1150,20 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("membership.discordModsChannel must be a string", thrown.getMessage());
   }
 
   @Test
   void parsesMembershipMemberRole() throws JsonProcessingException {
-    var dotenv =
-        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token
+      membersApiKey: some-key"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -950,7 +1177,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.membership().isPresent(), "membership config is present");
     assertEquals("the-member-role", config.membership().get().memberRole());
@@ -958,8 +1185,13 @@ public class ConfigYamlParserTest {
 
   @Test
   void defaultsMembershipMemberRoleToMember() throws JsonProcessingException {
-    var dotenv =
-        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token
+      membersApiKey: some-key"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -972,7 +1204,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.membership().isPresent(), "membership config is present");
     assertEquals("member", config.membership().get().memberRole());
@@ -980,8 +1212,13 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfMembershipMemberRoleIsNotString() throws JsonProcessingException {
-    var dotenv =
-        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token
+      membersApiKey: some-key"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -995,15 +1232,20 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("membership.memberRole must be a string", thrown.getMessage());
   }
 
   @Test
   void parsesMembershipUnverifiedRole() throws JsonProcessingException {
-    var dotenv =
-        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token
+      membersApiKey: some-key"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1017,7 +1259,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.membership().isPresent(), "membership config is present");
     assertEquals("the-unverified-role", config.membership().get().unverifiedRole());
@@ -1025,8 +1267,13 @@ public class ConfigYamlParserTest {
 
   @Test
   void defaultsMembershipUnverifiedRoleToUnverified() throws JsonProcessingException {
-    var dotenv =
-        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token
+      membersApiKey: some-key"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1039,7 +1286,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.membership().isPresent(), "membership config is present");
     assertEquals("unverified", config.membership().get().unverifiedRole());
@@ -1047,8 +1294,13 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfMembershipUnverifiedRoleIsNotString() throws JsonProcessingException {
-    var dotenv =
-        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token
+      membersApiKey: some-key"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1062,15 +1314,20 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("membership.unverifiedRole must be a string", thrown.getMessage());
   }
 
   @Test
   void parsesMembershipAdditionalRoles() throws JsonProcessingException {
-    var dotenv =
-        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token
+      membersApiKey: some-key"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1086,7 +1343,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.membership().isPresent(), "membership config is present");
     assertEquals(
@@ -1097,8 +1354,13 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfMembershipAdditionalRolesIsNotAnObject() throws JsonProcessingException {
-    var dotenv =
-        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token
+      membersApiKey: some-key"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1112,15 +1374,20 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("membership.additionalRoles must be an object", thrown.getMessage());
   }
 
   @Test
   void errorsIfMembershipAdditionalRolesContainsNonStringValues() throws JsonProcessingException {
-    var dotenv =
-        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token
+      membersApiKey: some-key"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1136,15 +1403,20 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("membership.additionalRoles.role2 must be a string", thrown.getMessage());
   }
 
   @Test
   void defaultsAdditionalRolesToEmptyMap() throws JsonProcessingException {
-    var dotenv =
-        new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token").add("MEMBERS_API_KEY", "some-key");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token
+      membersApiKey: some-key"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1157,7 +1429,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.membership().isPresent(), "membership config is present");
     assertTrue(config.membership().get().additionalRoles().isEmpty(), "additional roles is empty");
@@ -1165,7 +1437,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void programmeConfigIsOptional() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1176,14 +1453,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assert (config.programme().isEmpty());
   }
 
   @Test
   void parsesProgrammeProgrammeUrl() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1196,7 +1478,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.programme().isPresent(), "programme config is present");
     assertEquals("https://example.com/the-programme-url", config.programme().get().programmeUrl());
@@ -1204,7 +1486,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfProgrammeProgrammeUrlIsMissing() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1216,14 +1503,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("programme.programmeUrl is required", thrown.getMessage());
   }
 
   @Test
   void errorsIfProgrammeProgrammeUrlIsNotString() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1236,14 +1528,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("programme.programmeUrl must be a string", thrown.getMessage());
   }
 
   @Test
   void nowOnConfigIsOptional() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1256,7 +1553,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.programme().isPresent(), "programme config is present");
     assertTrue(config.programme().get().nowOn().isEmpty(), "nowOn config is not present");
@@ -1264,7 +1561,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void parsesNoOnChannelId() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1281,7 +1583,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.programme().isPresent(), "programme config is present");
     assertTrue(config.programme().get().nowOn().isPresent(), "nowOn config is present");
@@ -1290,7 +1592,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void nowOnChannelDefaultsToNowOn() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1306,7 +1613,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.programme().isPresent(), "programme config is present");
     assertTrue(config.programme().get().nowOn().isPresent(), "nowOn config is present");
@@ -1315,7 +1622,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfNowOnChannelIdIsNotString() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1332,14 +1644,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("programme.nowOn.channel must be a string", thrown.getMessage());
   }
 
   @Test
   void parsesProgrammeNowOnTimeBeforeToAdd() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1355,7 +1672,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.programme().isPresent(), "programme config is present");
     assertTrue(config.programme().get().nowOn().isPresent(), "nowOn config is present");
@@ -1364,7 +1681,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfProgrammeNowOnTimeBeforeToAddIsMissing() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1379,14 +1701,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("programme.nowOn.timeBeforeToAdd is required", thrown.getMessage());
   }
 
   @Test
   void errorsIfProgrammeNowOnTimeBeforeToAddIsNotString() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1402,14 +1729,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("programme.nowOn.timeBeforeToAdd must be a string", thrown.getMessage());
   }
 
   @Test
   void errorsIfProgrammeNowOnTimeBeforeToAddIsInvalidDuration() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1425,7 +1757,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals(
         "Malformed value for programme.nowOn.timeBeforeToAdd: Text cannot be parsed to a Duration",
@@ -1434,7 +1766,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void parsesProgrammeNowOnTimeAfterToKeep() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1450,7 +1787,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.programme().isPresent(), "programme config is present");
     assertTrue(config.programme().get().nowOn().isPresent(), "nowOn config is present");
@@ -1459,7 +1796,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfProgrammeNowOnTimeAfterToKeepIsMissing() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1474,14 +1816,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("programme.nowOn.timeAfterToKeep is required", thrown.getMessage());
   }
 
   @Test
   void errorsIfProgrammeNowOnTimeAfterToKeepIsNotString() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1497,14 +1844,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("programme.nowOn.timeAfterToKeep must be a string", thrown.getMessage());
   }
 
   @Test
   void errorsIfProgrammeNowOnTimeAfterToKeepIsInvalidDuration() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1520,7 +1872,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals(
         "Malformed value for programme.nowOn.timeAfterToKeep: Text cannot be parsed to a Duration",
@@ -1529,7 +1881,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void parsesProgrammeMajorAnnouncementsChannel() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1543,7 +1900,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.programme().isPresent(), "programme config is present");
     assertEquals(
@@ -1553,7 +1910,12 @@ public class ConfigYamlParserTest {
   @Test
   void defaultsProgrammeMajorAnnouncementsChannelToProgrammeAnnouncements()
       throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1568,7 +1930,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.programme().isPresent(), "programme config is present");
     assertEquals("programme-announcements", config.programme().get().majorAnnouncementsChannel());
@@ -1576,7 +1938,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfProgrammeMajorAnnouncementsChannelIsNotString() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1590,14 +1957,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("programme.majorAnnouncementsChannel must be a string", thrown.getMessage());
   }
 
   @Test
   void parsesProgrammeHasPerformedFirstLoad() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1611,7 +1983,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.programme().isPresent(), "programme config is present");
     assertTrue(config.programme().get().hasPerformedFirstLoad(), "hasPerformedFirstLoad is true");
@@ -1619,7 +1991,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void defaultsProgrammeHasPerformedFirstLoadToTrue() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1632,7 +2009,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.programme().isPresent(), "programme config is present");
     assertTrue(config.programme().get().hasPerformedFirstLoad(), "hasPerformedFirstLoad is true");
@@ -1640,7 +2017,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfProgrammeHasPerformedFirstLoadIsNotBoolean() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1654,14 +2036,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("programme.hasPerformedFirstLoad must be a boolean", thrown.getMessage());
   }
 
   @Test
   void programmeChannelNameResolverIsOptional() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1674,7 +2061,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.programme().isPresent(), "programme config is present");
     assertInstanceOf(DayChannelNameResolver.class, config.programme().get().channelNameResolver());
@@ -1682,7 +2069,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfProgrammeChannelNameResolverIsNotAnObject() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1696,14 +2088,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("programme.channelNameResolver must be an object", thrown.getMessage());
   }
 
   @Test
   void errorsIfProgrammeChannelNameResolverTypeIsMissing() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1717,14 +2114,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("programme.channelNameResolver.type is required", thrown.getMessage());
   }
 
   @Test
   void errorsIfProgrammeChannelNameResolverTypeIsNotString() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1739,14 +2141,19 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("programme.channelNameResolver.type must be a string", thrown.getMessage());
   }
 
   @Test
   void errorsIfProgrammeChannelNameResolverTypeIsInvalidType() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1761,7 +2168,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals(
         "Malformed value for programme.channelNameResolver.type: Unknown resolver invalid",
@@ -1770,7 +2177,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void parsesProgrammeDayChannelNameResolver() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1785,7 +2197,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.programme().isPresent(), "programme config is present");
     assertInstanceOf(DayChannelNameResolver.class, config.programme().get().channelNameResolver());
@@ -1793,7 +2205,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void parsesProgrammeDayTodChannelNameResolver() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1818,7 +2235,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var config = parser.parse(jsonConfig, dotenv);
+    var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.programme().isPresent(), "programme config is present");
     assertInstanceOf(
@@ -1840,7 +2257,12 @@ public class ConfigYamlParserTest {
   @Test
   void errorsIfProgrammeDayTodChannelNameResolverThresholdsAreMissing()
       throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1855,7 +2277,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("programme.channelNameResolver.thresholds is required", thrown.getMessage());
   }
@@ -1863,7 +2285,12 @@ public class ConfigYamlParserTest {
   @Test
   void errorsIfProgrammeDayTodChannelNameResolverThresholdsIsNotAList()
       throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1879,7 +2306,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("programme.channelNameResolver.thresholds must be a list", thrown.getMessage());
   }
@@ -1887,7 +2314,12 @@ public class ConfigYamlParserTest {
   @Test
   void errorsIfProgrammeDayTodChannelNameResolverThresholdsContainsNonObjectValues()
       throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1904,7 +2336,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals(
         "programme.channelNameResolver.thresholds[0] must be an object", thrown.getMessage());
@@ -1912,7 +2344,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfThresholdIsMissingLabel() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1932,7 +2369,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals(
         "programme.channelNameResolver.thresholds[0].label is required", thrown.getMessage());
@@ -1940,7 +2377,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfThresholdLabelIsNotString() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1961,7 +2403,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals(
         "programme.channelNameResolver.thresholds[0].label must be a string", thrown.getMessage());
@@ -1969,7 +2411,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfThresholdIsMissingStart() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -1989,7 +2436,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals(
         "programme.channelNameResolver.thresholds[0].start is required", thrown.getMessage());
@@ -1997,7 +2444,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfThresholdStartIsNotString() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -2018,7 +2470,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals(
         "programme.channelNameResolver.thresholds[0].start must be a string", thrown.getMessage());
@@ -2026,7 +2478,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfThresholdStartIsWrongFormat() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -2047,7 +2504,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals(
         "Malformed value for programme.channelNameResolver.thresholds[0].start: must be in the format hh:mm",
@@ -2056,7 +2513,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfThresholdIsMissingEnd() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -2076,7 +2538,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals(
         "programme.channelNameResolver.thresholds[0].end is required", thrown.getMessage());
@@ -2084,7 +2546,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfThresholdEndIsNotString() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -2105,7 +2572,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals(
         "programme.channelNameResolver.thresholds[0].end must be a string", thrown.getMessage());
@@ -2113,7 +2580,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfThresholdEndIsWrongFormat() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -2134,7 +2606,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals(
         "Malformed value for programme.channelNameResolver.thresholds[0].end: must be in the format hh:mm",
@@ -2143,7 +2615,12 @@ public class ConfigYamlParserTest {
 
   @Test
   void errorsIfThresholdsOverlap() throws JsonProcessingException {
-    var dotenv = new DotenvFake().add("DISCORD_BOT_TOKEN", "some-token");
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token"
+    """);
     var jsonConfig =
         new YAMLMapper()
             .readTree(
@@ -2170,7 +2647,7 @@ public class ConfigYamlParserTest {
         """);
 
     var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(jsonConfig, dotenv));
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("programme.channelNameResolver.thresholds must not overlap", thrown.getMessage());
   }
