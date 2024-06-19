@@ -13,9 +13,14 @@ public class ClearChannels {
 
   public static void main(String[] args)
       throws IOException, InterruptedException, ExecutionException {
+    if (args.length != 2) {
+      System.err.println("Usage: ClearChannels <secrets file> <config file>");
+      System.exit(1);
+    }
+
     var objectMapper = new YAMLMapper();
     var jsonSecrets = objectMapper.readTree(Paths.get(args[0]).toFile());
-    var jsonConfig = objectMapper.readTree(Paths.get(args[0], "config.yaml").toFile());
+    var jsonConfig = objectMapper.readTree(Paths.get(args[1]).toFile());
     var config = new ConfigYamlParser().parse(jsonSecrets, jsonConfig);
 
     var possibleNames =
