@@ -9,18 +9,20 @@ import com.ajanuary.watson.programme.channelnameresolvers.DayChannelNameResolver
 import com.ajanuary.watson.programme.channelnameresolvers.DayTodChannelNameResolver;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import java.net.URI;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import org.junit.jupiter.api.Test;
 
 public class ConfigYamlParserTest {
 
   @Test
-  void readsDiscordBotTokenFromDotenv() throws JsonProcessingException {
+  void readsDiscordBotTokenFromSecrets() throws JsonProcessingException {
     var secretsConfig =
         new YAMLMapper()
             .readTree(
                 """
       discordBotToken: the-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -61,12 +63,61 @@ public class ConfigYamlParserTest {
   }
 
   @Test
+  void readsPortalApiKeyFromSecrets() throws JsonProcessingException {
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token
+      portalApiKey: the-key
+    """);
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+        guildId: some-guild-id
+        databasePath: some-db-path
+        timezone: America/New_York
+        """);
+
+    var parser = new ConfigYamlParser();
+    var config = parser.parse(secretsConfig, jsonConfig);
+
+    assertEquals("the-key", config.portalApiKey());
+  }
+
+  @Test
+  void throwsIfPortalApiKeyMissing() throws JsonProcessingException {
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token
+    """);
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+        guildId: some-guild-id
+        databasePath: some-db-path
+        timezone: America/New_York
+        """);
+
+    var parser = new ConfigYamlParser();
+
+    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
+
+    assertEquals("portalApiKey is required", thrown.getMessage());
+  }
+
+  @Test
   void readsCoreConfigFrom() throws JsonProcessingException {
     var secretsConfig =
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -89,7 +140,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -112,7 +164,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -134,7 +187,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -157,7 +211,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -180,7 +235,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -202,7 +258,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -224,7 +281,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -247,7 +305,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -272,7 +331,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -295,7 +355,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -323,7 +384,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -349,7 +411,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -376,7 +439,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -405,7 +469,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -433,7 +498,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -459,7 +525,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -486,7 +553,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -515,7 +583,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -543,7 +612,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -569,7 +639,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -596,7 +667,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -625,7 +697,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -654,7 +727,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -682,7 +756,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -710,7 +785,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -739,7 +815,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -768,7 +845,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -796,7 +874,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -824,7 +903,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -848,7 +928,7 @@ public class ConfigYamlParserTest {
             .readTree(
                 """
       discordBotToken: some-token
-      membersApiKey: some-key
+      portalApiKey: some-key
       """);
     var jsonConfig =
         new YAMLMapper()
@@ -875,7 +955,7 @@ public class ConfigYamlParserTest {
             .readTree(
                 """
       discordBotToken: some-token
-      membersApiKey: some-key"
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -901,7 +981,7 @@ public class ConfigYamlParserTest {
             .readTree(
                 """
       discordBotToken: some-token
-      membersApiKey: some-key"
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -926,7 +1006,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -944,65 +1025,13 @@ public class ConfigYamlParserTest {
   }
 
   @Test
-  void membershipModuleRequiresMembersApiKey() throws JsonProcessingException {
-    var secretsConfig =
-        new YAMLMapper()
-            .readTree(
-                """
-      discordBotToken: some-token"
-    """);
-    var jsonConfig =
-        new YAMLMapper()
-            .readTree(
-                """
-        guildId: some-guild-id
-        databasePath: some-db-path
-        timezone: America/New_York
-        membership:
-          membersApiUrl: https://example.com
-        """);
-
-    var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
-
-    assertEquals("membersApiKey is required", thrown.getMessage());
-  }
-
-  @Test
-  void readsMembersApiKeyFromDotenv() throws JsonProcessingException {
-    var secretsConfig =
-        new YAMLMapper()
-            .readTree(
-                """
-      discordBotToken: some-token
-      membersApiKey: the-key
-    """);
-    var jsonConfig =
-        new YAMLMapper()
-            .readTree(
-                """
-        guildId: some-guild-id
-        databasePath: some-db-path
-        timezone: America/New_York
-        membership:
-          membersApiUrl: https://example.com/the-api-root
-        """);
-
-    var parser = new ConfigYamlParser();
-    var config = parser.parse(secretsConfig, jsonConfig);
-
-    assertTrue(config.membership().isPresent(), "membership config is present");
-    assertEquals("the-key", config.membership().get().membersApiKey());
-  }
-
-  @Test
   void parsesMembershipApiRoot() throws JsonProcessingException {
     var secretsConfig =
         new YAMLMapper()
             .readTree(
                 """
       discordBotToken: some-token
-      membersApiKey: some-key"
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1019,7 +1048,8 @@ public class ConfigYamlParserTest {
     var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.membership().isPresent(), "membership config is present");
-    assertEquals("https://example.com/the-api-root", config.membership().get().membersApiUrl());
+    assertEquals(
+        URI.create("https://example.com/the-api-root"), config.membership().get().membersApiUrl());
   }
 
   @Test
@@ -1029,7 +1059,7 @@ public class ConfigYamlParserTest {
             .readTree(
                 """
       discordBotToken: some-token
-      membersApiKey: some-key"
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1054,7 +1084,7 @@ public class ConfigYamlParserTest {
             .readTree(
                 """
       discordBotToken: some-token
-      membersApiKey: some-key"
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1080,7 +1110,7 @@ public class ConfigYamlParserTest {
             .readTree(
                 """
       discordBotToken: some-token
-      membersApiKey: some-key"
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1108,7 +1138,7 @@ public class ConfigYamlParserTest {
             .readTree(
                 """
       discordBotToken: some-token
-      membersApiKey: some-key"
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1135,7 +1165,7 @@ public class ConfigYamlParserTest {
             .readTree(
                 """
       discordBotToken: some-token
-      membersApiKey: some-key"
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1162,7 +1192,7 @@ public class ConfigYamlParserTest {
             .readTree(
                 """
       discordBotToken: some-token
-      membersApiKey: some-key"
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1190,7 +1220,7 @@ public class ConfigYamlParserTest {
             .readTree(
                 """
       discordBotToken: some-token
-      membersApiKey: some-key"
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1217,7 +1247,7 @@ public class ConfigYamlParserTest {
             .readTree(
                 """
       discordBotToken: some-token
-      membersApiKey: some-key"
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1244,7 +1274,7 @@ public class ConfigYamlParserTest {
             .readTree(
                 """
       discordBotToken: some-token
-      membersApiKey: some-key"
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1272,7 +1302,7 @@ public class ConfigYamlParserTest {
             .readTree(
                 """
       discordBotToken: some-token
-      membersApiKey: some-key"
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1299,7 +1329,7 @@ public class ConfigYamlParserTest {
             .readTree(
                 """
       discordBotToken: some-token
-      membersApiKey: some-key"
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1326,7 +1356,7 @@ public class ConfigYamlParserTest {
             .readTree(
                 """
       discordBotToken: some-token
-      membersApiKey: some-key"
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1359,7 +1389,7 @@ public class ConfigYamlParserTest {
             .readTree(
                 """
       discordBotToken: some-token
-      membersApiKey: some-key"
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1386,7 +1416,7 @@ public class ConfigYamlParserTest {
             .readTree(
                 """
       discordBotToken: some-token
-      membersApiKey: some-key"
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1415,7 +1445,7 @@ public class ConfigYamlParserTest {
             .readTree(
                 """
       discordBotToken: some-token
-      membersApiKey: some-key"
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1441,7 +1471,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1464,7 +1495,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1475,13 +1507,46 @@ public class ConfigYamlParserTest {
         timezone: America/New_York
         programme:
           programmeUrl: https://example.com/the-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
         """);
 
     var parser = new ConfigYamlParser();
     var config = parser.parse(secretsConfig, jsonConfig);
 
     assertTrue(config.programme().isPresent(), "programme config is present");
-    assertEquals("https://example.com/the-programme-url", config.programme().get().programmeUrl());
+    assertEquals(
+        URI.create("https://example.com/the-programme-url"),
+        config.programme().get().programmeUrl());
+  }
+
+  @Test
+  void parsesProgrammeAssignDiscordPostsApiUrl() throws JsonProcessingException {
+    var secretsConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+      discordBotToken: some-token
+      portalApiKey: some-key
+    """);
+    var jsonConfig =
+        new YAMLMapper()
+            .readTree(
+                """
+        guildId: some-guild-id
+        databasePath: some-db-path
+        timezone: America/New_York
+        programme:
+          programmeUrl: https://example.com/the-programme-url
+          assignDiscordPostsApiUrl: https://example.com/the-assign-discord-posts-api-url
+        """);
+
+    var parser = new ConfigYamlParser();
+    var config = parser.parse(secretsConfig, jsonConfig);
+
+    assertTrue(config.programme().isPresent(), "programme config is present");
+    assertEquals(
+        URI.create("https://example.com/the-assign-discord-posts-api-url"),
+        config.programme().get().assignDiscordPostsApiUrl());
   }
 
   @Test
@@ -1490,7 +1555,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1514,7 +1580,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1539,7 +1606,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1549,7 +1617,8 @@ public class ConfigYamlParserTest {
         databasePath: some-db-path
         timezone: America/New_York
         programme:
-          programmeUrl: https://example.com/the-programme-url
+          programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
         """);
 
     var parser = new ConfigYamlParser();
@@ -1565,7 +1634,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1575,7 +1645,8 @@ public class ConfigYamlParserTest {
         databasePath: some-db-path
         timezone: America/New_York
         programme:
-          programmeUrl: https://example.com/the-programme-url
+          programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           nowOn:
             channel: the-now-on-channel-id
             timeBeforeToAdd: 15m
@@ -1596,7 +1667,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1606,7 +1678,8 @@ public class ConfigYamlParserTest {
         databasePath: some-db-path
         timezone: America/New_York
         programme:
-          programmeUrl: https://example.com/the-programme-url
+          programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           nowOn:
             timeBeforeToAdd: 15m
             timeAfterToKeep: 15m
@@ -1626,7 +1699,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1636,7 +1710,8 @@ public class ConfigYamlParserTest {
         databasePath: some-db-path
         timezone: America/New_York
         programme:
-          programmeUrl: https://example.com/the-programme-url
+          programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           nowOn:
             channel: 10
             timeBeforeToAdd: 15m
@@ -1655,7 +1730,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1665,7 +1741,8 @@ public class ConfigYamlParserTest {
         databasePath: some-db-path
         timezone: America/New_York
         programme:
-          programmeUrl: https://example.com/the-programme-url
+          programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           nowOn:
             timeBeforeToAdd: 15m
             timeAfterToKeep: 15m
@@ -1685,7 +1762,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1695,7 +1773,8 @@ public class ConfigYamlParserTest {
         databasePath: some-db-path
         timezone: America/New_York
         programme:
-          programmeUrl: https://example.com/the-programme-url
+          programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           nowOn:
             timeAfterToKeep: 15m
         """);
@@ -1712,7 +1791,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1722,7 +1802,8 @@ public class ConfigYamlParserTest {
         databasePath: some-db-path
         timezone: America/New_York
         programme:
-          programmeUrl: https://example.com/the-programme-url
+          programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           nowOn:
             timeBeforeToAdd: 15
             timeAfterToKeep: 15m
@@ -1740,7 +1821,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1750,7 +1832,8 @@ public class ConfigYamlParserTest {
         databasePath: some-db-path
         timezone: America/New_York
         programme:
-          programmeUrl: https://example.com/the-programme-url
+          programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           nowOn:
             timeBeforeToAdd: 15x
             timeAfterToKeep: 15m
@@ -1770,7 +1853,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1780,7 +1864,8 @@ public class ConfigYamlParserTest {
         databasePath: some-db-path
         timezone: America/New_York
         programme:
-          programmeUrl: https://example.com/the-programme-url
+          programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           nowOn:
             timeBeforeToAdd: 15m
             timeAfterToKeep: 15m
@@ -1800,7 +1885,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1810,7 +1896,8 @@ public class ConfigYamlParserTest {
         databasePath: some-db-path
         timezone: America/New_York
         programme:
-          programmeUrl: https://example.com/the-programme-url
+          programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           nowOn:
             timeBeforeToAdd: 15m
         """);
@@ -1827,7 +1914,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1837,7 +1925,8 @@ public class ConfigYamlParserTest {
         databasePath: some-db-path
         timezone: America/New_York
         programme:
-          programmeUrl: https://example.com/the-programme-url
+          programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           nowOn:
             timeBeforeToAdd: 15m
             timeAfterToKeep: 15
@@ -1855,7 +1944,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1865,7 +1955,8 @@ public class ConfigYamlParserTest {
         databasePath: some-db-path
         timezone: America/New_York
         programme:
-          programmeUrl: https://example.com/the-programme-url
+          programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           nowOn:
             timeBeforeToAdd: 15m
             timeAfterToKeep: 15x
@@ -1885,7 +1976,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1896,6 +1988,7 @@ public class ConfigYamlParserTest {
         timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           majorAnnouncementsChannel: the-major-announcements-channel
         """);
 
@@ -1914,7 +2007,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1925,6 +2019,7 @@ public class ConfigYamlParserTest {
         timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           timeBeforeToAddToNowOn: 15m
           timeAfterToKeepInNowOn: 15m
         """);
@@ -1942,7 +2037,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1953,6 +2049,7 @@ public class ConfigYamlParserTest {
         timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           majorAnnouncementsChannel: 10
         """);
 
@@ -1968,7 +2065,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -1979,6 +2077,7 @@ public class ConfigYamlParserTest {
           timezone: America/New_York
           programme:
             programmeUrl: https://example.com/some-programme-url
+            assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
             hasPerformedFirstLoad: true
         """);
 
@@ -1995,7 +2094,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -2006,6 +2106,7 @@ public class ConfigYamlParserTest {
           timezone: America/New_York
           programme:
             programmeUrl: https://example.com/some-programme-url
+            assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
         """);
 
     var parser = new ConfigYamlParser();
@@ -2021,7 +2122,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -2032,6 +2134,7 @@ public class ConfigYamlParserTest {
           timezone: America/New_York
           programme:
             programmeUrl: https://example.com/some-programme-url
+            assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
             hasPerformedFirstLoad: 10
         """);
 
@@ -2047,7 +2150,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -2058,6 +2162,7 @@ public class ConfigYamlParserTest {
         timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
         """);
 
     var parser = new ConfigYamlParser();
@@ -2073,7 +2178,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -2084,6 +2190,7 @@ public class ConfigYamlParserTest {
         timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           channelNameResolver: 10
         """);
 
@@ -2099,7 +2206,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -2110,6 +2218,7 @@ public class ConfigYamlParserTest {
         timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           channelNameResolver: {}
         """);
 
@@ -2125,7 +2234,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -2136,6 +2246,7 @@ public class ConfigYamlParserTest {
         timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           channelNameResolver:
             type: 10
         """);
@@ -2152,7 +2263,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -2163,6 +2275,7 @@ public class ConfigYamlParserTest {
         timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           channelNameResolver:
             type: invalid
         """);
@@ -2181,7 +2294,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -2192,6 +2306,7 @@ public class ConfigYamlParserTest {
         timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           channelNameResolver:
             type: day
         """);
@@ -2209,7 +2324,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -2220,6 +2336,7 @@ public class ConfigYamlParserTest {
         timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           channelNameResolver:
             type: day-tod
             thresholds:
@@ -2261,7 +2378,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -2272,6 +2390,7 @@ public class ConfigYamlParserTest {
         timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           channelNameResolver:
             type: day-tod
         """);
@@ -2289,7 +2408,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -2300,6 +2420,7 @@ public class ConfigYamlParserTest {
         timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           channelNameResolver:
             type: day-tod
             thresholds: 10
@@ -2318,7 +2439,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -2329,6 +2451,7 @@ public class ConfigYamlParserTest {
         timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           channelNameResolver:
             type: day-tod
             thresholds:
@@ -2348,7 +2471,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -2359,6 +2483,7 @@ public class ConfigYamlParserTest {
         timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           timeBeforeToAddToNowOn: 15m
           timeAfterToKeepInNowOn: 15m
           channelNameResolver:
@@ -2381,7 +2506,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -2392,6 +2518,7 @@ public class ConfigYamlParserTest {
         timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           timeBeforeToAddToNowOn: 15m
           timeAfterToKeepInNowOn: 15m
           channelNameResolver:
@@ -2415,7 +2542,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -2426,6 +2554,7 @@ public class ConfigYamlParserTest {
         timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           timeBeforeToAddToNowOn: 15m
           timeAfterToKeepInNowOn: 15m
           channelNameResolver:
@@ -2448,7 +2577,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -2459,6 +2589,7 @@ public class ConfigYamlParserTest {
         timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           timeBeforeToAddToNowOn: 15m
           timeAfterToKeepInNowOn: 15m
           channelNameResolver:
@@ -2482,7 +2613,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -2493,6 +2625,7 @@ public class ConfigYamlParserTest {
         timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           timeBeforeToAddToNowOn: 15m
           timeAfterToKeepInNowOn: 15m
           channelNameResolver:
@@ -2517,7 +2650,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -2528,6 +2662,7 @@ public class ConfigYamlParserTest {
         timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           timeBeforeToAddToNowOn: 15m
           timeAfterToKeepInNowOn: 15m
           channelNameResolver:
@@ -2550,7 +2685,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -2561,6 +2697,7 @@ public class ConfigYamlParserTest {
         timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           timeBeforeToAddToNowOn: 15m
           timeAfterToKeepInNowOn: 15m
           channelNameResolver:
@@ -2584,7 +2721,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -2595,6 +2733,7 @@ public class ConfigYamlParserTest {
         timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           timeBeforeToAddToNowOn: 15m
           timeAfterToKeepInNowOn: 15m
           channelNameResolver:
@@ -2619,7 +2758,8 @@ public class ConfigYamlParserTest {
         new YAMLMapper()
             .readTree(
                 """
-      discordBotToken: some-token"
+      discordBotToken: some-token
+      portalApiKey: some-key`
     """);
     var jsonConfig =
         new YAMLMapper()
@@ -2630,6 +2770,7 @@ public class ConfigYamlParserTest {
         timezone: America/New_York
         programme:
           programmeUrl: https://example.com/some-programme-url
+          assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           timeBeforeToAddToNowOn: 15m
           timeAfterToKeepInNowOn: 15m
           channelNameResolver:

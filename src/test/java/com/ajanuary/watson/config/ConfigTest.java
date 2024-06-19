@@ -9,20 +9,15 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.ajanuary.watson.api.ApiConfig;
-import com.ajanuary.watson.membership.MembershipConfig;
-import com.ajanuary.watson.programme.ProgrammeConfig;
-import com.ajanuary.watson.programme.ProgrammeConfig.NowOnConfig;
-import com.ajanuary.watson.programme.channelnameresolvers.DayChannelNameResolver;
-import java.time.Duration;
 import java.time.ZoneId;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import org.junit.jupiter.api.Test;
+import support.TestConfigBuilder;
 
 public class ConfigTest {
 
@@ -31,16 +26,7 @@ public class ConfigTest {
     var jda = mock(JDA.class);
     when(jda.getGuildById("the-guild-id")).thenReturn(null);
 
-    var config =
-        new Config(
-            "some-token",
-            "the-guild-id",
-            "some-database-path",
-            ZoneId.of("UTC"),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty());
+    var config = new TestConfigBuilder().withGuildId("the-guild-id").build();
     var thrown = assertThrows(IllegalStateException.class, () -> config.validateDiscordConfig(jda));
 
     assertEquals(
@@ -52,17 +38,7 @@ public class ConfigTest {
   void validateDoesNotErrorIfGuildFound() {
     var jda = mock(JDA.class);
     when(jda.getGuildById("the-guild-id")).thenReturn(mock(Guild.class));
-
-    var config =
-        new Config(
-            "some-token",
-            "the-guild-id",
-            "some-database-path",
-            ZoneId.of("UTC"),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty());
+    var config = new TestConfigBuilder().withGuildId("the-guild-id").build();
 
     config.validateDiscordConfig(jda);
   }
@@ -78,15 +54,20 @@ public class ConfigTest {
         .thenReturn(List.of(mock(TextChannel.class)));
 
     var config =
-        new Config(
-            "some-token",
-            "the-guild-id",
-            "some-database-path",
-            ZoneId.of("UTC"),
-            Optional.empty(),
-            Optional.of(new ApiConfig("the-channel-id")),
-            Optional.empty(),
-            Optional.empty());
+        new TestConfigBuilder()
+            .withGuildId("the-guild-id")
+            .withApiConfig(apiConfig -> apiConfig.withChannel("the-channel-id"))
+            .build();
+    new Config(
+        "some-token",
+        "the-guild-id",
+        "some-database-path",
+        "some-portal-api-key",
+        ZoneId.of("UTC"),
+        Optional.empty(),
+        Optional.of(new ApiConfig("the-channel-id")),
+        Optional.empty(),
+        Optional.empty());
     var thrown =
         assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
@@ -104,15 +85,10 @@ public class ConfigTest {
         .thenReturn(List.of(mock(TextChannel.class)));
 
     var config =
-        new Config(
-            "some-token",
-            "the-guild-id",
-            "some-database-path",
-            ZoneId.of("UTC"),
-            Optional.empty(),
-            Optional.of(new ApiConfig("the-channel-id")),
-            Optional.empty(),
-            Optional.empty());
+        new TestConfigBuilder()
+            .withGuildId("the-guild-id")
+            .withApiConfig(apiConfig -> apiConfig.withChannel("the-channel-id"))
+            .build();
 
     config.validateDiscordConfig(jda);
   }
@@ -128,15 +104,10 @@ public class ConfigTest {
         .thenReturn(List.of(mock(TextChannel.class), mock(TextChannel.class)));
 
     var config =
-        new Config(
-            "some-token",
-            "the-guild-id",
-            "some-database-path",
-            ZoneId.of("UTC"),
-            Optional.empty(),
-            Optional.of(new ApiConfig("the-channel-id")),
-            Optional.empty(),
-            Optional.empty());
+        new TestConfigBuilder()
+            .withGuildId("the-guild-id")
+            .withApiConfig(apiConfig -> apiConfig.withChannel("the-channel-id"))
+            .build();
     var thrown =
         assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
@@ -154,23 +125,14 @@ public class ConfigTest {
         .thenReturn(List.of(mock(TextChannel.class)));
 
     var config =
-        new Config(
-            "some-token",
-            "the-guild-id",
-            "some-database-path",
-            ZoneId.of("UTC"),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.of(
-                new MembershipConfig(
-                    "https://example.com/some-api-root",
-                    "some-api-key",
-                    "the-help-desk-channel-id",
-                    "the-mods-channel-id",
-                    "some-mods-channel",
-                    "some-unverified-role",
-                    Map.of())),
-            Optional.empty());
+        new TestConfigBuilder()
+            .withGuildId("the-guild-id")
+            .withMembershipConfig(
+                membershipConfig ->
+                    membershipConfig
+                        .withHelpDeskChannel("the-help-desk-channel-id")
+                        .withDiscordModsChannel("the-mods-channel-id"))
+            .build();
     var thrown =
         assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
@@ -190,23 +152,14 @@ public class ConfigTest {
         .thenReturn(List.of(mock(TextChannel.class)));
 
     var config =
-        new Config(
-            "some-token",
-            "the-guild-id",
-            "some-database-path",
-            ZoneId.of("UTC"),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.of(
-                new MembershipConfig(
-                    "https://example.com/some-api-root",
-                    "some-api-key",
-                    "the-help-desk-channel-id",
-                    "the-mods-channel-id",
-                    "some-member-role",
-                    "some-unverified-role",
-                    Map.of())),
-            Optional.empty());
+        new TestConfigBuilder()
+            .withGuildId("the-guild-id")
+            .withMembershipConfig(
+                membershipConfig ->
+                    membershipConfig
+                        .withHelpDeskChannel("the-help-desk-channel-id")
+                        .withDiscordModsChannel("the-mods-channel-id"))
+            .build();
 
     config.validateDiscordConfig(jda);
   }
@@ -224,23 +177,14 @@ public class ConfigTest {
         .thenReturn(List.of(mock(TextChannel.class)));
 
     var config =
-        new Config(
-            "some-token",
-            "the-guild-id",
-            "some-database-path",
-            ZoneId.of("UTC"),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.of(
-                new MembershipConfig(
-                    "https://example.com/some-api-root",
-                    "some-api-key",
-                    "the-help-desk-channel-id",
-                    "the-mods-channel-id",
-                    "some-member-role",
-                    "some-unverified-role",
-                    Map.of())),
-            Optional.empty());
+        new TestConfigBuilder()
+            .withGuildId("the-guild-id")
+            .withMembershipConfig(
+                membershipConfig ->
+                    membershipConfig
+                        .withHelpDeskChannel("the-help-desk-channel-id")
+                        .withDiscordModsChannel("the-mods-channel-id"))
+            .build();
     var thrown =
         assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
@@ -259,23 +203,14 @@ public class ConfigTest {
         .thenReturn(List.of());
 
     var config =
-        new Config(
-            "some-token",
-            "the-guild-id",
-            "some-database-path",
-            ZoneId.of("UTC"),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.of(
-                new MembershipConfig(
-                    "https://example.com/some-api-root",
-                    "some-api-key",
-                    "the-help-desk-channel-id",
-                    "the-mods-channel-id",
-                    "some-mods-channel",
-                    "some-unverified-role",
-                    Map.of())),
-            Optional.empty());
+        new TestConfigBuilder()
+            .withGuildId("the-guild-id")
+            .withMembershipConfig(
+                membershipConfig ->
+                    membershipConfig
+                        .withHelpDeskChannel("the-help-desk-channel-id")
+                        .withDiscordModsChannel("the-mods-channel-id"))
+            .build();
     var thrown =
         assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
@@ -295,23 +230,14 @@ public class ConfigTest {
         .thenReturn(List.of(mock(TextChannel.class)));
 
     var config =
-        new Config(
-            "some-token",
-            "the-guild-id",
-            "some-database-path",
-            ZoneId.of("UTC"),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.of(
-                new MembershipConfig(
-                    "https://example.com/some-api-root",
-                    "some-api-key",
-                    "the-help-desk-channel-id",
-                    "the-mods-channel-id",
-                    "some-member-role",
-                    "some-unverified-role",
-                    Map.of())),
-            Optional.empty());
+        new TestConfigBuilder()
+            .withGuildId("the-guild-id")
+            .withMembershipConfig(
+                membershipConfig ->
+                    membershipConfig
+                        .withHelpDeskChannel("the-help-desk-channel-id")
+                        .withDiscordModsChannel("the-mods-channel-id"))
+            .build();
 
     config.validateDiscordConfig(jda);
   }
@@ -329,23 +255,14 @@ public class ConfigTest {
         .thenReturn(List.of(mock(TextChannel.class), mock(TextChannel.class)));
 
     var config =
-        new Config(
-            "some-token",
-            "the-guild-id",
-            "some-database-path",
-            ZoneId.of("UTC"),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.of(
-                new MembershipConfig(
-                    "https://example.com/some-api-root",
-                    "some-api-key",
-                    "the-help-desk-channel-id",
-                    "the-mods-channel-id",
-                    "some-member-role",
-                    "some-unverified-role",
-                    Map.of())),
-            Optional.empty());
+        new TestConfigBuilder()
+            .withGuildId("the-guild-id")
+            .withMembershipConfig(
+                membershipConfig ->
+                    membershipConfig
+                        .withHelpDeskChannel("the-help-desk-channel-id")
+                        .withDiscordModsChannel("the-mods-channel-id"))
+            .build();
     var thrown =
         assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
@@ -363,23 +280,15 @@ public class ConfigTest {
     when(guild.getRolesByName(any(), anyBoolean())).thenReturn(List.of(mock(Role.class)));
 
     var config =
-        new Config(
-            "some-token",
-            "the-guild-id",
-            "some-database-path",
-            ZoneId.of("UTC"),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.of(
-                new MembershipConfig(
-                    "https://example.com/some-api-root",
-                    "some-api-key",
-                    "some-help-desk-channel",
-                    "some-mods-channel",
-                    "the-member-role",
-                    "the-unverified-role",
-                    Map.of("some-role-label", "the-role-id"))),
-            Optional.empty());
+        new TestConfigBuilder()
+            .withGuildId("the-guild-id")
+            .withMembershipConfig(
+                membershipConfig ->
+                    membershipConfig
+                        .withMemberRole("the-member-role")
+                        .withUnverifiedRole("the-unverified-role")
+                        .withAdditionalRole("some-role-label", "the-role-id"))
+            .build();
 
     config.validateDiscordConfig(jda);
   }
@@ -404,23 +313,11 @@ public class ConfigTest {
             });
 
     var config =
-        new Config(
-            "some-token",
-            "the-guild-id",
-            "some-database-path",
-            ZoneId.of("UTC"),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.of(
-                new MembershipConfig(
-                    "https://example.com/some-api-root",
-                    "some-api-key",
-                    "some-help-desk-channel",
-                    "some-mods-channel",
-                    "the-member-role",
-                    "some-unverified-role",
-                    Map.of())),
-            Optional.empty());
+        new TestConfigBuilder()
+            .withGuildId("the-guild-id")
+            .withMembershipConfig(
+                membershipConfig -> membershipConfig.withMemberRole("the-member-role"))
+            .build();
     var thrown =
         assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
@@ -447,23 +344,11 @@ public class ConfigTest {
             });
 
     var config =
-        new Config(
-            "some-token",
-            "the-guild-id",
-            "some-database-path",
-            ZoneId.of("UTC"),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.of(
-                new MembershipConfig(
-                    "https://example.com/some-api-root",
-                    "some-api-key",
-                    "some-help-desk-channel",
-                    "some-mods-channel",
-                    "the-member-role",
-                    "some-unverified-role",
-                    Map.of())),
-            Optional.empty());
+        new TestConfigBuilder()
+            .withGuildId("the-guild-id")
+            .withMembershipConfig(
+                membershipConfig -> membershipConfig.withMemberRole("the-member-role"))
+            .build();
     var thrown =
         assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
@@ -490,23 +375,11 @@ public class ConfigTest {
             });
 
     var config =
-        new Config(
-            "some-token",
-            "the-guild-id",
-            "some-database-path",
-            ZoneId.of("UTC"),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.of(
-                new MembershipConfig(
-                    "https://example.com/some-api-root",
-                    "some-api-key",
-                    "some-help-desk-channel",
-                    "some-mods-channel",
-                    "some-member-role",
-                    "the-unverified-role",
-                    Map.of())),
-            Optional.empty());
+        new TestConfigBuilder()
+            .withGuildId("the-guild-id")
+            .withMembershipConfig(
+                membershipConfig -> membershipConfig.withUnverifiedRole("the-unverified-role"))
+            .build();
     var thrown =
         assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
@@ -533,23 +406,11 @@ public class ConfigTest {
             });
 
     var config =
-        new Config(
-            "some-token",
-            "the-guild-id",
-            "some-database-path",
-            ZoneId.of("UTC"),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.of(
-                new MembershipConfig(
-                    "https://example.com/some-api-root",
-                    "some-api-key",
-                    "some-help-desk-channel",
-                    "some-mods-channel",
-                    "some-member-role",
-                    "the-unverified-role",
-                    Map.of())),
-            Optional.empty());
+        new TestConfigBuilder()
+            .withGuildId("the-guild-id")
+            .withMembershipConfig(
+                membershipConfig -> membershipConfig.withUnverifiedRole("the-unverified-role"))
+            .build();
     var thrown =
         assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
@@ -576,23 +437,12 @@ public class ConfigTest {
             });
 
     var config =
-        new Config(
-            "some-token",
-            "the-guild-id",
-            "some-database-path",
-            ZoneId.of("UTC"),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.of(
-                new MembershipConfig(
-                    "https://example.com/some-api-root",
-                    "some-api-key",
-                    "some-help-desk-channel",
-                    "some-mods-channel",
-                    "some-member-role",
-                    "some-unverified-role",
-                    Map.of("some-role-label", "the-role-id"))),
-            Optional.empty());
+        new TestConfigBuilder()
+            .withGuildId("the-guild-id")
+            .withMembershipConfig(
+                membershipConfig ->
+                    membershipConfig.withAdditionalRole("some-role-label", "the-role-id"))
+            .build();
     var thrown =
         assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
@@ -619,23 +469,12 @@ public class ConfigTest {
             });
 
     var config =
-        new Config(
-            "some-token",
-            "the-guild-id",
-            "some-database-path",
-            ZoneId.of("UTC"),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.of(
-                new MembershipConfig(
-                    "https://example.com/some-api-root",
-                    "some-api-key",
-                    "some-help-desk-channel",
-                    "some-mods-channel",
-                    "some-member-role",
-                    "some-unverified-role",
-                    Map.of("some-role-label", "the-role-id"))),
-            Optional.empty());
+        new TestConfigBuilder()
+            .withGuildId("the-guild-id")
+            .withMembershipConfig(
+                membershipConfig ->
+                    membershipConfig.withAdditionalRole("some-role-label", "the-role-id"))
+            .build();
     var thrown =
         assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
@@ -652,21 +491,13 @@ public class ConfigTest {
         .thenReturn(List.of(mock(TextChannel.class)));
 
     var config =
-        new Config(
-            "some-token",
-            "the-guild-id",
-            "some-database-path",
-            ZoneId.of("UTC"),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.of(
-                new ProgrammeConfig(
-                    "https://example.com/some-api-root",
-                    "the-major-announcements-channel-id",
-                    Optional.empty(),
-                    new DayChannelNameResolver(),
-                    false)));
+        new TestConfigBuilder()
+            .withGuildId("the-guild-id")
+            .withProgrammeConfig(
+                programmeConfig ->
+                    programmeConfig.withMajorAnnouncementChannel(
+                        "the-major-announcements-channel-id"))
+            .build();
     var thrown =
         assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
@@ -686,21 +517,13 @@ public class ConfigTest {
         .thenReturn(List.of(mock(TextChannel.class)));
 
     var config =
-        new Config(
-            "some-token",
-            "the-guild-id",
-            "some-database-path",
-            ZoneId.of("UTC"),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.of(
-                new ProgrammeConfig(
-                    "https://example.com/some-api-root",
-                    "the-major-announcements-channel-id",
-                    Optional.empty(),
-                    new DayChannelNameResolver(),
-                    false)));
+        new TestConfigBuilder()
+            .withGuildId("the-guild-id")
+            .withProgrammeConfig(
+                programmeConfig ->
+                    programmeConfig.withMajorAnnouncementChannel(
+                        "the-major-announcements-channel-id"))
+            .build();
 
     config.validateDiscordConfig(jda);
   }
@@ -718,21 +541,13 @@ public class ConfigTest {
         .thenReturn(List.of(mock(TextChannel.class)));
 
     var config =
-        new Config(
-            "some-token",
-            "the-guild-id",
-            "some-database-path",
-            ZoneId.of("UTC"),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.of(
-                new ProgrammeConfig(
-                    "https://example.com/some-api-root",
-                    "the-major-announcements-channel-id",
-                    Optional.empty(),
-                    new DayChannelNameResolver(),
-                    false)));
+        new TestConfigBuilder()
+            .withGuildId("the-guild-id")
+            .withProgrammeConfig(
+                programmeConfig ->
+                    programmeConfig.withMajorAnnouncementChannel(
+                        "the-major-announcements-channel-id"))
+            .build();
     var thrown =
         assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
@@ -751,23 +566,14 @@ public class ConfigTest {
     when(guild.getTextChannelById("the-now-next-channel")).thenReturn(null);
 
     var config =
-        new Config(
-            "some-token",
-            "the-guild-id",
-            "some-database-path",
-            ZoneId.of("UTC"),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.of(
-                new ProgrammeConfig(
-                    "https://example.com/some-api-root",
-                    "the-major-announcements-channel-id",
-                    Optional.of(
-                        new NowOnConfig(
-                            "the-now-next-channel", Duration.ofMinutes(5), Duration.ofMinutes(15))),
-                    new DayChannelNameResolver(),
-                    false)));
+        new TestConfigBuilder()
+            .withGuildId("the-guild-id")
+            .withProgrammeConfig(
+                programmeConfig ->
+                    programmeConfig
+                        .withMajorAnnouncementChannel("the-major-announcements-channel-id")
+                        .withNowOn(nowOn -> nowOn.withChannel("the-now-next-channel")))
+            .build();
     var thrown =
         assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
@@ -787,23 +593,14 @@ public class ConfigTest {
         .thenReturn(List.of(mock(TextChannel.class), mock(TextChannel.class)));
 
     var config =
-        new Config(
-            "some-token",
-            "the-guild-id",
-            "some-database-path",
-            ZoneId.of("UTC"),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.of(
-                new ProgrammeConfig(
-                    "https://example.com/some-api-root",
-                    "the-major-announcements-channel-id",
-                    Optional.of(
-                        new NowOnConfig(
-                            "the-now-next-channel", Duration.ofMinutes(5), Duration.ofMinutes(15))),
-                    new DayChannelNameResolver(),
-                    false)));
+        new TestConfigBuilder()
+            .withGuildId("the-guild-id")
+            .withProgrammeConfig(
+                programmeConfig ->
+                    programmeConfig
+                        .withMajorAnnouncementChannel("the-major-announcements-channel-id")
+                        .withNowOn(nowOn -> nowOn.withChannel("the-now-next-channel")))
+            .build();
     var thrown =
         assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 

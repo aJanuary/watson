@@ -13,6 +13,7 @@ public record Config(
     String discordBotToken,
     String guildId,
     String databasePath,
+    String portalApiKey,
     ZoneId timezone,
     Optional<AlarmsConfig> alarms,
     Optional<ApiConfig> api,

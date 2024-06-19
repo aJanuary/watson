@@ -2,11 +2,13 @@ package com.ajanuary.watson.programme;
 
 import com.ajanuary.watson.programme.channelnameresolvers.ChannelNameResolver;
 import com.ajanuary.watson.utils.JDAUtils;
+import java.net.URI;
 import java.time.temporal.TemporalAmount;
 import java.util.Optional;
 
 public record ProgrammeConfig(
-    String programmeUrl,
+    URI programmeUrl,
+    URI assignDiscordPostsApiUrl,
     String majorAnnouncementsChannel,
     Optional<NowOnConfig> nowOn,
     ChannelNameResolver channelNameResolver,

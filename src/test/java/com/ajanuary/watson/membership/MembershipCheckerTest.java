@@ -30,7 +30,7 @@ import support.TestConfigBuilder;
 public class MembershipCheckerTest {
   @Test
   void doesntCheckBots() {
-    var config = new TestConfigBuilder().build();
+    var config = new TestConfigBuilder().withMembershipConfig(membershipConfig -> {}).build();
     var member = mock(Member.class);
     var user = mock(User.class);
     when(member.getUser()).thenReturn(user);
@@ -103,7 +103,7 @@ public class MembershipCheckerTest {
 
   @Test
   void doesCheckMembersWithNoRoles() {
-    var config = new TestConfigBuilder().build();
+    var config = new TestConfigBuilder().withMembershipConfig(membershipConfig -> {}).build();
 
     var member = mock(Member.class);
     var user = mock(User.class);
@@ -124,7 +124,7 @@ public class MembershipCheckerTest {
 
   @Test
   void doesCheckMembersWithUnrelatedRoles() {
-    var config = new TestConfigBuilder().build();
+    var config = new TestConfigBuilder().withMembershipConfig(membershipConfig -> {}).build();
 
     var unrelatedRole = mock(Role.class);
     when(unrelatedRole.getName()).thenReturn("some-unrelated-role");

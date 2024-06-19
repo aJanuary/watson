@@ -8,6 +8,7 @@ import com.ajanuary.watson.programme.ProgrammeConfig;
 import com.ajanuary.watson.programme.ProgrammeConfig.NowOnConfig;
 import com.ajanuary.watson.programme.channelnameresolvers.ChannelNameResolver;
 import com.ajanuary.watson.programme.channelnameresolvers.DayChannelNameResolver;
+import java.net.URI;
 import java.time.Duration;
 import java.time.ZoneId;
 import java.time.temporal.TemporalAmount;
@@ -21,17 +22,19 @@ public class TestConfigBuilder {
   private String discordBotToken = "some-discord-bot-token";
   private String guildId = "some-guild-id";
   private String databasePath = "some-database-path";
+  private String portalApiKey = "some-portal-api-key";
   private ZoneId timezone = ZoneId.of("UTC");
-  private TestAlarmsConfigBuilder alarmsConfigBuilder = new TestAlarmsConfigBuilder();
-  private TestApiConfigBuilder apiConfigBuilder = new TestApiConfigBuilder();
-  private TestMembershipConfigBuilder membershipConfigBuilder = new TestMembershipConfigBuilder();
-  private TestProgrammeConfigBuilder programmeConfigBuilder = new TestProgrammeConfigBuilder();
+  private TestAlarmsConfigBuilder alarmsConfigBuilder = null;
+  private TestApiConfigBuilder apiConfigBuilder = null;
+  private TestMembershipConfigBuilder membershipConfigBuilder = null;
+  private TestProgrammeConfigBuilder programmeConfigBuilder = null;
 
   public Config build() {
     return new Config(
         discordBotToken,
         guildId,
         databasePath,
+        portalApiKey,
         timezone,
         Optional.ofNullable(alarmsConfigBuilder).map(TestAlarmsConfigBuilder::build),
         Optional.ofNullable(apiConfigBuilder).map(TestApiConfigBuilder::build),
@@ -59,7 +62,15 @@ public class TestConfigBuilder {
     return this;
   }
 
+  public TestConfigBuilder withPortalApiKey(String portalApiKey) {
+    this.portalApiKey = portalApiKey;
+    return this;
+  }
+
   public TestConfigBuilder withAlarmsConfig(Consumer<TestAlarmsConfigBuilder> configure) {
+    if (alarmsConfigBuilder == null) {
+      alarmsConfigBuilder = new TestAlarmsConfigBuilder();
+    }
     configure.accept(alarmsConfigBuilder);
     return this;
   }
@@ -69,7 +80,23 @@ public class TestConfigBuilder {
     return this;
   }
 
+  public TestConfigBuilder withApiConfig(Consumer<TestApiConfigBuilder> configure) {
+    if (apiConfigBuilder == null) {
+      apiConfigBuilder = new TestApiConfigBuilder();
+    }
+    configure.accept(apiConfigBuilder);
+    return this;
+  }
+
+  public TestConfigBuilder withNoApiConfig() {
+    apiConfigBuilder = null;
+    return this;
+  }
+
   public TestConfigBuilder withMembershipConfig(Consumer<TestMembershipConfigBuilder> configure) {
+    if (membershipConfigBuilder == null) {
+      membershipConfigBuilder = new TestMembershipConfigBuilder();
+    }
     configure.accept(membershipConfigBuilder);
     return this;
   }
@@ -80,6 +107,9 @@ public class TestConfigBuilder {
   }
 
   public TestConfigBuilder withProgrammeConfig(Consumer<TestProgrammeConfigBuilder> configure) {
+    if (programmeConfigBuilder == null) {
+      programmeConfigBuilder = new TestProgrammeConfigBuilder();
+    }
     configure.accept(programmeConfigBuilder);
     return this;
   }
@@ -141,8 +171,7 @@ public class TestConfigBuilder {
   }
 
   public static class TestMembershipConfigBuilder {
-    private String membersApiUrl = "https://example.com/some-api-root";
-    private String membersApiKey = "some-api-key";
+    private URI membersApiUrl = URI.create("https://example.com/some-api-root");
     private String helpDeskChannel = "some-help-desk-channel";
     private String discordModsChannel = "some-discord-mods-channel";
     private String memberRole = "some-member-role";
@@ -152,7 +181,6 @@ public class TestConfigBuilder {
     public MembershipConfig build() {
       return new MembershipConfig(
           membersApiUrl,
-          membersApiKey,
           helpDeskChannel,
           discordModsChannel,
           memberRole,
@@ -160,13 +188,13 @@ public class TestConfigBuilder {
           additionalRoles);
     }
 
-    public TestMembershipConfigBuilder withMembersApiUrl(String membersApiUrl) {
+    public TestMembershipConfigBuilder withMembersApiUrl(URI membersApiUrl) {
       this.membersApiUrl = membersApiUrl;
       return this;
     }
 
-    public TestMembershipConfigBuilder withMembersApiKey(String membersApiKey) {
-      this.membersApiKey = membersApiKey;
+    public TestMembershipConfigBuilder withHelpDeskChannel(String helpDeskChannel) {
+      this.helpDeskChannel = helpDeskChannel;
       return this;
     }
 
@@ -192,7 +220,8 @@ public class TestConfigBuilder {
   }
 
   public static class TestProgrammeConfigBuilder {
-    private String programmeApiRoot = "https://example.com/some-api-root";
+    private URI programmeApiRoot = URI.create("https://example.com/some-api-root");
+    private URI assignDiscordPostsApiUrl = URI.create("https://example.com/some-api-root");
     private String majorAnnouncementChannel = "some-major-announcement-channel";
     private Optional<NowOnConfig> nowOnConfig = Optional.empty();
     private ChannelNameResolver channelNameResolver = new DayChannelNameResolver();
@@ -201,14 +230,20 @@ public class TestConfigBuilder {
     public ProgrammeConfig build() {
       return new ProgrammeConfig(
           programmeApiRoot,
+          assignDiscordPostsApiUrl,
           majorAnnouncementChannel,
           nowOnConfig,
           channelNameResolver,
           hasPerformedFirstLoad);
     }
 
-    public TestProgrammeConfigBuilder withProgrammeApiRoot(String programmeApiRoot) {
+    public TestProgrammeConfigBuilder withProgrammeApiRoot(URI programmeApiRoot) {
       this.programmeApiRoot = programmeApiRoot;
+      return this;
+    }
+
+    public TestProgrammeConfigBuilder withAssignDiscordPostsApiUrl(URI assignDiscordPostsApiUrl) {
+      this.assignDiscordPostsApiUrl = assignDiscordPostsApiUrl;
       return this;
     }
 

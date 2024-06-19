@@ -9,8 +9,8 @@ import com.ajanuary.watson.utils.JDAUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.guild.GenericGuildEvent;
@@ -83,7 +83,7 @@ public class ApiModule implements EventListener {
         .queue(
             messages -> {
               try (var conn = databaseManager.getConnection()) {
-                var membersToCheck = new ArrayList<DiscordUser>();
+                var membersToCheck = new HashMap<String, DiscordUser>();
                 // The come in newest first, so reverse them
                 Collections.reverse(messages);
                 for (var message : messages) {
@@ -95,7 +95,7 @@ public class ApiModule implements EventListener {
                         var userId = command.get("user-id").asText();
                         var user = jda.getUserById(userId);
                         if (user != null) {
-                          membersToCheck.add(new DiscordUser(userId, user.getName()));
+                          membersToCheck.put(userId, new DiscordUser(userId, user.getName()));
                         }
                       }
                     }
@@ -104,7 +104,7 @@ public class ApiModule implements EventListener {
                   }
                 }
                 if (!membersToCheck.isEmpty()) {
-                  eventDispatcher.dispatch(new CheckUserEvent(membersToCheck));
+                  eventDispatcher.dispatch(new CheckUserEvent(membersToCheck.values()));
                 }
 
               } catch (SQLException e) {

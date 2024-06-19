@@ -1,17 +1,20 @@
 package com.ajanuary.watson.membership;
 
 import com.ajanuary.watson.config.ConfigParser.ObjectConfigParserWithValue;
+import java.net.URI;
 import java.util.Map;
 
 public class MembershipConfigYamlParser {
 
   private MembershipConfigYamlParser() {}
 
-  public static MembershipConfig parse(
-      ObjectConfigParserWithValue secretsParser, ObjectConfigParserWithValue configParser) {
-    var membersApiKey = secretsParser.get("membersApiKey").string().required().value();
-
-    var membersApiUrl = configParser.get("membersApiUrl").string().required().value();
+  public static MembershipConfig parse(ObjectConfigParserWithValue configParser) {
+    var membersApiUrl =
+        configParser
+            .get("membersApiUrl")
+            .string()
+            .required()
+            .map(URI::create);
     var helpDeskChannel =
         configParser.get("helpDeskChannel").string().defaultingTo("help-desk").value();
     var discordModsChannel =
@@ -31,7 +34,6 @@ public class MembershipConfigYamlParser {
 
     return new MembershipConfig(
         membersApiUrl,
-        membersApiKey,
         helpDeskChannel,
         discordModsChannel,
         memberRole,

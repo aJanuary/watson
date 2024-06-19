@@ -12,6 +12,7 @@ public class ConfigYamlParser {
   public Config parse(JsonNode jsonSecrets, JsonNode jsonConfig) {
     var secretsParser = ConfigParser.parse(jsonSecrets);
     var discordBotToken = secretsParser.get("discordBotToken").string().required().value();
+    var portalApiKey = secretsParser.get("portalApiKey").string().required().value();
 
     var configParser = ConfigParser.parse(jsonConfig);
     var guildId = configParser.get("guildId").string().required().value();
@@ -20,12 +21,7 @@ public class ConfigYamlParser {
     var alarmsConfig = configParser.get("alarms").object().map(AlarmsConfigYamlParser::parse);
     var apiConfig = configParser.get("api").object().map(ApiConfigYamlParser::parse);
     var membershipConfig =
-        configParser
-            .get("membership")
-            .object()
-            .map(
-                membershipConfigObj ->
-                    MembershipConfigYamlParser.parse(secretsParser, membershipConfigObj));
+        configParser.get("membership").object().map(MembershipConfigYamlParser::parse);
     var programmeConfig =
         configParser.get("programme").object().map(ProgrammeConfigYamlParser::parse);
 
@@ -33,6 +29,7 @@ public class ConfigYamlParser {
         discordBotToken,
         guildId,
         databasePath,
+        portalApiKey,
         timezone,
         alarmsConfig,
         apiConfig,

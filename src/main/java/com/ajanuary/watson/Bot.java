@@ -9,6 +9,7 @@ import com.ajanuary.watson.membership.MembershipChecker;
 import com.ajanuary.watson.membership.MembershipModule;
 import com.ajanuary.watson.notification.EventDispatcher;
 import com.ajanuary.watson.notification.ReadyEvent;
+import com.ajanuary.watson.portalapi.PortalApiClient;
 import com.ajanuary.watson.programme.ProgrammeModule;
 import java.net.http.HttpClient;
 import java.sql.SQLException;
@@ -51,6 +52,13 @@ public class Bot {
       System.exit(1);
     }
 
+    PortalApiClient portalApiClient;
+    if (config.membership().isPresent() || config.programme().isPresent()) {
+      portalApiClient = new PortalApiClient(config.portalApiKey(), HttpClient.newHttpClient());
+    } else {
+      portalApiClient = null;
+    }
+
     var eventDispatcher = new EventDispatcher();
     config
         .alarms()
@@ -65,7 +73,8 @@ public class Bot {
         .membership()
         .ifPresent(
             membershipConfig -> {
-              var apiClient = new MembersApiClient(membershipConfig, HttpClient.newHttpClient());
+              var apiClient =
+                  new MembersApiClient(membershipConfig.membersApiUrl(), portalApiClient);
               var membershipChecker =
                   new MembershipChecker(jda, membershipConfig, config, apiClient, databaseManager);
               new MembershipModule(jda, config, membershipChecker, eventDispatcher);
@@ -75,7 +84,12 @@ public class Bot {
         .ifPresent(
             programmeConfig ->
                 new ProgrammeModule(
-                    jda, programmeConfig, config, databaseManager, eventDispatcher));
+                    jda,
+                    programmeConfig,
+                    config,
+                    databaseManager,
+                    portalApiClient,
+                    eventDispatcher));
 
     eventDispatcher.dispatch(new ReadyEvent());
   }

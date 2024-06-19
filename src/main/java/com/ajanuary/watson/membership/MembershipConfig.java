@@ -1,11 +1,11 @@
 package com.ajanuary.watson.membership;
 
 import com.ajanuary.watson.utils.JDAUtils;
+import java.net.URI;
 import java.util.Map;
 
 public record MembershipConfig(
-    String membersApiUrl,
-    String membersApiKey,
+    URI membersApiUrl,
     String helpDeskChannel,
     String discordModsChannel,
     String memberRole,

@@ -6,6 +6,7 @@ import com.ajanuary.watson.programme.channelnameresolvers.ChannelNameResolver;
 import com.ajanuary.watson.programme.channelnameresolvers.DayChannelNameResolver;
 import com.ajanuary.watson.programme.channelnameresolvers.DayTodChannelNameResolver;
 import com.ajanuary.watson.programme.channelnameresolvers.DayTodChannelNameResolver.Threshold;
+import java.net.URI;
 import java.time.Duration;
 import java.util.Optional;
 
@@ -14,7 +15,9 @@ public class ProgrammeConfigYamlParser {
   private ProgrammeConfigYamlParser() {}
 
   public static ProgrammeConfig parse(ObjectConfigParserWithValue configParser) {
-    var programmeUrl = configParser.get("programmeUrl").string().required().value();
+    var programmeUrl = configParser.get("programmeUrl").string().required().map(URI::create);
+    var assignDiscordPostsApiUrl =
+        configParser.get("assignDiscordPostsApiUrl").string().required().map(URI::create);
     var majorAnnouncementsChannel =
         configParser
             .get("majorAnnouncementsChannel")
@@ -69,6 +72,7 @@ public class ProgrammeConfigYamlParser {
 
     return new ProgrammeConfig(
         programmeUrl,
+        assignDiscordPostsApiUrl,
         majorAnnouncementsChannel,
         nowOnConfig,
         channelNameResolver,

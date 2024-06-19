@@ -4,6 +4,7 @@ import com.ajanuary.watson.alarms.Scheduler;
 import com.ajanuary.watson.config.Config;
 import com.ajanuary.watson.db.DatabaseManager;
 import com.ajanuary.watson.notification.EventDispatcher;
+import com.ajanuary.watson.portalapi.PortalApiClient;
 import com.ajanuary.watson.utils.JDAUtils;
 import com.fasterxml.jackson.core.StreamReadFeature;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -12,7 +13,6 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.github.furstenheim.CopyDown;
 import java.io.IOException;
-import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -54,6 +54,7 @@ public class ProgrammeModule {
   private final Config config;
   private final DatabaseManager databaseManager;
   private final EventDispatcher eventDispatcher;
+  private final PortalProgrammeApiClient portalProgrammeApiClient;
 
   private boolean doneFirstOnNowPoll = false;
 
@@ -62,12 +63,15 @@ public class ProgrammeModule {
       ProgrammeConfig programmeConfig,
       Config config,
       DatabaseManager databaseManager,
+      PortalApiClient portalApiClient,
       EventDispatcher eventDispatcher) {
     this.jda = jda;
     this.jdaUtils = new JDAUtils(jda, config);
     this.programmeConfig = programmeConfig;
     this.config = config;
     this.databaseManager = databaseManager;
+    this.portalProgrammeApiClient =
+        new PortalProgrammeApiClient(programmeConfig.assignDiscordPostsApiUrl(), portalApiClient);
     this.eventDispatcher = eventDispatcher;
     Executors.newSingleThreadScheduledExecutor()
         .scheduleWithFixedDelay(this::pollProgramme, 0, 1, TimeUnit.MINUTES);
@@ -184,6 +188,12 @@ public class ProgrammeModule {
           conn.insertDiscordThread(
               new DiscordThread(
                   discordThreadId, discordMessageId, Status.SCHEDULED, newDiscordItem));
+          portalProgrammeApiClient.addPostDetails(
+              newItem.id(),
+              newItem.startTime(),
+              newItem.mins(),
+              newItem.loc(),
+              "https://discord.com/channels/" + config.guildId() + "/" + discordThreadId);
           eventDispatcher.dispatch(new ItemChangedEvent());
 
           if (programmeConfig.hasPerformedFirstLoad()) {
@@ -361,8 +371,7 @@ public class ProgrammeModule {
 
   private List<ProgrammeItem> getNewProgrammeItems() throws IOException, InterruptedException {
     var client = HttpClient.newHttpClient();
-    var request =
-        HttpRequest.newBuilder().uri(URI.create(programmeConfig.programmeUrl())).GET().build();
+    var request = HttpRequest.newBuilder().uri(programmeConfig.programmeUrl()).GET().build();
     var response = client.send(request, HttpResponse.BodyHandlers.ofString());
     if (response.statusCode() != 200) {
       throw new IOException("Error polling programme: " + response.body());
