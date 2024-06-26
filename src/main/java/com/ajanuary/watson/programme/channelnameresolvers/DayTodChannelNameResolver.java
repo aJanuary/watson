@@ -20,12 +20,13 @@ public class DayTodChannelNameResolver implements ChannelNameResolver {
 
   @Override
   public String resolveChannelName(ProgrammeItem item) {
-    var day = item.date().format(DateTimeFormatter.ofPattern("EEEE"));
+    var day = item.startTime().format(DateTimeFormatter.ofPattern("EEEE"));
     return thresholds.stream()
         .filter(
-            threshold ->
-                item.time().compareTo(threshold.start()) >= 0
-                    && item.time().compareTo(threshold.end()) < 0)
+            threshold -> {
+              var time = item.startTime().format(DateTimeFormatter.ofPattern("HH:mm"));
+              return time.compareTo(threshold.start()) >= 0 && time.compareTo(threshold.end()) < 0;
+            })
         .findFirst()
         .map(threshold -> day + "-" + threshold.label())
         .orElse(day);

@@ -10,7 +10,7 @@ import com.ajanuary.watson.utils.JDAUtils;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -48,17 +48,11 @@ public class AlarmsModule {
 
     var itemScheduler =
         new Scheduler<>(
-            "item",
-            config.timezone(),
-            Duration.ZERO,
-            this::getNextItemTime,
-            this::getItemsBefore,
-            this::handleItem);
+            "item", Duration.ZERO, this::getNextItemTime, this::getItemsBefore, this::handleItem);
     eventDispatcher.register(ItemChangedEvent.class, e -> itemScheduler.notifyOfDbChange());
     this.dmScheduler =
         new Scheduler<>(
             "dm",
-            config.timezone(),
             alarmsConfig.minTimeBetweenDMs(),
             this::getNextScheduledDMTime,
             this::getScheduledDMsBefore,
@@ -67,13 +61,13 @@ public class AlarmsModule {
     this.privateThreadManager = new PrivateThreadManager(jda, "alarms");
   }
 
-  private Optional<LocalDateTime> getNextItemTime() throws SQLException, IOException {
+  private Optional<ZonedDateTime> getNextItemTime() throws SQLException {
     try (var conn = databaseManager.getConnection()) {
       return conn.getNextItemTime().map(t -> t.minus(alarmsConfig.timeBeforeToNotify()));
     }
   }
 
-  private List<DiscordThread> getItemsBefore(LocalDateTime time) throws SQLException, IOException {
+  private List<DiscordThread> getItemsBefore(ZonedDateTime time) throws SQLException {
     try (var conn = databaseManager.getConnection()) {
       return conn.getItemsBefore(time.plus(alarmsConfig.timeBeforeToNotify()));
     }
@@ -153,13 +147,13 @@ public class AlarmsModule {
                     "Error getting message for thread {}", discordThread.discordThreadId(), error));
   }
 
-  private Optional<LocalDateTime> getNextScheduledDMTime() throws SQLException, IOException {
+  private Optional<ZonedDateTime> getNextScheduledDMTime() throws SQLException, IOException {
     try (var conn = databaseManager.getConnection()) {
       return conn.getNextScheduledDMTime();
     }
   }
 
-  private List<WithId<ScheduledDM>> getScheduledDMsBefore(LocalDateTime localDateTime)
+  private List<WithId<ScheduledDM>> getScheduledDMsBefore(ZonedDateTime localDateTime)
       throws SQLException, IOException {
     try (var conn = databaseManager.getConnection()) {
       return conn.getScheduledDMsBefore(localDateTime);
@@ -179,7 +173,7 @@ public class AlarmsModule {
       if (!dm.messageTime()
           .plus(alarmsConfig.timeBeforeToNotify())
           .plus(alarmsConfig.maxTimeAfterToNotify())
-          .isAfter(LocalDateTime.now(config.timezone()))) {
+          .isAfter(ZonedDateTime.now())) {
         logger.warn(
             "DM {} is being processed too late after it's scheduled time of {}. Ignoring",
             dmWithId.id(),

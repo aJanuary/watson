@@ -8,13 +8,16 @@ import com.ajanuary.watson.programme.Status;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAmount;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import javax.sql.DataSource;
 import org.flywaydb.core.Flyway;
+import org.jetbrains.annotations.NotNull;
 import org.sqlite.SQLiteDataSource;
 import org.sqlite.SQLiteErrorCode;
 import org.sqlite.SQLiteException;
@@ -43,6 +46,10 @@ public class DatabaseManager {
 
     private DatabaseConnection(Connection connection) {
       this.connection = connection;
+    }
+
+    private static @NotNull String toDbDateTimeString(ZonedDateTime endTime) {
+      return endTime.withZoneSameInstant(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME);
     }
 
     @Override
@@ -87,8 +94,8 @@ public class DatabaseManager {
         }
         var loc = rs.getString(5);
         var time = rs.getString(6);
-        var startTime = LocalDateTime.parse(rs.getString(7));
-        var endTime = LocalDateTime.parse(rs.getString(8));
+        var startTime = ZonedDateTime.parse(rs.getString(7));
+        var endTime = ZonedDateTime.parse(rs.getString(8));
         var status = Status.valueOf(rs.getString(9));
         return Optional.of(
             new DiscordThread(
@@ -129,8 +136,8 @@ public class DatabaseManager {
         }
         statement.setString(6, discordThread.item().loc());
         statement.setString(7, discordThread.item().time());
-        statement.setString(8, discordThread.item().startTime().toString());
-        statement.setString(9, discordThread.item().endTime().toString());
+        statement.setString(8, toDbDateTimeString(discordThread.item().startTime()));
+        statement.setString(9, toDbDateTimeString(discordThread.item().endTime()));
         statement.setString(10, discordThread.status().toString());
 
         var rowsAffected = statement.executeUpdate();
@@ -165,8 +172,8 @@ public class DatabaseManager {
         statement.setBytes(4, discordThread.item().body().getBytes());
         statement.setString(5, discordThread.item().loc());
         statement.setString(6, discordThread.item().time());
-        statement.setString(7, discordThread.item().startTime().toString());
-        statement.setString(8, discordThread.item().endTime().toString());
+        statement.setString(7, toDbDateTimeString(discordThread.item().startTime()));
+        statement.setString(8, toDbDateTimeString(discordThread.item().endTime()));
         statement.setString(9, discordThread.status().toString());
         statement.setString(10, discordThread.item().id());
 
@@ -197,7 +204,7 @@ public class DatabaseManager {
       }
     }
 
-    public List<DiscordThread> getItemsBefore(LocalDateTime maxTime) throws SQLException {
+    public List<DiscordThread> getItemsBefore(ZonedDateTime maxTime) throws SQLException {
       try (var connection = dataSource.getConnection();
           var statement =
               connection.prepareStatement(
@@ -219,7 +226,7 @@ public class DatabaseManager {
             start_time <= ?
             and processed_alarms = 0
           """)) {
-        statement.setString(1, maxTime.toString());
+        statement.setString(1, toDbDateTimeString(maxTime));
         var rs = statement.executeQuery();
         var results = new ArrayList<DiscordThread>();
         while (rs.next()) {
@@ -236,8 +243,8 @@ public class DatabaseManager {
           }
           var loc = rs.getString(6);
           var time = rs.getString(7);
-          var startTime = LocalDateTime.parse(rs.getString(8));
-          var endTime = LocalDateTime.parse(rs.getString(9));
+          var startTime = ZonedDateTime.parse(rs.getString(8));
+          var endTime = ZonedDateTime.parse(rs.getString(9));
           var status = Status.valueOf(rs.getString(10));
           results.add(
               new DiscordThread(
@@ -250,7 +257,7 @@ public class DatabaseManager {
       }
     }
 
-    public Optional<LocalDateTime> getNextItemTime() throws SQLException {
+    public Optional<ZonedDateTime> getNextItemTime() throws SQLException {
       try (var connection = dataSource.getConnection();
           var statement =
               connection.prepareStatement(
@@ -270,7 +277,7 @@ public class DatabaseManager {
         if (time == null) {
           return Optional.empty();
         }
-        return Optional.of(LocalDateTime.parse(time));
+        return Optional.of(ZonedDateTime.parse(time));
       }
     }
 
@@ -311,7 +318,7 @@ public class DatabaseManager {
         statement.setString(1, scheduledDM.discordThreadId());
         statement.setString(2, scheduledDM.discordMessageId());
         statement.setString(3, scheduledDM.userId());
-        statement.setString(4, scheduledDM.messageTime().toString());
+        statement.setString(4, toDbDateTimeString(scheduledDM.messageTime()));
         statement.setString(5, scheduledDM.title());
         statement.setString(6, scheduledDM.jumpUrl());
         statement.setString(7, scheduledDM.contents());
@@ -329,7 +336,7 @@ public class DatabaseManager {
       }
     }
 
-    public Optional<LocalDateTime> getNextScheduledDMTime() throws SQLException {
+    public Optional<ZonedDateTime> getNextScheduledDMTime() throws SQLException {
       try (var connection = dataSource.getConnection();
           var statement =
               connection.prepareStatement(
@@ -347,11 +354,11 @@ public class DatabaseManager {
         if (time == null) {
           return Optional.empty();
         }
-        return Optional.of(LocalDateTime.parse(time));
+        return Optional.of(ZonedDateTime.parse(time));
       }
     }
 
-    public List<WithId<ScheduledDM>> getScheduledDMsBefore(LocalDateTime localDateTime)
+    public List<WithId<ScheduledDM>> getScheduledDMsBefore(ZonedDateTime dateTime)
         throws SQLException {
       try (var connection = dataSource.getConnection();
           var statement =
@@ -372,7 +379,7 @@ public class DatabaseManager {
           where
             message_time <= ?
           """)) {
-        statement.setString(1, localDateTime.toString());
+        statement.setString(1, toDbDateTimeString(dateTime));
         var rs = statement.executeQuery();
         var results = new ArrayList<WithId<ScheduledDM>>();
         while (rs.next()) {
@@ -380,7 +387,7 @@ public class DatabaseManager {
           var discordThreadId = rs.getString(2);
           var discordMessageId = rs.getString(3);
           var userId = rs.getString(4);
-          var messageTime = LocalDateTime.parse(rs.getString(5));
+          var messageTime = ZonedDateTime.parse(rs.getString(5));
           var title = rs.getString(6);
           var jumpUrl = rs.getString(7);
           var contents = rs.getString(8);
@@ -471,7 +478,38 @@ public class DatabaseManager {
       }
     }
 
-    public Optional<LocalDateTime> getNextNowOnEnd() throws SQLException {
+    public Optional<ZonedDateTime> getNextNowOn() throws SQLException {
+      try (var connection = dataSource.getConnection();
+          var statement =
+              connection.prepareStatement(
+                  """
+          select
+            min(start_time)
+          from
+            discord_threads
+          where
+            not exists (
+              select
+                1
+              from
+                now_on
+              where
+                discord_threads.programme_item_id = now_on.programme_item_id
+            )
+          """)) {
+        var rs = statement.executeQuery();
+        if (!rs.next()) {
+          return Optional.empty();
+        }
+        var time = rs.getString(1);
+        if (time == null) {
+          return Optional.empty();
+        }
+        return Optional.of(ZonedDateTime.parse(time));
+      }
+    }
+
+    public Optional<ZonedDateTime> getNextNowOnEnd() throws SQLException {
       try (var connection = dataSource.getConnection();
           var statement =
               connection.prepareStatement(
@@ -489,12 +527,12 @@ public class DatabaseManager {
         if (time == null) {
           return Optional.empty();
         }
-        return Optional.of(LocalDateTime.parse(time));
+        return Optional.of(ZonedDateTime.parse(time));
       }
     }
 
     public List<DiscordThread> getNowOn(
-        LocalDateTime now, TemporalAmount timeBeforeToAdd, TemporalAmount timeAfterToKeep)
+        ZonedDateTime now, TemporalAmount timeBeforeToAdd, TemporalAmount timeAfterToKeep)
         throws SQLException {
       try (var connection = dataSource.getConnection();
           var statement =
@@ -525,8 +563,8 @@ public class DatabaseManager {
             order by
               start_time, loc
           """)) {
-        statement.setString(1, now.plus(timeBeforeToAdd).toString());
-        statement.setString(2, now.minus(timeAfterToKeep).toString());
+        statement.setString(1, toDbDateTimeString(now.plus(timeBeforeToAdd)));
+        statement.setString(2, toDbDateTimeString(now.minus(timeAfterToKeep)));
         var rs = statement.executeQuery();
         var results = new ArrayList<DiscordThread>();
         while (rs.next()) {
@@ -543,8 +581,8 @@ public class DatabaseManager {
           }
           var loc = rs.getString(6);
           var time = rs.getString(7);
-          var startTime = LocalDateTime.parse(rs.getString(8));
-          var endTime = LocalDateTime.parse(rs.getString(9));
+          var startTime = ZonedDateTime.parse(rs.getString(8));
+          var endTime = ZonedDateTime.parse(rs.getString(9));
           var status = Status.valueOf(rs.getString(10));
           results.add(
               new DiscordThread(
@@ -557,7 +595,7 @@ public class DatabaseManager {
       }
     }
 
-    public List<String> getExpiredNowOnMessages(LocalDateTime time) throws SQLException {
+    public List<String> getExpiredNowOnMessages(ZonedDateTime time) throws SQLException {
       try (var connection = dataSource.getConnection();
           var statement =
               connection.prepareStatement(
@@ -569,7 +607,7 @@ public class DatabaseManager {
           where
             end_time <= ?
           """)) {
-        statement.setString(1, time.toString());
+        statement.setString(1, toDbDateTimeString(time));
         var rs = statement.executeQuery();
         var results = new ArrayList<String>();
         while (rs.next()) {
@@ -580,7 +618,7 @@ public class DatabaseManager {
     }
 
     public void insertNowOnMessage(
-        String programmeItemId, String discordMessageId, LocalDateTime endTime)
+        String programmeItemId, String discordMessageId, ZonedDateTime endTime)
         throws SQLException {
       try (var connection = dataSource.getConnection();
           var statement =
@@ -595,7 +633,7 @@ public class DatabaseManager {
           """)) {
         statement.setString(1, programmeItemId);
         statement.setString(2, discordMessageId);
-        statement.setString(3, endTime.toString());
+        statement.setString(3, toDbDateTimeString(endTime));
         statement.executeUpdate();
       }
     }

@@ -1,6 +1,6 @@
 package com.ajanuary.watson.programme;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 public record DiscordItem(
     String id,
@@ -8,5 +8,5 @@ public record DiscordItem(
     String body,
     String loc,
     String time,
-    LocalDateTime startTime,
-    LocalDateTime endTime) {}
+    ZonedDateTime startTime,
+    ZonedDateTime endTime) {}

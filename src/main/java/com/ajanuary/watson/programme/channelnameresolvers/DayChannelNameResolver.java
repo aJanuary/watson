@@ -8,7 +8,7 @@ public class DayChannelNameResolver implements ChannelNameResolver {
 
   @Override
   public String resolveChannelName(ProgrammeItem item) {
-    return item.date().format(DateTimeFormatter.ofPattern("EEEE"));
+    return item.startTime().format(DateTimeFormatter.ofPattern("EEEE"));
   }
 
   @Override

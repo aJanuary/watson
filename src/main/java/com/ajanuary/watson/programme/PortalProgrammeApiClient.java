@@ -3,7 +3,7 @@ package com.ajanuary.watson.programme;
 import com.ajanuary.watson.portalapi.PortalApiClient;
 import java.io.IOException;
 import java.net.URI;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.HashMap;
@@ -79,7 +79,7 @@ public class PortalProgrammeApiClient {
   public void addPostDetails(
       String itemId,
       String title,
-      LocalDateTime localDateTime,
+      ZonedDateTime dateTime,
       int mins,
       String roomId,
       String postUrl) {
@@ -87,7 +87,7 @@ public class PortalProgrammeApiClient {
         new PostDetails(
             itemId,
             title,
-            localDateTime.format(DateTimeFormatter.ISO_DATE_TIME),
+            dateTime.format(DateTimeFormatter.ISO_DATE_TIME),
             mins,
             roomId,
             postUrl);

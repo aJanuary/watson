@@ -1,13 +1,12 @@
 package com.ajanuary.watson.programme;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.util.StdConverter;
 import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -15,28 +14,45 @@ import java.util.Map;
 public record ProgrammeItem(
     String id,
     String title,
-    List<String> tags,
-    @JsonDeserialize(converter = DateConverter.class) LocalDate date,
-    String time,
+    @JsonDeserialize(using = TagDeserializer.class) List<String> tags,
+    @JsonProperty("datetime") @JsonDeserialize(converter = DateConverter.class)
+        ZonedDateTime startTime,
     int mins,
     @JsonDeserialize(converter = LocationConverter.class) String loc,
     @JsonDeserialize(using = PersonDeserializer.class) List<String> people,
     String desc,
     Map<String, String> links) {
 
-  public LocalDateTime startTime() {
-    return LocalDateTime.of(date, LocalTime.parse(time));
-  }
-
-  public LocalDateTime endTime() {
+  public ZonedDateTime endTime() {
     return startTime().plus(Duration.ofMinutes(mins));
   }
 
-  private static final class DateConverter extends StdConverter<String, LocalDate> {
+  private static final class TagDeserializer extends StdDeserializer<List<String>> {
+
+    public TagDeserializer() {
+      super(List.class);
+    }
 
     @Override
-    public LocalDate convert(String value) {
-      return LocalDate.parse(value);
+    public List<String> deserialize(
+        com.fasterxml.jackson.core.JsonParser p,
+        com.fasterxml.jackson.databind.DeserializationContext ctxt)
+        throws java.io.IOException {
+      var result = new ArrayList<String>();
+      var list = p.readValueAsTree();
+      for (var i = 0; i < list.size(); i++) {
+        var tag = ((JsonNode) list.get(i)).get("label").asText();
+        result.add(tag);
+      }
+      return result;
+    }
+  }
+
+  private static final class DateConverter extends StdConverter<String, ZonedDateTime> {
+
+    @Override
+    public ZonedDateTime convert(String value) {
+      return ZonedDateTime.parse(value);
     }
   }
 

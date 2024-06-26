@@ -1,8 +1,7 @@
 package com.ajanuary.watson.alarms;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAmount;
 import java.util.List;
@@ -23,7 +22,6 @@ public class Scheduler<T> {
 
   public Scheduler(
       String name,
-      ZoneId zoneId,
       TemporalAmount minTimeBetweenEvents,
       NextEventTimeGetter getNextEventTime,
       EventsGetter<T> eventsGetter,
@@ -38,7 +36,7 @@ public class Scheduler<T> {
                   try {
                     lock.lock();
                     boolean hadError;
-                    Optional<LocalDateTime> nextEventTime = Optional.empty();
+                    Optional<ZonedDateTime> nextEventTime = Optional.empty();
                     try {
                       nextEventTime = getNextEventTime.get();
                       hadError = false;
@@ -47,7 +45,7 @@ public class Scheduler<T> {
                       hadError = true;
                     }
                     while (nextEventTime.isEmpty()
-                        || !nextEventTime.get().isBefore(LocalDateTime.now(zoneId))) {
+                        || !nextEventTime.get().isBefore(ZonedDateTime.now())) {
                       if (nextEventTime.isEmpty()) {
                         if (hadError) {
                           logger.info("Waiting 1 minute");
@@ -62,7 +60,7 @@ public class Scheduler<T> {
                             Math.max(
                                 0,
                                 ChronoUnit.MILLIS.between(
-                                    LocalDateTime.now(zoneId), nextEventTime.get()));
+                                    ZonedDateTime.now(), nextEventTime.get()));
                         logger.info(
                             "Waiting for {} ms until {}", millisToSleep, nextEventTime.get());
                         waiting.await(millisToSleep, TimeUnit.MILLISECONDS);
@@ -76,7 +74,7 @@ public class Scheduler<T> {
                         hadError = true;
                       }
                     }
-                    List<T> events = eventsGetter.getEventsBefore(LocalDateTime.now(zoneId));
+                    List<T> events = eventsGetter.getEventsBefore(ZonedDateTime.now());
                     for (T event : events) {
                       Thread.sleep(
                           Math.max(
@@ -115,12 +113,12 @@ public class Scheduler<T> {
   @FunctionalInterface
   public interface NextEventTimeGetter {
 
-    Optional<LocalDateTime> get() throws Exception;
+    Optional<ZonedDateTime> get() throws Exception;
   }
 
   @FunctionalInterface
   public interface EventsGetter<T> {
 
-    List<T> getEventsBefore(LocalDateTime time) throws Exception;
+    List<T> getEventsBefore(ZonedDateTime time) throws Exception;
   }
 }

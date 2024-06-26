@@ -20,6 +20,8 @@ import java.net.http.HttpResponse;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -81,12 +83,7 @@ public class ProgrammeModule {
     if (programmeConfig.nowOn().isPresent()) {
       var scheduler =
           new Scheduler<>(
-              "item",
-              config.timezone(),
-              Duration.ZERO,
-              this::getNextNowOnTime,
-              this::getNowOn,
-              this::handleNowOn);
+              "item", Duration.ZERO, this::getNextNowOnTime, this::getNowOn, this::handleNowOn);
       eventDispatcher.register(ItemChangedEvent.class, e -> scheduler.notifyOfDbChange());
     }
   }
@@ -128,7 +125,7 @@ public class ProgrammeModule {
     var links =
         programmeConfig.links().stream()
             .filter(link -> newItem.links().containsKey(link.name()))
-            .map(link -> "[" + link.label() + "](" + newItem.links().get(link.name()) + ")")
+            .map(link -> "[" + link.label() + "](<" + newItem.links().get(link.name()) + ">)")
             .toList();
     if (!links.isEmpty()) {
       desc.append("\n\n").append(String.join("\n", links));
@@ -153,13 +150,15 @@ public class ProgrammeModule {
 
       for (var newItem : newProgrammeItems) {
         var existingThread = conn.getDiscordThread(newItem.id());
+        var time =
+            newItem.startTime().withZoneSameInstant(config.timezone()).format(TIME_FORMATTER);
         var newDiscordItem =
             new DiscordItem(
                 newItem.id(),
                 newItem.title(),
                 newItem.desc(),
                 newItem.loc(),
-                newItem.time(),
+                time,
                 newItem.startTime(),
                 newItem.endTime());
         if (existingThread.isEmpty()) {
@@ -169,7 +168,7 @@ public class ProgrammeModule {
           var channel = guild.getForumChannelsByName(channelName, true).get(0);
           assert channel != null;
 
-          var title = newItem.time() + " " + newItem.title();
+          var title = time + " " + newItem.title();
           if (programmeConfig.hasPerformedFirstLoad()) {
             if (title.length() > MAX_THREAD_TITLE_LEN - 6) {
               title = title.substring(0, MAX_THREAD_TITLE_LEN - 6);
@@ -213,7 +212,7 @@ public class ProgrammeModule {
           if (programmeConfig.hasPerformedFirstLoad()) {
             var announcementEmbedBuilder = new EmbedBuilder();
             announcementEmbedBuilder.appendDescription("'" + newItem.title() + "' has been added");
-            announcementEmbedBuilder.addField("Time", newItem.time(), false);
+            announcementEmbedBuilder.addField("Time", time, false);
             announcementEmbedBuilder.addField("Room", newItem.loc(), false);
             announcementEmbedBuilder.addField(
                 "Discussion thread", "<#" + discordThreadId + ">", false);
@@ -239,7 +238,7 @@ public class ProgrammeModule {
           var isSignificantUpdate =
               timeChanged || noLongerCancelled || roomDifferent || !tagChanges.isEmpty();
 
-          var title = newItem.time() + " " + newItem.title();
+          var title = time + " " + newItem.title();
 
           if (!programmeConfig.hasPerformedFirstLoad()
               && (isSignificantUpdate || existingThread.get().status() == Status.UPDATED)) {
@@ -278,8 +277,7 @@ public class ProgrammeModule {
                   builder -> builder.addField("Status", "The item is no longer cancelled", false));
             }
             if (timeChanged) {
-              allEmbedBuilders.forEach(
-                  builder -> builder.addField("New time", newItem.time(), false));
+              allEmbedBuilders.forEach(builder -> builder.addField("New time", time, false));
             }
             if (roomDifferent) {
               allEmbedBuilders.forEach(
@@ -397,28 +395,25 @@ public class ProgrammeModule {
         .toList();
   }
 
-  private Optional<LocalDateTime> getNextNowOnTime() throws SQLException {
+  private Optional<ZonedDateTime> getNextNowOnTime() throws SQLException {
     if (!doneFirstOnNowPoll) {
       // When we start up we want to check what messages we should be posting.
       // It could be that we were down when an event started, so we need to catch up and post it.
       doneFirstOnNowPoll = true;
-      return Optional.of(LocalDateTime.MIN);
+      return Optional.of(LocalDateTime.MIN.atZone(ZoneId.of("UTC")));
     }
 
     try (var conn = databaseManager.getConnection()) {
       var nextItemStart =
-          conn.getNextItemTime().map(t -> t.minus(programmeConfig.nowOn().get().timeBeforeToAdd()));
-      var nextNowOnEnd =
-          conn.getNextNowOnEnd().map(t -> t.plus(programmeConfig.nowOn().get().timeAfterToKeep()));
+          conn.getNextNowOn().map(t -> t.minus(programmeConfig.nowOn().get().timeBeforeToAdd()));
+      var nextNowOnEnd = conn.getNextNowOnEnd();
 
       if (nextItemStart.isEmpty()) {
         return nextNowOnEnd;
       }
 
       return nextNowOnEnd
-          .map(
-              localDateTime ->
-                  nextItemStart.get().isBefore(localDateTime) ? nextItemStart.get() : localDateTime)
+          .map(dateTime -> nextItemStart.get().isBefore(dateTime) ? nextItemStart.get() : dateTime)
           .or(() -> nextItemStart);
     }
   }
@@ -449,7 +444,7 @@ public class ProgrammeModule {
     }
   }
 
-  private List<NowOnAction> getNowOn(LocalDateTime time) throws SQLException {
+  private List<NowOnAction> getNowOn(ZonedDateTime time) throws SQLException {
     try (var conn = databaseManager.getConnection()) {
       return Stream.concat(
               conn
@@ -473,8 +468,19 @@ public class ProgrammeModule {
   }
 
   private void handleNowOnPost(DiscordThread discordThread) {
-    var start = discordThread.item().startTime().format(TIME_FORMATTER);
-    var end = discordThread.item().endTime().format(TIME_FORMATTER);
+    logger.info("Posting now on message for {}", discordThread.item().id());
+    var start =
+        discordThread
+            .item()
+            .startTime()
+            .withZoneSameInstant(config.timezone())
+            .format(TIME_FORMATTER);
+    var end =
+        discordThread
+            .item()
+            .endTime()
+            .withZoneSameInstant(config.timezone())
+            .format(TIME_FORMATTER);
     var message =
         jdaUtils
             .getTextChannel(programmeConfig.nowOn().get().channel())
@@ -495,13 +501,16 @@ public class ProgrammeModule {
             .complete();
     try (var conn = databaseManager.getConnection()) {
       conn.insertNowOnMessage(
-          discordThread.item().id(), message.getId(), discordThread.item().endTime());
+          discordThread.item().id(),
+          message.getId(),
+          discordThread.item().endTime().plus(programmeConfig.nowOn().get().timeAfterToKeep()));
     } catch (SQLException e) {
       logger.error("Failed to insert now on message", e);
     }
   }
 
   private void handleNowOnDelete(String messageId) {
+    logger.info("Deleting now on message {}", messageId);
     jdaUtils
         .getTextChannel(programmeConfig.nowOn().get().channel())
         .retrieveMessageById(messageId)
