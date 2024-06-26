@@ -1508,6 +1508,12 @@ public class ConfigYamlParserTest {
         programme:
           programmeUrl: https://example.com/the-programme-url
           assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
+          links:
+            - name: some-name
+              label: some-label
+          locations:
+            - id: some-id
+              name: some-name
         """);
 
     var parser = new ConfigYamlParser();
@@ -1538,6 +1544,12 @@ public class ConfigYamlParserTest {
         programme:
           programmeUrl: https://example.com/the-programme-url
           assignDiscordPostsApiUrl: https://example.com/the-assign-discord-posts-api-url
+          links:
+            - name: some-name
+              label: some-label
+          locations:
+            - id: some-id
+              name: some-name
         """);
 
     var parser = new ConfigYamlParser();
@@ -1619,6 +1631,12 @@ public class ConfigYamlParserTest {
         programme:
           programmeUrl: https://example.com/some-programme-url
           assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
+          links:
+            - name: some-name
+              label: some-label
+          locations:
+            - id: some-id
+              name: some-name
         """);
 
     var parser = new ConfigYamlParser();
@@ -1651,6 +1669,12 @@ public class ConfigYamlParserTest {
             channel: the-now-on-channel-id
             timeBeforeToAdd: 15m
             timeAfterToKeep: 15m
+          links:
+            - name: some-name
+              label: some-label
+          locations:
+            - id: some-id
+              name: some-name
         """);
 
     var parser = new ConfigYamlParser();
@@ -1683,6 +1707,12 @@ public class ConfigYamlParserTest {
           nowOn:
             timeBeforeToAdd: 15m
             timeAfterToKeep: 15m
+          links:
+            - name: some-name
+              label: some-label
+          locations:
+            - id: some-id
+              name: some-name
         """);
 
     var parser = new ConfigYamlParser();
@@ -1746,6 +1776,12 @@ public class ConfigYamlParserTest {
           nowOn:
             timeBeforeToAdd: 15m
             timeAfterToKeep: 15m
+          links:
+            - name: some-name
+              label: some-label
+          locations:
+            - id: some-id
+              name: some-name
         """);
 
     var parser = new ConfigYamlParser();
@@ -1869,6 +1905,12 @@ public class ConfigYamlParserTest {
           nowOn:
             timeBeforeToAdd: 15m
             timeAfterToKeep: 15m
+          links:
+            - name: some-name
+              label: some-label
+          locations:
+            - id: some-id
+              name: some-name
         """);
 
     var parser = new ConfigYamlParser();
@@ -1990,6 +2032,12 @@ public class ConfigYamlParserTest {
           programmeUrl: https://example.com/some-programme-url
           assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           majorAnnouncementsChannel: the-major-announcements-channel
+          links:
+            - name: some-name
+              label: some-label
+          locations:
+            - id: some-id
+              name: some-name
         """);
 
     var parser = new ConfigYamlParser();
@@ -2022,6 +2070,12 @@ public class ConfigYamlParserTest {
           assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           timeBeforeToAddToNowOn: 15m
           timeAfterToKeepInNowOn: 15m
+          links:
+            - name: some-name
+              label: some-label
+          locations:
+            - id: some-id
+              name: some-name
         """);
 
     var parser = new ConfigYamlParser();
@@ -2079,6 +2133,12 @@ public class ConfigYamlParserTest {
             programmeUrl: https://example.com/some-programme-url
             assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
             hasPerformedFirstLoad: true
+            links:
+              - name: some-name
+                label: some-label
+            locations:
+              - id: some-id
+                name: some-name
         """);
 
     var parser = new ConfigYamlParser();
@@ -2107,6 +2167,12 @@ public class ConfigYamlParserTest {
           programme:
             programmeUrl: https://example.com/some-programme-url
             assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
+            links:
+              - name: some-name
+                label: some-label
+            locations:
+              - id: some-id
+                name: some-name
         """);
 
     var parser = new ConfigYamlParser();
@@ -2136,6 +2202,12 @@ public class ConfigYamlParserTest {
             programmeUrl: https://example.com/some-programme-url
             assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
             hasPerformedFirstLoad: 10
+            links:
+              - name: some-name
+                label: some-label
+            locations:
+              - id: some-id
+                name: some-name
         """);
 
     var parser = new ConfigYamlParser();
@@ -2163,6 +2235,12 @@ public class ConfigYamlParserTest {
         programme:
           programmeUrl: https://example.com/some-programme-url
           assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
+          links:
+            - name: some-name
+              label: some-label
+          locations:
+            - id: some-id
+              name: some-name
         """);
 
     var parser = new ConfigYamlParser();
@@ -2309,6 +2387,12 @@ public class ConfigYamlParserTest {
           assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           channelNameResolver:
             type: day
+          links:
+            - name: some-name
+              label: some-label
+          locations:
+            - id: some-id
+              name: some-name
         """);
 
     var parser = new ConfigYamlParser();
@@ -2349,6 +2433,12 @@ public class ConfigYamlParserTest {
               - label: evening
                 start: 18:00
                 end: 24:00
+          links:
+            - name: some-name
+              label: some-label
+          locations:
+            - id: some-id
+              name: some-name
         """);
 
     var parser = new ConfigYamlParser();

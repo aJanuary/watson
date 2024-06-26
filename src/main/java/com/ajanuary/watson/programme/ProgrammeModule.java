@@ -5,6 +5,7 @@ import com.ajanuary.watson.config.Config;
 import com.ajanuary.watson.db.DatabaseManager;
 import com.ajanuary.watson.notification.EventDispatcher;
 import com.ajanuary.watson.portalapi.PortalApiClient;
+import com.ajanuary.watson.programme.ProgrammeConfig.Location;
 import com.ajanuary.watson.utils.JDAUtils;
 import com.fasterxml.jackson.core.StreamReadFeature;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -204,13 +205,20 @@ public class ProgrammeModule {
           conn.insertDiscordThread(
               new DiscordThread(
                   discordThreadId, discordMessageId, Status.SCHEDULED, newDiscordItem));
-          portalProgrammeApiClient.addPostDetails(
-              newItem.id(),
-              newItem.title(),
-              newItem.startTime(),
-              newItem.mins(),
-              newItem.loc(),
-              "https://discord.com/channels/" + config.guildId() + "/" + discordThreadId);
+          programmeConfig.locations().stream()
+              .filter(l -> l.name().equals(newItem.loc()))
+              .findFirst()
+              .map(Location::id)
+              .ifPresent(
+                  roomId -> {
+                    portalProgrammeApiClient.addPostDetails(
+                        newItem.id(),
+                        newItem.title(),
+                        newItem.startTime(),
+                        newItem.mins(),
+                        roomId,
+                        "https://discord.com/channels/" + config.guildId() + "/" + discordThreadId);
+                  });
           eventDispatcher.dispatch(new ItemChangedEvent());
 
           if (programmeConfig.hasPerformedFirstLoad()) {

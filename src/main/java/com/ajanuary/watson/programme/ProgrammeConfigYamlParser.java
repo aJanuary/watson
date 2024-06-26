@@ -78,6 +78,17 @@ public class ProgrammeConfigYamlParser {
                 })
             .toList();
 
+    var locations =
+        configParser.get("locations").list().required().value().stream()
+            .map(
+                locationConfig -> {
+                  var locationConfigObj = locationConfig.object().required();
+                  var id = locationConfigObj.get("id").string().required().value();
+                  var name = locationConfigObj.get("name").string().required().value();
+                  return new ProgrammeConfig.Location(id, name);
+                })
+            .toList();
+
     var hasPerformedFirstLoadNode =
         configParser.get("hasPerformedFirstLoad").bool().defaultingTo(true).value();
 
@@ -88,6 +99,7 @@ public class ProgrammeConfigYamlParser {
         nowOnConfig,
         channelNameResolver,
         links,
+        locations,
         hasPerformedFirstLoadNode);
   }
 

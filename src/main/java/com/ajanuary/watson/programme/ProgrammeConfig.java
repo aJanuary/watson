@@ -14,6 +14,7 @@ public record ProgrammeConfig(
     Optional<NowOnConfig> nowOn,
     ChannelNameResolver channelNameResolver,
     List<Link> links,
+    List<Location> locations,
     boolean hasPerformedFirstLoad) {
 
   public void validateDiscordConfig(JDAUtils jdaUtils) {
@@ -25,4 +26,6 @@ public record ProgrammeConfig(
       String channel, TemporalAmount timeBeforeToAdd, TemporalAmount timeAfterToKeep) {}
 
   public record Link(String name, String label) {}
+
+  public record Location(String id, String name) {}
 }

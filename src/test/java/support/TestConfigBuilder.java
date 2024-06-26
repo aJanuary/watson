@@ -5,6 +5,8 @@ import com.ajanuary.watson.api.ApiConfig;
 import com.ajanuary.watson.config.Config;
 import com.ajanuary.watson.membership.MembershipConfig;
 import com.ajanuary.watson.programme.ProgrammeConfig;
+import com.ajanuary.watson.programme.ProgrammeConfig.Link;
+import com.ajanuary.watson.programme.ProgrammeConfig.Location;
 import com.ajanuary.watson.programme.ProgrammeConfig.NowOnConfig;
 import com.ajanuary.watson.programme.channelnameresolvers.ChannelNameResolver;
 import com.ajanuary.watson.programme.channelnameresolvers.DayChannelNameResolver;
@@ -12,7 +14,9 @@ import java.net.URI;
 import java.time.Duration;
 import java.time.ZoneId;
 import java.time.temporal.TemporalAmount;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -225,6 +229,8 @@ public class TestConfigBuilder {
     private String majorAnnouncementChannel = "some-major-announcement-channel";
     private Optional<NowOnConfig> nowOnConfig = Optional.empty();
     private ChannelNameResolver channelNameResolver = new DayChannelNameResolver();
+    private List<Link> links = new ArrayList<>();
+    private List<Location> locations = new ArrayList<>();
     private boolean hasPerformedFirstLoad = true;
 
     public ProgrammeConfig build() {
@@ -234,6 +240,8 @@ public class TestConfigBuilder {
           majorAnnouncementChannel,
           nowOnConfig,
           channelNameResolver,
+          links,
+          locations,
           hasPerformedFirstLoad);
     }
 
@@ -268,6 +276,16 @@ public class TestConfigBuilder {
 
     public TestProgrammeConfigBuilder withHasPerformedFirstLoad(boolean hasPerformedFirstLoad) {
       this.hasPerformedFirstLoad = hasPerformedFirstLoad;
+      return this;
+    }
+
+    public TestProgrammeConfigBuilder withLink(String name, String url) {
+      links.add(new Link(name, url));
+      return this;
+    }
+
+    public TestProgrammeConfigBuilder withLocation(String name, String url) {
+      locations.add(new Location(name, url));
       return this;
     }
   }
