@@ -110,22 +110,33 @@ public class ProgrammeModule {
   }
 
   @NotNull
-  private static String makeDescription(
+  private String makeDescription(
       ProgrammeItem newItem, CopyDown mdConverter, boolean hasAlarmsConfigured) {
     var descMd = mdConverter.convert(newItem.desc());
     var people = newItem.people() == null ? List.<String>of() : newItem.people();
     var desc =
-        descMd
-            + "\n\n\n"
-            + newItem.mins()
-            + " min, "
-            + newItem.loc()
-            + "\n\n"
-            + String.join(", ", people);
-    if (hasAlarmsConfigured) {
-      desc += "\n\nReact with :alarm_clock: to be reminded when this item starts";
+        new StringBuilder()
+            .append(descMd)
+            .append("\n\n\n")
+            .append(newItem.mins())
+            .append(" min, ")
+            .append(newItem.loc());
+    if (!people.isEmpty()) {
+      desc.append("\n\n").append(String.join(", ", people));
     }
-    return desc;
+
+    var links =
+        programmeConfig.links().stream()
+            .filter(link -> newItem.links().containsKey(link.name()))
+            .map(link -> "[" + link.label() + "](" + newItem.links().get(link.name()) + ")")
+            .toList();
+    if (!links.isEmpty()) {
+      desc.append("\n\n").append(String.join("\n", links));
+    }
+    if (hasAlarmsConfigured) {
+      desc.append("\n\nReact with :alarm_clock: to be reminded when this item starts");
+    }
+    return desc.toString();
   }
 
   private void pollProgramme() {

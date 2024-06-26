@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public record ProgrammeItem(
     String id,
@@ -21,7 +22,7 @@ public record ProgrammeItem(
     @JsonDeserialize(converter = LocationConverter.class) String loc,
     @JsonDeserialize(using = PersonDeserializer.class) List<String> people,
     String desc,
-    List<String> links) {
+    Map<String, String> links) {
 
   public LocalDateTime startTime() {
     return LocalDateTime.of(date, LocalTime.parse(time));

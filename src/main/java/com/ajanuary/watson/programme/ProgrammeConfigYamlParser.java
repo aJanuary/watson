@@ -67,6 +67,17 @@ public class ProgrammeConfigYamlParser {
                                 }))
             .orElseGet(DayChannelNameResolver::new);
 
+    var links =
+        configParser.get("links").list().required().value().stream()
+            .map(
+                linkConfig -> {
+                  var linkConfigObj = linkConfig.object().required();
+                  var name = linkConfigObj.get("name").string().required().value();
+                  var label = linkConfigObj.get("label").string().required().value();
+                  return new ProgrammeConfig.Link(name, label);
+                })
+            .toList();
+
     var hasPerformedFirstLoadNode =
         configParser.get("hasPerformedFirstLoad").bool().defaultingTo(true).value();
 
@@ -76,6 +87,7 @@ public class ProgrammeConfigYamlParser {
         majorAnnouncementsChannel,
         nowOnConfig,
         channelNameResolver,
+        links,
         hasPerformedFirstLoadNode);
   }
 

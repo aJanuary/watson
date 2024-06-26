@@ -4,6 +4,7 @@ import com.ajanuary.watson.programme.channelnameresolvers.ChannelNameResolver;
 import com.ajanuary.watson.utils.JDAUtils;
 import java.net.URI;
 import java.time.temporal.TemporalAmount;
+import java.util.List;
 import java.util.Optional;
 
 public record ProgrammeConfig(
@@ -12,6 +13,7 @@ public record ProgrammeConfig(
     String majorAnnouncementsChannel,
     Optional<NowOnConfig> nowOn,
     ChannelNameResolver channelNameResolver,
+    List<Link> links,
     boolean hasPerformedFirstLoad) {
 
   public void validateDiscordConfig(JDAUtils jdaUtils) {
@@ -21,4 +23,6 @@ public record ProgrammeConfig(
 
   public record NowOnConfig(
       String channel, TemporalAmount timeBeforeToAdd, TemporalAmount timeAfterToKeep) {}
+
+  public record Link(String name, String label) {}
 }
