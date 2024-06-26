@@ -77,10 +77,20 @@ public class PortalProgrammeApiClient {
   }
 
   public void addPostDetails(
-      String itemId, LocalDateTime localDateTime, int mins, String roomId, String postUrl) {
+      String itemId,
+      String title,
+      LocalDateTime localDateTime,
+      int mins,
+      String roomId,
+      String postUrl) {
     var postDetails =
         new PostDetails(
-            itemId, localDateTime.format(DateTimeFormatter.ISO_DATE_TIME), mins, roomId, postUrl);
+            itemId,
+            title,
+            localDateTime.format(DateTimeFormatter.ISO_DATE_TIME),
+            mins,
+            roomId,
+            postUrl);
     lock.lock();
     try {
       queue.put(itemId, postDetails);
@@ -91,5 +101,5 @@ public class PortalProgrammeApiClient {
   }
 
   private record PostDetails(
-      String itemId, String start, int mins, String roomId, String postUrl) {}
+      String itemId, String title, String start, int mins, String roomId, String postUrl) {}
 }

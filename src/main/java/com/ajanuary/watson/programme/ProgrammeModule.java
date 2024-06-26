@@ -192,6 +192,7 @@ public class ProgrammeModule {
                   discordThreadId, discordMessageId, Status.SCHEDULED, newDiscordItem));
           portalProgrammeApiClient.addPostDetails(
               newItem.id(),
+              newItem.title(),
               newItem.startTime(),
               newItem.mins(),
               newItem.loc(),
