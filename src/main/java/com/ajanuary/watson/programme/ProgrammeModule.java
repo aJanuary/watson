@@ -8,6 +8,7 @@ import com.ajanuary.watson.portalapi.PortalApiClient;
 import com.ajanuary.watson.utils.JDAUtils;
 import com.fasterxml.jackson.core.StreamReadFeature;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -45,6 +46,7 @@ public class ProgrammeModule {
   private final ObjectMapper objectMapper =
       JsonMapper.builder()
           .addModule(new JavaTimeModule())
+          .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
           .enable(StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION)
           .build();
 

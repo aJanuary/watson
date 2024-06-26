@@ -78,7 +78,13 @@ public class DatabaseManager {
         var threadId = rs.getString(1);
         var messageId = rs.getString(2);
         var title = rs.getString(3);
-        var desc = new String(rs.getBytes(4));
+        String desc;
+        var descBytes = rs.getBytes(4);
+        if (descBytes == null) {
+          desc = null;
+        } else {
+          desc = new String(descBytes);
+        }
         var loc = rs.getString(5);
         var time = rs.getString(6);
         var startTime = LocalDateTime.parse(rs.getString(7));
@@ -116,7 +122,11 @@ public class DatabaseManager {
         statement.setString(2, discordThread.discordThreadId());
         statement.setString(3, discordThread.discordMessageId());
         statement.setString(4, discordThread.item().title());
-        statement.setBytes(5, discordThread.item().body().getBytes());
+        if (discordThread.item().body() == null) {
+          statement.setNull(5, Types.BLOB);
+        } else {
+          statement.setBytes(5, discordThread.item().body().getBytes());
+        }
         statement.setString(6, discordThread.item().loc());
         statement.setString(7, discordThread.item().time());
         statement.setString(8, discordThread.item().startTime().toString());
@@ -217,7 +227,13 @@ public class DatabaseManager {
           var threadId = rs.getString(2);
           var messageId = rs.getString(3);
           var title = rs.getString(4);
-          var desc = new String(rs.getBytes(5));
+          String desc;
+          var descBytes = rs.getBytes(5);
+          if (descBytes == null) {
+            desc = null;
+          } else {
+            desc = new String(descBytes);
+          }
           var loc = rs.getString(6);
           var time = rs.getString(7);
           var startTime = LocalDateTime.parse(rs.getString(8));
@@ -518,7 +534,13 @@ public class DatabaseManager {
           var threadId = rs.getString(2);
           var messageId = rs.getString(3);
           var title = rs.getString(4);
-          var desc = new String(rs.getBytes(5));
+          String desc;
+          var descBytes = rs.getBytes(5);
+          if (descBytes == null) {
+            desc = null;
+          } else {
+            desc = new String(descBytes);
+          }
           var loc = rs.getString(6);
           var time = rs.getString(7);
           var startTime = LocalDateTime.parse(rs.getString(8));

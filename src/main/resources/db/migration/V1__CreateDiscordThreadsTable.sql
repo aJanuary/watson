@@ -3,7 +3,7 @@ create table discord_threads (
   thread_id string not null,
   message_id string not null,
   title string not null,
-  desc blob not null,
+  desc blob,
   loc string not null,
   time string not null,
   start_time string not null,
