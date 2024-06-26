@@ -83,7 +83,11 @@ public class ProgrammeModule {
     if (programmeConfig.nowOn().isPresent()) {
       var scheduler =
           new Scheduler<>(
-              "item", Duration.ZERO, this::getNextNowOnTime, this::getNowOn, this::handleNowOn);
+              "now on item",
+              Duration.ZERO,
+              this::getNextNowOnTime,
+              this::getNowOn,
+              this::handleNowOn);
       eventDispatcher.register(ItemChangedEvent.class, e -> scheduler.notifyOfDbChange());
     }
   }

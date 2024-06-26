@@ -48,7 +48,11 @@ public class AlarmsModule {
 
     var itemScheduler =
         new Scheduler<>(
-            "item", Duration.ZERO, this::getNextItemTime, this::getItemsBefore, this::handleItem);
+            "alarm item",
+            Duration.ZERO,
+            this::getNextItemTime,
+            this::getItemsBefore,
+            this::handleItem);
     eventDispatcher.register(ItemChangedEvent.class, e -> itemScheduler.notifyOfDbChange());
     this.dmScheduler =
         new Scheduler<>(
