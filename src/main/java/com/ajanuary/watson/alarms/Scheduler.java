@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 public class Scheduler<T> {
 
-  private final Logger logger;
+  private final Logger logger = LoggerFactory.getLogger(Scheduler.class);
 
   private final ReentrantLock lock = new ReentrantLock();
   private final Condition waiting = lock.newCondition();
@@ -26,7 +26,6 @@ public class Scheduler<T> {
       NextEventTimeGetter getNextEventTime,
       EventsGetter<T> eventsGetter,
       Consumer<T> onEvent) {
-    logger = LoggerFactory.getLogger(name + " scheduler");
     Thread thread =
         new Thread(
             () -> {
@@ -39,6 +38,7 @@ public class Scheduler<T> {
                     Optional<ZonedDateTime> nextEventTime = Optional.empty();
                     try {
                       nextEventTime = getNextEventTime.get();
+                      logger.info("Got next event time {}", nextEventTime);
                       hadError = false;
                     } catch (Exception e) {
                       logger.error("Error getting next event", e);
@@ -96,6 +96,7 @@ public class Scheduler<T> {
                 // Allow the thread to die
               }
             });
+    thread.setName(name + " scheduler");
     thread.start();
     // TODO: Add mechanism to stop thread
   }
