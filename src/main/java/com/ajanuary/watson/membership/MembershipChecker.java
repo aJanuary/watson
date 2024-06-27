@@ -10,7 +10,6 @@ import java.util.Collection;
 import java.util.Objects;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -160,9 +159,7 @@ public class MembershipChecker {
                                 .addContent(
                                     "Hello <@"
                                         + userId
-                                        + ">!\n\nTo help us keep our members safe, we need you to click the Verify button to associate your Discord account with your convention membership.")
-                                .addActionRow(
-                                    Button.primary("verify", "Verify").withUrl(verificationUrl))
+                                        + ">!\n\nTo help us keep our members safe, we need you to click the link below to associate your Discord account with your convention membership.\n[Verify your Discord account](<" + verificationUrl + ">)")
                                 .addContent(
                                     "If you have any problems, please reply here and a member of <TODO: @ help desk team> will be happy to help.")
                                 .build())
