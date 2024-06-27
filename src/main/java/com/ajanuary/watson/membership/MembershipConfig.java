@@ -10,13 +10,15 @@ public record MembershipConfig(
     String discordModsChannel,
     String memberRole,
     String unverifiedRole,
-    Map<String, String> additionalRoles) {
+    Map<String, String> additionalRoles,
+    String memberHelpRole) {
 
   public void validateDiscordConfig(JDAUtils jdaUtils) {
     jdaUtils.getTextChannel(helpDeskChannel());
     jdaUtils.getTextChannel(discordModsChannel());
     jdaUtils.getRole(memberRole());
     jdaUtils.getRole(unverifiedRole());
+    jdaUtils.getRole(memberHelpRole());
 
     for (var entry : additionalRoles.entrySet()) {
       jdaUtils.getRole(entry.getValue());

@@ -181,6 +181,7 @@ public class TestConfigBuilder {
     private String memberRole = "some-member-role";
     private String unverifiedRole = "some-unverified-role";
     private final Map<String, String> additionalRoles = new HashMap<>();
+    private String memberHelpRole = "some-member-help-role";
 
     public MembershipConfig build() {
       return new MembershipConfig(
@@ -189,7 +190,8 @@ public class TestConfigBuilder {
           discordModsChannel,
           memberRole,
           unverifiedRole,
-          additionalRoles);
+          additionalRoles,
+          memberHelpRole);
     }
 
     public TestMembershipConfigBuilder withMembersApiUrl(URI membersApiUrl) {

@@ -152,6 +152,7 @@ public class MembershipChecker {
                           });
 
                   if (createThreadResult.created()) {
+                    var memberHelpRole = jdaUtils.getRole(membershipConfig.memberHelpRole());
                     createThreadResult
                         .thread()
                         .sendMessage(
@@ -159,9 +160,13 @@ public class MembershipChecker {
                                 .addContent(
                                     "Hello <@"
                                         + userId
-                                        + ">!\n\nTo help us keep our members safe, we need you to click the link below to associate your Discord account with your convention membership.\n[Verify your Discord account](<" + verificationUrl + ">)")
+                                        + ">!\n\nTo help us keep our members safe, we need you to click the link below to associate your Discord account with your convention membership.\n[Verify your Discord account](<"
+                                        + verificationUrl
+                                        + ">)")
                                 .addContent(
-                                    "If you have any problems, please reply here and a member of <TODO: @ help desk team> will be happy to help.")
+                                    "If you have any problems, please reply here and a <@&"
+                                        + memberHelpRole.getId()
+                                        + "> will be happy to help.")
                                 .build())
                         .queue();
                   } else {
