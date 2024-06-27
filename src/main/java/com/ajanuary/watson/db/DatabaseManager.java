@@ -478,7 +478,9 @@ public class DatabaseManager {
       }
     }
 
-    public Optional<ZonedDateTime> getNextNowOn() throws SQLException {
+    public Optional<ZonedDateTime> getNextNowOn(
+        ZonedDateTime now, TemporalAmount timeBeforeToAdd, TemporalAmount timeAfterToKeep)
+        throws SQLException {
       try (var connection = dataSource.getConnection();
           var statement =
               connection.prepareStatement(
@@ -488,7 +490,7 @@ public class DatabaseManager {
           from
             discord_threads
           where
-            not exists (
+            start_time <= ? and end_time > ? and not exists (
               select
                 1
               from
@@ -497,6 +499,8 @@ public class DatabaseManager {
                 discord_threads.programme_item_id = now_on.programme_item_id
             )
           """)) {
+        statement.setString(1, toDbDateTimeString(now.plus(timeBeforeToAdd)));
+        statement.setString(2, toDbDateTimeString(now.minus(timeAfterToKeep)));
         var rs = statement.executeQuery();
         if (!rs.next()) {
           return Optional.empty();

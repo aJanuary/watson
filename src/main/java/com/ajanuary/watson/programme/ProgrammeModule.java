@@ -417,7 +417,11 @@ public class ProgrammeModule {
 
     try (var conn = databaseManager.getConnection()) {
       var nextItemStart =
-          conn.getNextNowOn().map(t -> t.minus(programmeConfig.nowOn().get().timeBeforeToAdd()));
+          conn.getNextNowOn(
+                  ZonedDateTime.now(),
+                  programmeConfig.nowOn().get().timeBeforeToAdd(),
+                  programmeConfig.nowOn().get().timeAfterToKeep())
+              .map(t -> t.minus(programmeConfig.nowOn().get().timeBeforeToAdd()));
       var nextNowOnEnd = conn.getNextNowOnEnd();
 
       if (nextItemStart.isEmpty()) {
