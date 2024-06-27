@@ -417,10 +417,7 @@ public class ProgrammeModule {
 
     try (var conn = databaseManager.getConnection()) {
       var nextItemStart =
-          conn.getNextNowOn(
-                  ZonedDateTime.now(),
-                  programmeConfig.nowOn().get().timeBeforeToAdd(),
-                  programmeConfig.nowOn().get().timeAfterToKeep())
+          conn.getNextNowOn(ZonedDateTime.now(), programmeConfig.nowOn().get().timeAfterToKeep())
               .map(t -> t.minus(programmeConfig.nowOn().get().timeBeforeToAdd()));
       var nextNowOnEnd = conn.getNextNowOnEnd();
 
