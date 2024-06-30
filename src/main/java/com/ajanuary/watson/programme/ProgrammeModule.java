@@ -209,20 +209,19 @@ public class ProgrammeModule {
           conn.insertDiscordThread(
               new DiscordThread(
                   discordThreadId, discordMessageId, Status.SCHEDULED, newDiscordItem));
-          programmeConfig.locations().stream()
-              .filter(l -> l.name().equals(newItem.loc()))
-              .findFirst()
-              .map(Location::id)
-              .ifPresent(
-                  roomId -> {
-                    portalProgrammeApiClient.addPostDetails(
-                        newItem.id(),
-                        newItem.title(),
-                        newItem.startTime(),
-                        newItem.mins(),
-                        roomId,
-                        "https://discord.com/channels/" + config.guildId() + "/" + discordThreadId);
-                  });
+          var roomId =
+              programmeConfig.locations().stream()
+                  .filter(l -> l.name().equals(newItem.loc()))
+                  .findFirst()
+                  .map(Location::id)
+                  .orElse("");
+          portalProgrammeApiClient.addPostDetails(
+              newItem.id(),
+              newItem.title(),
+              newItem.startTime(),
+              newItem.mins(),
+              roomId,
+              "https://discord.com/channels/" + config.guildId() + "/" + discordThreadId);
           eventDispatcher.dispatch(new ItemChangedEvent());
 
           if (programmeConfig.hasPerformedFirstLoad()) {
