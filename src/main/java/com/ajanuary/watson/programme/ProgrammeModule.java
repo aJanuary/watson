@@ -45,6 +45,8 @@ public class ProgrammeModule {
 
   private static final int MAX_THREAD_TITLE_LEN = 100;
   private final Logger logger = LoggerFactory.getLogger(ProgrammeModule.class);
+  private static final DateTimeFormatter DATE_TIME_FORMATTER =
+      DateTimeFormatter.ofPattern("EEE HH:mm");
   private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
   private final ObjectMapper objectMapper =
       JsonMapper.builder()
@@ -157,6 +159,8 @@ public class ProgrammeModule {
         var existingThread = conn.getDiscordThread(newItem.id());
         var time =
             newItem.startTime().withZoneSameInstant(config.timezone()).format(TIME_FORMATTER);
+        var dateTime =
+            newItem.startTime().withZoneSameInstant(config.timezone()).format(DATE_TIME_FORMATTER);
         var newDiscordItem =
             new DiscordItem(
                 newItem.id(),
@@ -224,7 +228,7 @@ public class ProgrammeModule {
           if (programmeConfig.hasPerformedFirstLoad()) {
             var announcementEmbedBuilder = new EmbedBuilder();
             announcementEmbedBuilder.appendDescription("'" + newItem.title() + "' has been added");
-            announcementEmbedBuilder.addField("Time", time, false);
+            announcementEmbedBuilder.addField("Time", dateTime, false);
             announcementEmbedBuilder.addField("Room", newItem.loc(), false);
             announcementEmbedBuilder.addField(
                 "Discussion thread", "<#" + discordThreadId + ">", false);
@@ -289,7 +293,7 @@ public class ProgrammeModule {
                   builder -> builder.addField("Status", "The item is no longer cancelled", false));
             }
             if (timeChanged) {
-              allEmbedBuilders.forEach(builder -> builder.addField("New time", time, false));
+              allEmbedBuilders.forEach(builder -> builder.addField("New time", dateTime, false));
             }
             if (roomDifferent) {
               allEmbedBuilders.forEach(
