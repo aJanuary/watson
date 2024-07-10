@@ -48,6 +48,12 @@ public class ClearChannels {
               }
             });
 
+    var announcementsChannel =
+        guild
+            .getTextChannelsByName(config.programme().get().majorAnnouncementsChannel(), true)
+            .get(0);
+    announcementsChannel.getIterableHistory().forEach(m -> m.delete().complete());
+
     jda.shutdown();
   }
 }
