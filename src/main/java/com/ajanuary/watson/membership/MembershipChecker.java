@@ -83,18 +83,13 @@ public class MembershipChecker {
                 roles.add(membershipConfig.memberRole());
                 for (var roleName : roles) {
                   logger.info("Adding role {} to user {}", roleName, userId);
-                  guild
-                      .addRoleToMember(member, jdaUtils.getRole(roleName))
-                      .queue(
-                          (v) -> {},
-                          e ->
-                              logger.error("Error adding role {} to user {}", roleName, userId, e));
+                  guild.addRoleToMember(member, jdaUtils.getRole(roleName)).complete();
                 }
 
                 guild
                     .removeRoleFromMember(
                         member, jdaUtils.getRole(membershipConfig.unverifiedRole()))
-                    .queue();
+                    .complete();
 
                 try (var conn = databaseManager.getConnection()) {
                   privateThreadManager
@@ -115,16 +110,7 @@ public class MembershipChecker {
                 var member = guild.retrieveMemberById(userId).complete();
                 guild
                     .addRoleToMember(member, jdaUtils.getRole(membershipConfig.unverifiedRole()))
-                    .queue(
-                        (v) -> {
-                          logger.info("Added unverified role to user {}", userId);
-                        },
-                        e ->
-                            logger.error(
-                                "Error adding role {} to user {}",
-                                membershipConfig.unverifiedRole(),
-                                userId,
-                                e));
+                    .complete();
                 if (!member
                     .getEffectiveName()
                     .endsWith("[" + membershipConfig.unverifiedRole() + "]")) {
