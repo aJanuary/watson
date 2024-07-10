@@ -116,7 +116,9 @@ public class MembershipChecker {
                 guild
                     .addRoleToMember(member, jdaUtils.getRole(membershipConfig.unverifiedRole()))
                     .queue(
-                        (v) -> {},
+                        (v) -> {
+                          logger.info("Added unverified role to user {}", userId);
+                        },
                         e ->
                             logger.error(
                                 "Error adding role {} to user {}",
