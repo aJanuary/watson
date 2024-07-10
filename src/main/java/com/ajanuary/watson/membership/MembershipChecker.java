@@ -138,12 +138,6 @@ public class MembershipChecker {
                               + "]")
                       .queue();
                 }
-                modsChannel
-                    .sendMessage(
-                        "User <@"
-                            + userId
-                            + "> has joined but we can't find them in our members database. They have been given the Unverified role.")
-                    .queue();
 
                 try (var conn = databaseManager.getConnection()) {
                   var createThreadResult =
