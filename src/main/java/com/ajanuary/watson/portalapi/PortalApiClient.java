@@ -15,8 +15,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PortalApiClient {
+  private final Logger logger = LoggerFactory.getLogger(PortalApiClient.class);
+
   private final ObjectMapper objectMapper = new ObjectMapper();
   private final String apiKey;
   private final HttpClient httpClient;
@@ -55,6 +59,8 @@ public class PortalApiClient {
       throw new IOException(
           "Error checking membership: [" + response.statusCode() + "]" + response.body());
     }
+
+    logger.info("Got response {}", response.body());
 
     return objectMapper.readTree(response.body());
   }
