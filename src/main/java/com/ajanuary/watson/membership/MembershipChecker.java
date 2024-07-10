@@ -55,8 +55,6 @@ public class MembershipChecker {
         return;
       }
 
-      var modsChannel = jdaUtils.getTextChannel(membershipConfig.discordModsChannel());
-
       for (var entry : results.entrySet()) {
         try {
           var userId = entry.getKey();
@@ -102,13 +100,12 @@ public class MembershipChecker {
                   privateThreadManager
                       .getThread(conn, userId)
                       .ifPresent(
-                          thread -> {
-                            thread
-                                .sendMessage(
-                                    "Thank you, we've now associated your membership with this Discord account.")
-                                .onSuccess(v -> thread.getManager().setArchived(true).queue())
-                                .queue();
-                          });
+                          thread ->
+                              thread
+                                  .sendMessage(
+                                      "Thank you, we've now associated your membership with this Discord account.")
+                                  .onSuccess(v -> thread.getManager().setArchived(true).queue())
+                                  .queue());
                 } catch (SQLException e) {
                   logger.error("Error checking private thread for user {}", userId, e);
                 }
@@ -136,7 +133,13 @@ public class MembershipChecker {
                               + " ["
                               + membershipConfig.unverifiedRole()
                               + "]")
-                      .queue();
+                      .queue(
+                          (v) -> {},
+                          e ->
+                              logger.error(
+                                  "Error modifying nickname of {} to include unverified tag",
+                                  userId,
+                                  e));
                 }
 
                 try (var conn = databaseManager.getConnection()) {
@@ -169,7 +172,11 @@ public class MembershipChecker {
                                         + memberHelpRole.getId()
                                         + "> will be happy to help.")
                                 .build())
-                        .queue();
+                        .queue(
+                            (v) -> {},
+                            e ->
+                                logger.error(
+                                    "Error sending message to {} with link to verify.", userId, e));
                   } else {
                     createThreadResult
                         .thread()
@@ -178,7 +185,13 @@ public class MembershipChecker {
                                 .addContent(
                                     "Sorry, we're still having trouble verifying you. Please wait while a member of the help desk team assists you.")
                                 .build())
-                        .queue();
+                        .queue(
+                            (v) -> {},
+                            e ->
+                                logger.error(
+                                    "Error sending message to {} with update on verification.",
+                                    userId,
+                                    e));
                   }
                 } catch (SQLException e) {
                   logger.error("Error creating private thread for user {}", userId, e);
