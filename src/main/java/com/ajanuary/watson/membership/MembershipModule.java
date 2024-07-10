@@ -83,8 +83,10 @@ public class MembershipModule implements EventListener {
       var member = guildMemberJoinEvent.getMember();
       membersLock.lock();
       try {
-        membersToCheck.add(new DiscordUser(member.getId(), member.getUser().getName()));
-        hasMembersToCheck.signal();
+        if (membershipChecker.shouldCheckMember(member)) {
+          membersToCheck.add(new DiscordUser(member.getId(), member.getUser().getName()));
+          hasMembersToCheck.signal();
+        }
       } finally {
         membersLock.unlock();
       }
