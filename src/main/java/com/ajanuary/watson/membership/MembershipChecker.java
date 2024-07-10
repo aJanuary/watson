@@ -118,7 +118,14 @@ public class MembershipChecker {
                 var member = guild.retrieveMemberById(userId).complete();
                 guild
                     .addRoleToMember(member, jdaUtils.getRole(membershipConfig.unverifiedRole()))
-                    .queue();
+                    .queue(
+                        (v) -> {},
+                        e ->
+                            logger.error(
+                                "Error adding role {} to user {}",
+                                membershipConfig.unverifiedRole(),
+                                userId,
+                                e));
                 if (!member
                     .getEffectiveName()
                     .endsWith("[" + membershipConfig.unverifiedRole() + "]")) {
@@ -162,7 +169,7 @@ public class MembershipChecker {
                                         + userId
                                         + ">!\n\nTo help us keep our members safe, we need you to click the link below to associate your Discord account with your convention membership.\n[Verify your Discord account](<"
                                         + verificationUrl
-                                        + ">)")
+                                        + ">)\n\n")
                                 .addContent(
                                     "If you have any problems, please reply here and a <@&"
                                         + memberHelpRole.getId()
