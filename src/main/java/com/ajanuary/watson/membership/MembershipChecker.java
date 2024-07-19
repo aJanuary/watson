@@ -66,10 +66,18 @@ public class MembershipChecker {
                   logger.error("Member {} not found", userId);
                   return;
                 }
-                logger.info(
-                    "User {} is a member. Setting nickname to {}.", userId, memberDetails.name());
+                var name = memberDetails.name();
+                var suffix =
+                    memberDetails.roles().stream()
+                        .filter(r -> r.endsWith(" AH") || r.endsWith(" DH"))
+                        .sorted()
+                        .toList();
+                if (!suffix.isEmpty()) {
+                  name += " (" + String.join(", ", suffix) + ")";
+                }
+                logger.info("User {} is a member. Setting nickname to {}.", userId, name);
                 try {
-                  guild.modifyNickname(member, memberDetails.name()).complete();
+                  guild.modifyNickname(member, name).complete();
                 } catch (Exception e) {
                   logger.error("Error setting nickname for user {}", userId, e);
                 }
