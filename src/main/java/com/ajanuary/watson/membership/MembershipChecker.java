@@ -67,14 +67,6 @@ public class MembershipChecker {
                   return;
                 }
                 var name = memberDetails.name();
-                var suffix =
-                    memberDetails.roles().stream()
-                        .filter(r -> r.endsWith(" AH") || r.endsWith(" DH"))
-                        .sorted()
-                        .toList();
-                if (!suffix.isEmpty()) {
-                  name += " (" + String.join(", ", suffix) + ")";
-                }
                 logger.info("User {} is a member. Setting nickname to {}.", userId, name);
                 try {
                   guild.modifyNickname(member, name).complete();
