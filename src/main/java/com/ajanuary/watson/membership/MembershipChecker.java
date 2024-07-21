@@ -66,7 +66,8 @@ public class MembershipChecker {
                   logger.error("Member {} not found", userId);
                   return;
                 }
-                var name = memberDetails.name();
+                var name =
+                    memberDetails.name().substring(0, Math.min(32, memberDetails.name().length()));
                 logger.info("User {} is a member. Setting nickname to {}.", userId, name);
                 try {
                   guild.modifyNickname(member, name).complete();
