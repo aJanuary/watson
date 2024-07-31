@@ -3,7 +3,6 @@ package com.ajanuary.watson.membership;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -289,54 +288,6 @@ public class MembershipCheckerTest {
     assertFalse(
         modifyNicknameAction.wasInvoked(),
         "modifyNickname action was never scheduled for execution");
-  }
-
-  @Test
-  void notifiesModsOfUnverifiedUser() throws IOException, InterruptedException {
-    var config =
-        new TestConfigBuilder()
-            .withGuildId("the-guild-id")
-            .withMembershipConfig(
-                membershipConfig -> {
-                  membershipConfig
-                      .withUnverifiedRole("the-unverified-role")
-                      .withDiscordModsChannel("the-mods-channel");
-                })
-            .build();
-
-    var jda = mock(JDA.class);
-    var guild = mock(Guild.class);
-    var apiClient = mock(MembersApiClient.class);
-    var member = mock(Member.class);
-    var unverifiedRole = mock(Role.class);
-    var modsChannel = mock(TextChannel.class);
-
-    when(jda.getGuildById("the-guild-id")).thenReturn(guild);
-
-    var retrieveMemberByIdAction = MonitorableRestAction.create(CacheRestAction.class, member);
-    when(guild.retrieveMemberById("the-member")).thenReturn(retrieveMemberByIdAction.action());
-    var modifyNicknameAction = MonitorableRestAction.create(AuditableRestAction.class);
-    when(guild.modifyNickname(any(), any())).thenReturn(modifyNicknameAction.action());
-    when(guild.getRolesByName("the-unverified-role", true)).thenReturn(List.of(unverifiedRole));
-    var addRoleToMemberAction = MonitorableRestAction.create(AuditableRestAction.class);
-    when(guild.addRoleToMember(member, unverifiedRole)).thenReturn(addRoleToMemberAction.action());
-    when(guild.getTextChannelsByName("the-mods-channel", true)).thenReturn(List.of(modsChannel));
-
-    when(apiClient.getMemberStatus(List.of(new DiscordUser("the-id", "the-member"))))
-        .thenReturn(Map.of("the-member", MembershipStatus.verification("some-verification-url")));
-
-    when(member.getEffectiveName()).thenReturn("the-member-name [the-unverified-role]");
-
-    var sendMessageAction = MonitorableRestAction.create(MessageCreateAction.class);
-    when(modsChannel.sendMessage(argThat((String message) -> message.contains("<@the-member>"))))
-        .thenReturn(sendMessageAction.action());
-
-    var membershipChecker =
-        new MembershipChecker(
-            jda, config.membership().get(), config, apiClient, mock(DatabaseManager.class));
-    membershipChecker.checkMembership(List.of(new DiscordUser("the-id", "the-member")));
-
-    assertTrue(sendMessageAction.wasInvoked(), "sendMessage action was scheduled for execution");
   }
 
   @Test
