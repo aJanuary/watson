@@ -84,7 +84,11 @@ public class MembershipChecker {
                 roles.add(membershipConfig.memberRole());
                 for (var roleName : roles) {
                   logger.info("Adding role {} to user {}", roleName, userId);
-                  guild.addRoleToMember(member, jdaUtils.getRole(roleName)).complete();
+                  try {
+                    guild.addRoleToMember(member, jdaUtils.getRole(roleName)).complete();
+                  } catch (Exception e) {
+                    logger.error("Error adding role {} to user {}", roleName, userId, e);
+                  }
                 }
 
                 guild
