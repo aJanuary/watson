@@ -2,13 +2,14 @@ package com.ajanuary.watson.programme.channelnameresolvers;
 
 import com.ajanuary.watson.programme.ProgrammeItem;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 import java.util.Set;
 
 public class DayChannelNameResolver implements ChannelNameResolver {
 
   @Override
-  public String resolveChannelName(ProgrammeItem item) {
-    return item.startTime().format(DateTimeFormatter.ofPattern("EEEE"));
+  public Optional<String> resolveChannelName(ProgrammeItem item) {
+    return Optional.of(item.startTime().format(DateTimeFormatter.ofPattern("EEEE")));
   }
 
   @Override

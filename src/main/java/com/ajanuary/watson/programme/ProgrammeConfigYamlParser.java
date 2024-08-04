@@ -6,6 +6,7 @@ import com.ajanuary.watson.programme.channelnameresolvers.ChannelNameResolver;
 import com.ajanuary.watson.programme.channelnameresolvers.DayChannelNameResolver;
 import com.ajanuary.watson.programme.channelnameresolvers.DayTodChannelNameResolver;
 import com.ajanuary.watson.programme.channelnameresolvers.DayTodChannelNameResolver.Threshold;
+import com.ajanuary.watson.programme.channelnameresolvers.LocChannelNameResolver;
 import java.net.URI;
 import java.time.Duration;
 import java.util.Optional;
@@ -61,6 +62,8 @@ public class ProgrammeConfigYamlParser {
                                   case "day" -> new DayChannelNameResolver();
                                   case "day-tod" ->
                                       parseDayTodChannelNameResolver(channelNameResolverConfig);
+                                  case "loc" ->
+                                      parseLocChannelNameResolver(channelNameResolverConfig);
                                   default ->
                                       throw new IllegalArgumentException(
                                           "Unknown resolver " + resolverType);
@@ -101,6 +104,17 @@ public class ProgrammeConfigYamlParser {
         links,
         locations,
         hasPerformedFirstLoadNode);
+  }
+
+  private static ChannelNameResolver parseLocChannelNameResolver(
+      ObjectConfigParserWithValue configParser) {
+    var roomMapping =
+        configParser
+            .get("locMappings")
+            .object()
+            .required()
+            .toMap(mapping -> mapping.string().required().value());
+    return new LocChannelNameResolver(roomMapping);
   }
 
   private static ChannelNameResolver parseDayTodChannelNameResolver(

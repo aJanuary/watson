@@ -171,9 +171,15 @@ public class ProgrammeModule {
                 newItem.startTime(),
                 newItem.endTime());
         if (existingThread.isEmpty()) {
+          var channelNameM = programmeConfig.channelNameResolver().resolveChannelName(newItem);
+          if (channelNameM.isEmpty()) {
+            continue;
+          }
+
           logger.info("Add item [{}] '{}'", newItem.id(), newItem.title());
 
-          var channelName = programmeConfig.channelNameResolver().resolveChannelName(newItem);
+          var channelName = channelNameM.get();
+
           var channel = guild.getForumChannelsByName(channelName, true).get(0);
           assert channel != null;
 
