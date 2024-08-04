@@ -31,6 +31,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
@@ -45,9 +46,9 @@ public class ProgrammeModule {
 
   private static final int MAX_THREAD_TITLE_LEN = 100;
   private final Logger logger = LoggerFactory.getLogger(ProgrammeModule.class);
+  private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
   private static final DateTimeFormatter DATE_TIME_FORMATTER =
       DateTimeFormatter.ofPattern("EEE HH:mm");
-  private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
   private final ObjectMapper objectMapper =
       JsonMapper.builder()
           .addModule(new JavaTimeModule())
@@ -144,6 +145,10 @@ public class ProgrammeModule {
   }
 
   private void pollProgramme() {
+    var start = System.currentTimeMillis();
+    var numAdded = new AtomicInteger(0);
+    var numUpdated = new AtomicInteger(0);
+    var numDeleted = new AtomicInteger(0);
     try (var conn = databaseManager.getConnection()) {
       var mdConverter = new CopyDown();
       var guild = jda.getGuildById(config.guildId());
@@ -158,8 +163,6 @@ public class ProgrammeModule {
       for (var newItem : newProgrammeItems) {
         var existingThread = conn.getDiscordThread(newItem.id());
         var time =
-            newItem.startTime().withZoneSameInstant(config.timezone()).format(TIME_FORMATTER);
-        var dateTime =
             newItem.startTime().withZoneSameInstant(config.timezone()).format(DATE_TIME_FORMATTER);
         var newDiscordItem =
             new DiscordItem(
@@ -233,7 +236,7 @@ public class ProgrammeModule {
           if (programmeConfig.hasPerformedFirstLoad()) {
             var announcementEmbedBuilder = new EmbedBuilder();
             announcementEmbedBuilder.appendDescription("'" + newItem.title() + "' has been added");
-            announcementEmbedBuilder.addField("Time", dateTime, false);
+            announcementEmbedBuilder.addField("Time", time, false);
             announcementEmbedBuilder.addField("Room", newItem.loc(), false);
             announcementEmbedBuilder.addField(
                 "Discussion thread", "<#" + discordThreadId + ">", false);
@@ -241,6 +244,8 @@ public class ProgrammeModule {
                 .sendMessage(MessageCreateData.fromEmbeds(announcementEmbedBuilder.build()))
                 .complete();
           }
+
+          numAdded.incrementAndGet();
         } else if (!existingThread.get().item().equals(newDiscordItem)
             || existingThread.get().status() == Status.CANCELLED) {
           logger.info("Edit item [{}] '{}'", newItem.id(), newItem.title());
@@ -298,7 +303,7 @@ public class ProgrammeModule {
                   builder -> builder.addField("Status", "The item is no longer cancelled", false));
             }
             if (timeChanged) {
-              allEmbedBuilders.forEach(builder -> builder.addField("New time", dateTime, false));
+              allEmbedBuilders.forEach(builder -> builder.addField("New time", time, false));
             }
             if (roomDifferent) {
               allEmbedBuilders.forEach(
@@ -323,6 +328,8 @@ public class ProgrammeModule {
                 .sendMessage(MessageCreateData.fromEmbeds(threadEmbedBuilder.build()))
                 .complete();
           }
+
+          numUpdated.incrementAndGet();
         }
       }
 
@@ -377,12 +384,21 @@ public class ProgrammeModule {
               threadChannel.sendMessage("This item has been cancelled.").complete();
             }
           }
+          numDeleted.incrementAndGet();
         }
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     } catch (Exception e) {
       logger.error("Failed to poll programme", e);
+    } finally {
+      long end = System.currentTimeMillis();
+      logger.info(
+          "Poll took {}ms. added {} updated {} deleted {}",
+          end - start,
+          numAdded.get(),
+          numUpdated.get(),
+          numDeleted.get());
     }
   }
 

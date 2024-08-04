@@ -5,6 +5,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -37,6 +38,7 @@ public class ClearChannels {
     var guild = jda.getGuildById(config.guildId());
     assert guild != null;
 
+    var count = new AtomicInteger();
     guild
         .getForumChannels()
         .forEach(
@@ -44,7 +46,11 @@ public class ClearChannels {
               if (possibleNames.contains(channel.getName().toLowerCase())) {
                 channel
                     .getThreadChannels()
-                    .forEach(threadChannel -> threadChannel.delete().complete());
+                    .forEach(
+                        threadChannel -> {
+                          count.incrementAndGet();
+                          threadChannel.delete().complete();
+                        });
               }
             });
 
@@ -55,5 +61,6 @@ public class ClearChannels {
     announcementsChannel.getIterableHistory().forEach(m -> m.delete().complete());
 
     jda.shutdown();
+    System.out.println("Deleted " + count.get() + " threads");
   }
 }
