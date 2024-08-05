@@ -1,4 +1,9 @@
 package com.ajanuary.watson.programme;
 
+import java.util.Optional;
+
 public record DiscordThread(
-    String discordThreadId, String discordMessageId, Status status, DiscordItem item) {}
+    Optional<String> discordThreadId,
+    Optional<String> discordMessageId,
+    Status status,
+    DiscordItem item) {}

@@ -44,13 +44,18 @@ public class ClearChannels {
         .forEach(
             channel -> {
               if (possibleNames.contains(channel.getName().toLowerCase())) {
-                channel
-                    .getThreadChannels()
-                    .forEach(
-                        threadChannel -> {
-                          count.incrementAndGet();
-                          threadChannel.delete().complete();
-                        });
+                try {
+                  channel
+                      .getThreadChannels()
+                      .forEach(
+                          threadChannel -> {
+                            count.incrementAndGet();
+                            threadChannel.delete().complete();
+                          });
+                } catch (Exception e) {
+                  System.err.println("Error deleting threads in " + channel.getName());
+                  e.printStackTrace();
+                }
               }
             });
 

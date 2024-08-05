@@ -35,7 +35,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.jetbrains.annotations.NotNull;
@@ -119,15 +121,17 @@ public class ProgrammeModule {
       ProgrammeItem newItem, CopyDown mdConverter, boolean hasAlarmsConfigured) {
     var descMd = mdConverter.convert(newItem.desc());
     var people = newItem.people() == null ? List.<String>of() : newItem.people();
-    var desc =
+
+    // TODO: Limit length to 2000 characters
+
+    var post =
         new StringBuilder()
-            .append(descMd)
             .append("\n\n\n")
             .append(newItem.mins())
             .append(" min, ")
             .append(newItem.loc());
     if (!people.isEmpty()) {
-      desc.append("\n\n").append(String.join(", ", people));
+      post.append("\n\n").append(String.join(", ", people));
     }
 
     var links =
@@ -136,12 +140,18 @@ public class ProgrammeModule {
             .map(link -> "[" + link.label() + "](<" + newItem.links().get(link.name()) + ">)")
             .toList();
     if (!links.isEmpty()) {
-      desc.append("\n\n").append(String.join("\n", links));
+      post.append("\n\n").append(String.join("\n", links));
     }
     if (hasAlarmsConfigured) {
-      desc.append("\n\nReact with :alarm_clock: to be reminded when this item starts");
+      post.append("\n\nReact with :alarm_clock: to be reminded when this item starts");
     }
-    return desc.toString();
+
+    var descMdTrunc = descMd;
+    if (descMdTrunc.length() + post.length() > 2000) {
+      descMdTrunc = descMdTrunc.substring(0, 2000 - post.length() - 3) + "...";
+    }
+
+    return descMdTrunc + post;
   }
 
   private void pollProgramme() {
@@ -174,17 +184,13 @@ public class ProgrammeModule {
                 newItem.startTime(),
                 newItem.endTime());
         if (existingThread.isEmpty()) {
-          var channelNameM = programmeConfig.channelNameResolver().resolveChannelName(newItem);
-          if (channelNameM.isEmpty()) {
-            continue;
-          }
-
           logger.info("Add item [{}] '{}'", newItem.id(), newItem.title());
 
-          var channelName = channelNameM.get();
+          var channelName =
+              programmeConfig.channelNameResolver().resolveChannelName(newItem).orElse(null);
 
-          var channel = guild.getForumChannelsByName(channelName, true).get(0);
-          assert channel != null;
+          String discordThreadId = null;
+          String discordMessageId = null;
 
           var title = time + " " + newItem.title();
           if (programmeConfig.hasPerformedFirstLoad()) {
@@ -199,38 +205,55 @@ public class ProgrammeModule {
           }
 
           var desc = makeDescription(newItem, mdConverter, config.alarms().isPresent());
-          var tags = getTags(newItem, channel);
-          var forumPost =
-              channel
-                  .createForumPost(title, MessageCreateData.fromContent(desc))
-                  .setTags(tags)
-                  .complete();
 
-          config
-              .alarms()
-              .ifPresent(
-                  alarmsConfig -> {
-                    forumPost.getMessage().addReaction(alarmsConfig.alarmEmoji()).complete();
-                  });
+          if (channelName != null) {
+            var channels = guild.getForumChannelsByName(channelName, true);
+            if (!channels.isEmpty()) {
+              var channel = channels.get(0);
+              if (channel.getType() == ChannelType.FORUM) {
+                var tags = getTags(newItem, channel);
+                var forumPost =
+                    channel
+                        .createForumPost(title, MessageCreateData.fromContent(desc))
+                        .setTags(tags)
+                        .complete();
 
-          String discordThreadId = forumPost.getThreadChannel().getId();
-          String discordMessageId = forumPost.getMessage().getId();
+                config
+                    .alarms()
+                    .ifPresent(
+                        alarmsConfig -> {
+                          forumPost.getMessage().addReaction(alarmsConfig.alarmEmoji()).complete();
+                        });
+
+                discordThreadId = forumPost.getThreadChannel().getId();
+                discordMessageId = forumPost.getMessage().getId();
+              }
+            }
+          }
+
           conn.insertDiscordThread(
               new DiscordThread(
-                  discordThreadId, discordMessageId, Status.SCHEDULED, newDiscordItem));
-          var roomId =
-              programmeConfig.locations().stream()
-                  .filter(l -> l.name().equals(newItem.loc()))
-                  .findFirst()
-                  .map(Location::id)
-                  .orElse("");
-          portalProgrammeApiClient.addPostDetails(
-              newItem.id(),
-              newItem.title(),
-              newItem.startTime(),
-              newItem.mins(),
-              roomId,
-              "https://discord.com/channels/" + config.guildId() + "/" + discordThreadId);
+                  Optional.ofNullable(discordThreadId),
+                  Optional.ofNullable(discordMessageId),
+                  Status.SCHEDULED,
+                  newDiscordItem));
+
+          if (discordThreadId != null) {
+            var roomId =
+                programmeConfig.locations().stream()
+                    .filter(l -> l.name().equals(newItem.loc()))
+                    .findFirst()
+                    .map(Location::id)
+                    .orElse("");
+            portalProgrammeApiClient.addPostDetails(
+                newItem.id(),
+                newItem.title(),
+                newItem.startTime(),
+                newItem.mins(),
+                roomId,
+                "https://discord.com/channels/" + config.guildId() + "/" + discordThreadId);
+          }
+
           eventDispatcher.dispatch(new ItemChangedEvent());
 
           if (programmeConfig.hasPerformedFirstLoad()) {
@@ -238,8 +261,10 @@ public class ProgrammeModule {
             announcementEmbedBuilder.appendDescription("'" + newItem.title() + "' has been added");
             announcementEmbedBuilder.addField("Time", time, false);
             announcementEmbedBuilder.addField("Room", newItem.loc(), false);
-            announcementEmbedBuilder.addField(
-                "Discussion thread", "<#" + discordThreadId + ">", false);
+            if (discordThreadId != null) {
+              announcementEmbedBuilder.addField(
+                  "Discussion thread", "<#" + discordThreadId + ">", false);
+            }
             announcementChannel
                 .sendMessage(MessageCreateData.fromEmbeds(announcementEmbedBuilder.build()))
                 .complete();
@@ -250,17 +275,27 @@ public class ProgrammeModule {
             || existingThread.get().status() == Status.CANCELLED) {
           logger.info("Edit item [{}] '{}'", newItem.id(), newItem.title());
 
-          var threadChannel = jda.getThreadChannelById(existingThread.get().discordThreadId());
-          assert threadChannel != null;
-          var forumChannel = threadChannel.getParentChannel().asForumChannel();
-          var newTags = getTags(newItem, forumChannel);
-          var existingTags = threadChannel.getAppliedTags();
+          var tagChanges = List.<TagChange>of();
+          var newTags = List.<ForumTag>of();
+          ThreadChannel threadChannel = null;
+          if (existingThread.get().discordThreadId().isPresent()) {
+            threadChannel = jda.getThreadChannelById(existingThread.get().discordThreadId().get());
+            assert threadChannel != null;
+            var forumChannel = threadChannel.getParentChannel().asForumChannel();
+            newTags = getTags(newItem, forumChannel);
+            var existingTags = threadChannel.getAppliedTags();
+            // Because we've done a massive hack and are using discord to store the tags rather than
+            // the database, now we've made discord threads optional and independant of the major
+            // changes announcement, we can't announce on major changes for things without threads.
+            // Oh well.
+            tagChanges = getTagChanges(newTags, existingTags);
+          }
 
           boolean timeChanged =
               !existingThread.get().item().startTime().equals(newItem.startTime());
           boolean noLongerCancelled = existingThread.get().status() == Status.CANCELLED;
           boolean roomDifferent = !existingThread.get().item().loc().equals(newItem.loc());
-          var tagChanges = getTagChanges(newTags, existingTags);
+
           var isSignificantUpdate =
               timeChanged || noLongerCancelled || roomDifferent || !tagChanges.isEmpty();
 
@@ -280,8 +315,12 @@ public class ProgrammeModule {
 
           var desc = makeDescription(newItem, mdConverter, config.alarms().isPresent());
 
-          threadChannel.getManager().setName(title).setAppliedTags(newTags).complete();
-          threadChannel.editMessageById(existingThread.get().discordMessageId(), desc).complete();
+          if (threadChannel != null) {
+            threadChannel.getManager().setName(title).setAppliedTags(newTags).complete();
+            threadChannel
+                .editMessageById(existingThread.get().discordMessageId().get(), desc)
+                .complete();
+          }
 
           conn.updateDiscordThread(
               new DiscordThread(
@@ -291,7 +330,7 @@ public class ProgrammeModule {
                   newDiscordItem));
           eventDispatcher.dispatch(new ItemChangedEvent());
 
-          if (!programmeConfig.hasPerformedFirstLoad() && isSignificantUpdate) {
+          if (programmeConfig.hasPerformedFirstLoad() && isSignificantUpdate) {
             var announcementEmbedBuilder = new EmbedBuilder();
             var threadEmbedBuilder = new EmbedBuilder();
             var allEmbedBuilders = List.of(announcementEmbedBuilder, threadEmbedBuilder);
@@ -318,15 +357,23 @@ public class ProgrammeModule {
                             tagChange.added() ? "New tag" : "Tag removed", tagChange.tag(), false));
               }
             }
-            announcementEmbedBuilder.addField(
-                "Discussion thread", "<#" + existingThread.get().discordThreadId() + ">", false);
+            existingThread
+                .get()
+                .discordThreadId()
+                .ifPresent(
+                    discordThreadId ->
+                        announcementEmbedBuilder.addField(
+                            "Discussion thread", "<#" + discordThreadId + ">", false));
 
             announcementChannel
                 .sendMessage(MessageCreateData.fromEmbeds(announcementEmbedBuilder.build()))
                 .complete();
-            threadChannel
-                .sendMessage(MessageCreateData.fromEmbeds(threadEmbedBuilder.build()))
-                .complete();
+
+            if (threadChannel != null) {
+              threadChannel
+                  .sendMessage(MessageCreateData.fromEmbeds(threadEmbedBuilder.build()))
+                  .complete();
+            }
           }
 
           numUpdated.incrementAndGet();
@@ -342,9 +389,12 @@ public class ProgrammeModule {
           }
           var existingThread = existingThreadM.get();
           if (!programmeConfig.hasPerformedFirstLoad()) {
-            Objects.requireNonNull(jda.getThreadChannelById(existingThread.discordThreadId()))
-                .delete()
-                .complete();
+            if (existingThread.discordThreadId().isPresent()) {
+              Objects.requireNonNull(
+                      jda.getThreadChannelById(existingThread.discordThreadId().get()))
+                  .delete()
+                  .complete();
+            }
             conn.deleteDiscordThread(oldItemId);
           } else {
             if (existingThread.status() != Status.CANCELLED) {
@@ -357,10 +407,13 @@ public class ProgrammeModule {
               }
               title += " [CANCELLED]";
 
-              Objects.requireNonNull(jda.getThreadChannelById(existingThread.discordThreadId()))
-                  .getManager()
-                  .setName(title)
-                  .complete();
+              if (existingThread.discordThreadId().isPresent()) {
+                Objects.requireNonNull(
+                        jda.getThreadChannelById(existingThread.discordThreadId().get()))
+                    .getManager()
+                    .setName(title)
+                    .complete();
+              }
 
               conn.updateDiscordThread(
                   new DiscordThread(
@@ -373,15 +426,23 @@ public class ProgrammeModule {
               var announcementEmbedBuilder = new EmbedBuilder();
               announcementEmbedBuilder.appendDescription(
                   "'" + existingThread.item().title() + "' has been cancelled");
-              announcementEmbedBuilder.addField(
-                  "Discussion thread", "<#" + existingThread.discordThreadId() + ">", false);
+              existingThread
+                  .discordThreadId()
+                  .ifPresent(
+                      discordThreadId -> {
+                        announcementEmbedBuilder.addField(
+                            "Discussion thread", "<#" + discordThreadId + ">", false);
+                      });
               announcementChannel
                   .sendMessage(MessageCreateData.fromEmbeds(announcementEmbedBuilder.build()))
                   .complete();
 
-              var threadChannel = jda.getThreadChannelById(existingThread.discordThreadId());
-              assert threadChannel != null;
-              threadChannel.sendMessage("This item has been cancelled.").complete();
+              if (existingThread.discordThreadId().isPresent()) {
+                var threadChannel =
+                    jda.getThreadChannelById(existingThread.discordThreadId().get());
+                assert threadChannel != null;
+                threadChannel.sendMessage("This item has been cancelled.").complete();
+              }
             }
           }
           numDeleted.incrementAndGet();
@@ -402,7 +463,7 @@ public class ProgrammeModule {
     }
   }
 
-  private List<TagChange> getTagChanges(ArrayList<ForumTag> newTags, List<ForumTag> existingTags) {
+  private List<TagChange> getTagChanges(List<ForumTag> newTags, List<ForumTag> existingTags) {
     var tagChanges = new ArrayList<TagChange>();
     for (var newTag : newTags) {
       if (existingTags.stream()
@@ -519,23 +580,58 @@ public class ProgrammeModule {
             .endTime()
             .withZoneSameInstant(config.timezone())
             .format(TIME_FORMATTER);
+    var discussUrl =
+        discordThread
+            .discordThreadId()
+            .map(
+                discordThreadId ->
+                    "https://discord.com/channels/" + config.guildId() + "/" + discordThreadId)
+            .orElseGet(
+                () -> {
+                  // This is a huuuuuuge hack
+                  // We need to get the channel name for the item so we can link to it, but
+                  // our mechanism for that uses programme items, which we don't have.
+                  // We should do something like calculate the channel earlier and pass it around
+                  // with the rest of the data, but I just don't have time to do that.
+                  // This is hardcoding the assumption that we are using a loc resolver :(
+                  var progItem =
+                      new ProgrammeItem(
+                          null, null, null, null, 0, discordThread.item().loc(), null, null, null);
+                  var channelName =
+                      programmeConfig
+                          .channelNameResolver()
+                          .resolveChannelName(progItem)
+                          .orElse(null);
+                  if (channelName != null) {
+                    var guild = jda.getGuildById(config.guildId());
+                    if (guild != null) {
+                      var channels = guild.getTextChannelsByName(channelName, true);
+                      if (!channels.isEmpty()) {
+                        return "https://discord.com/channels/"
+                            + config.guildId()
+                            + "/"
+                            + channels.get(0).getId();
+                      }
+                    }
+                  }
+                  return null;
+                });
+    String messageContent =
+        "**"
+            + start
+            + " - "
+            + end
+            + " "
+            + discordThread.item().title()
+            + "**\n"
+            + discordThread.item().loc();
+    if (discussUrl != null) {
+      messageContent += " | [Discuss](" + discussUrl + ")";
+    }
     var message =
         jdaUtils
             .getTextChannel(programmeConfig.nowOn().get().channel())
-            .sendMessage(
-                "**"
-                    + start
-                    + " - "
-                    + end
-                    + " "
-                    + discordThread.item().title()
-                    + "**\n"
-                    + discordThread.item().loc()
-                    + " | [Discuss](https://discord.com/channels/"
-                    + config.guildId()
-                    + "/"
-                    + discordThread.discordThreadId()
-                    + ")")
+            .sendMessage(messageContent)
             .complete();
     try (var conn = databaseManager.getConnection()) {
       conn.insertNowOnMessage(

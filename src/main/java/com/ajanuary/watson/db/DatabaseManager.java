@@ -82,8 +82,20 @@ public class DatabaseManager {
         if (!rs.next()) {
           return Optional.empty();
         }
-        var threadId = rs.getString(1);
-        var messageId = rs.getString(2);
+        Optional<String> threadId;
+        var threadIdBytes = rs.getBytes(1);
+        if (threadIdBytes != null) {
+          threadId = Optional.of(new String(threadIdBytes));
+        } else {
+          threadId = Optional.empty();
+        }
+        Optional<String> messageId;
+        var messageIdBytes = rs.getBytes(2);
+        if (messageIdBytes != null) {
+          messageId = Optional.of(new String(messageIdBytes));
+        } else {
+          messageId = Optional.empty();
+        }
         var title = rs.getString(3);
         String desc;
         var descBytes = rs.getBytes(4);
@@ -126,8 +138,16 @@ public class DatabaseManager {
           values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           """)) {
         statement.setString(1, discordThread.item().id());
-        statement.setString(2, discordThread.discordThreadId());
-        statement.setString(3, discordThread.discordMessageId());
+        if (discordThread.discordThreadId().isPresent()) {
+          statement.setString(2, discordThread.discordThreadId().get());
+        } else {
+          statement.setNull(2, Types.VARCHAR);
+        }
+        if (discordThread.discordMessageId().isPresent()) {
+          statement.setString(3, discordThread.discordMessageId().get());
+        } else {
+          statement.setNull(3, Types.VARCHAR);
+        }
         statement.setString(4, discordThread.item().title());
         if (discordThread.item().body() == null) {
           statement.setNull(5, Types.BLOB);
@@ -166,8 +186,16 @@ public class DatabaseManager {
           where
             programme_item_id = ?
           """)) {
-        statement.setString(1, discordThread.discordThreadId());
-        statement.setString(2, discordThread.discordMessageId());
+        if (discordThread.discordThreadId().isPresent()) {
+          statement.setString(1, discordThread.discordThreadId().get());
+        } else {
+          statement.setNull(1, Types.VARCHAR);
+        }
+        if (discordThread.discordMessageId().isPresent()) {
+          statement.setString(2, discordThread.discordMessageId().get());
+        } else {
+          statement.setNull(2, Types.VARCHAR);
+        }
         statement.setString(3, discordThread.item().title());
         statement.setBytes(4, discordThread.item().body().getBytes());
         statement.setString(5, discordThread.item().loc());
@@ -231,8 +259,20 @@ public class DatabaseManager {
         var results = new ArrayList<DiscordThread>();
         while (rs.next()) {
           var programmeItemId = rs.getString(1);
-          var threadId = rs.getString(2);
-          var messageId = rs.getString(3);
+          Optional<String> threadId;
+          var threadIdBytes = rs.getBytes(2);
+          if (threadIdBytes != null) {
+            threadId = Optional.of(new String(threadIdBytes));
+          } else {
+            threadId = Optional.empty();
+          }
+          Optional<String> messageId;
+          var messageIdBytes = rs.getBytes(3);
+          if (messageIdBytes != null) {
+            messageId = Optional.of(new String(messageIdBytes));
+          } else {
+            messageId = Optional.empty();
+          }
           var title = rs.getString(4);
           String desc;
           var descBytes = rs.getBytes(5);
@@ -571,8 +611,20 @@ public class DatabaseManager {
         var results = new ArrayList<DiscordThread>();
         while (rs.next()) {
           var programmeItemId = rs.getString(1);
-          var threadId = rs.getString(2);
-          var messageId = rs.getString(3);
+          Optional<String> threadId;
+          var threadIdBytes = rs.getBytes(2);
+          if (threadIdBytes != null) {
+            threadId = Optional.of(new String(threadIdBytes));
+          } else {
+            threadId = Optional.empty();
+          }
+          Optional<String> messageId;
+          var messageIdBytes = rs.getBytes(3);
+          if (messageIdBytes != null) {
+            messageId = Optional.of(new String(messageIdBytes));
+          } else {
+            messageId = Optional.empty();
+          }
           var title = rs.getString(4);
           String desc;
           var descBytes = rs.getBytes(5);

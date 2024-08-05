@@ -85,10 +85,14 @@ public class AlarmsModule {
       return;
     }
 
-    var threadChannel = jda.getThreadChannelById(discordThread.discordThreadId());
+    if (discordThread.discordThreadId().isEmpty() || discordThread.discordMessageId().isEmpty()) {
+      return;
+    }
+
+    var threadChannel = jda.getThreadChannelById(discordThread.discordThreadId().get());
     assert threadChannel != null;
     threadChannel
-        .retrieveMessageById(discordThread.discordMessageId())
+        .retrieveMessageById(discordThread.discordMessageId().get())
         .queue(
             message -> {
               var reaction = message.getReaction(alarmsConfig.alarmEmoji());
@@ -121,8 +125,8 @@ public class AlarmsModule {
 
                             var scheduledDM =
                                 new ScheduledDM(
-                                    discordThread.discordThreadId(),
-                                    discordThread.discordMessageId(),
+                                    discordThread.discordThreadId().get(),
+                                    discordThread.discordMessageId().get(),
                                     user.getId(),
                                     discordThread
                                         .item()
