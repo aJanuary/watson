@@ -197,7 +197,11 @@ public class DatabaseManager {
           statement.setNull(2, Types.VARCHAR);
         }
         statement.setString(3, discordThread.item().title());
-        statement.setBytes(4, discordThread.item().body().getBytes());
+        if (discordThread.item().body() == null) {
+          statement.setNull(4, Types.BLOB);
+        } else {
+          statement.setBytes(4, discordThread.item().body().getBytes());
+        }
         statement.setString(5, discordThread.item().loc());
         statement.setString(6, discordThread.item().time());
         statement.setString(7, toDbDateTimeString(discordThread.item().startTime()));
