@@ -540,7 +540,8 @@ public class DatabaseManager {
                 now_on
               where
                 discord_threads.programme_item_id = now_on.programme_item_id
-            )
+            ) AND
+            status != 'CANCELLED'
           """)) {
         statement.setString(1, toDbDateTimeString(now.minus(timeAfterToKeep)));
         var rs = statement.executeQuery();
