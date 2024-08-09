@@ -567,6 +567,11 @@ public class ProgrammeModule {
   }
 
   private void handleNowOnPost(DiscordThread discordThread) {
+    if (discordThread.status() == Status.CANCELLED) {
+      logger.info(
+          "Not posting now on message for {} as it is cancelled", discordThread.item().id());
+      return;
+    }
     logger.info("Posting now on message for {}", discordThread.item().id());
     var start =
         discordThread
