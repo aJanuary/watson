@@ -296,3 +296,14 @@ programme:
       # e.g. Room 1
       name: <location name>
 ```
+
+## Development
+
+### Entry point
+
+The entry point is [`com.ajanuary.watson.RunBot`](src/main/java/com/ajanuary/watson/RunBot.java).
+
+### Clear Channels
+
+The [`com.ajanuary.watson.utils.ClearChannels`](src/main/java/com/ajanuary/watson/utils/ClearChannels.java) entry point
+can be used to clear all the programme related messages.
