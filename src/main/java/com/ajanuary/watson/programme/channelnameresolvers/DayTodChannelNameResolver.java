@@ -1,6 +1,8 @@
 package com.ajanuary.watson.programme.channelnameresolvers;
 
 import com.ajanuary.watson.programme.ProgrammeItem;
+
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
@@ -10,9 +12,11 @@ import java.util.stream.Collectors;
 public class DayTodChannelNameResolver implements ChannelNameResolver {
 
   private final List<Threshold> thresholds;
+  private final ZoneId timezone;
 
-  public DayTodChannelNameResolver(List<Threshold> thresholds) {
+  public DayTodChannelNameResolver(List<Threshold> thresholds, ZoneId timezone) {
     this.thresholds = thresholds;
+    this.timezone = timezone;
   }
 
   public List<Threshold> thresholds() {
@@ -21,12 +25,12 @@ public class DayTodChannelNameResolver implements ChannelNameResolver {
 
   @Override
   public Optional<String> resolveChannelName(ProgrammeItem item) {
-    var day = item.startTime().format(DateTimeFormatter.ofPattern("EEEE"));
+    var day = item.startTime(timezone).format(DateTimeFormatter.ofPattern("EEEE"));
     return Optional.of(
         thresholds.stream()
             .filter(
                 threshold -> {
-                  var time = item.startTime().format(DateTimeFormatter.ofPattern("HH:mm"));
+                  var time = item.startTime(timezone).format(DateTimeFormatter.ofPattern("HH:mm"));
                   return time.compareTo(threshold.start()) >= 0
                       && time.compareTo(threshold.end()) < 0;
                 })

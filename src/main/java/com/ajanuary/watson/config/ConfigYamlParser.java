@@ -23,7 +23,7 @@ public class ConfigYamlParser {
     var membershipConfig =
         configParser.get("membership").object().map(MembershipConfigYamlParser::parse);
     var programmeConfig =
-        configParser.get("programme").object().map(ProgrammeConfigYamlParser::parse);
+        configParser.get("programme").object().map(c -> ProgrammeConfigYamlParser.parse(c, timezone));
 
     return new Config(
         discordBotToken,

@@ -223,7 +223,7 @@ public class TestConfigBuilder {
     private URI assignDiscordPostsApiUrl = URI.create("https://example.com/some-api-root");
     private String majorAnnouncementChannel = "some-major-announcement-channel";
     private Optional<NowOnConfig> nowOnConfig = Optional.empty();
-    private ChannelNameResolver channelNameResolver = new DayChannelNameResolver();
+    private ChannelNameResolver channelNameResolver = new DayChannelNameResolver(ZoneId.of("UTC"));
     private List<Link> links = new ArrayList<>();
     private List<Location> locations = new ArrayList<>();
     private boolean hasPerformedFirstLoad = true;

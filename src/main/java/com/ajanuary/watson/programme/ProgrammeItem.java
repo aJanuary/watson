@@ -1,11 +1,18 @@
 package com.ajanuary.watson.programme;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JacksonException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.util.StdConverter;
+
+import java.io.IOException;
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,16 +22,24 @@ public record ProgrammeItem(
     String id,
     String title,
     @JsonDeserialize(using = TagDeserializer.class) List<String> tags,
-    @JsonProperty("datetime") @JsonDeserialize(converter = DateConverter.class)
-        ZonedDateTime startTime,
+    LocalDate date,
+    LocalTime time,
+    ZonedDateTime dateTime,
     int mins,
     @JsonDeserialize(converter = LocationConverter.class) String loc,
     @JsonDeserialize(using = PersonDeserializer.class) List<String> people,
     String desc,
-    Map<String, String> links) {
+    @JsonDeserialize(using = LinksDeserializer.class) Map<String, String> links) {
 
-  public ZonedDateTime endTime() {
-    return startTime().plus(Duration.ofMinutes(mins));
+  public ZonedDateTime startTime(ZoneId zoneId) {
+    if (dateTime != null) {
+      return dateTime.withZoneSameInstant(zoneId);
+    } else {
+      return ZonedDateTime.of(date, time, zoneId);
+    }
+  }
+  public ZonedDateTime endTime(ZoneId zoneId) {
+    return startTime(zoneId).plus(Duration.ofMinutes(mins));
   }
 
   private static final class TagDeserializer extends StdDeserializer<List<String>> {
@@ -41,10 +56,33 @@ public record ProgrammeItem(
       var result = new ArrayList<String>();
       var list = p.readValueAsTree();
       for (var i = 0; i < list.size(); i++) {
-        var tag = ((JsonNode) list.get(i)).get("label").asText();
-        result.add(tag);
+        var value = ((JsonNode) list.get(i));
+        if (value.isTextual()) {
+          result.add(value.asText());
+        } else if (value.has("label")) {
+          var tag = value.get("label").asText();
+          result.add(tag);
+        }
       }
       return result;
+    }
+  }
+
+  private static final class LinksDeserializer extends StdDeserializer<Map<String, String>> {
+    public LinksDeserializer() {
+      super(Map.class);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Map<String, String> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
+        var value = ctxt.readTree(p);
+        if (value.isArray()) {
+          // For some reason the JSON is an empty list instead of an empty object
+          return Map.of();
+        } else {
+          return ctxt.readTreeAsValue(value, Map.class);
+        }
     }
   }
 

@@ -172,7 +172,7 @@ public class ProgrammeModule {
       for (var newItem : newProgrammeItems) {
         var existingThread = conn.getDiscordThread(newItem.id());
         var time =
-            newItem.startTime().withZoneSameInstant(config.timezone()).format(DATE_TIME_FORMATTER);
+            newItem.startTime(config.timezone()).format(DATE_TIME_FORMATTER);
         var newDiscordItem =
             new DiscordItem(
                 newItem.id(),
@@ -180,8 +180,8 @@ public class ProgrammeModule {
                 newItem.desc(),
                 newItem.loc(),
                 time,
-                newItem.startTime(),
-                newItem.endTime());
+                newItem.startTime(config.timezone()),
+                newItem.endTime(config.timezone()));
         if (existingThread.isEmpty()) {
           logger.info("Add item [{}] '{}'", newItem.id(), newItem.title());
 
@@ -248,7 +248,7 @@ public class ProgrammeModule {
             portalProgrammeApiClient.ifPresent(client -> client.addPostDetails(
                 newItem.id(),
                 newItem.title(),
-                newItem.startTime(),
+                newItem.startTime(config.timezone()),
                 newItem.mins(),
                 roomId,
                 "https://discord.com/channels/" + config.guildId() + "/" + theDiscordThreadId));
@@ -292,7 +292,7 @@ public class ProgrammeModule {
           }
 
           boolean timeChanged =
-              !existingThread.get().item().startTime().equals(newItem.startTime());
+              !existingThread.get().item().startTime().equals(newItem.startTime(config.timezone()));
           boolean noLongerCancelled = existingThread.get().status() == Status.CANCELLED;
           boolean roomDifferent = !existingThread.get().item().loc().equals(newItem.loc());
 
@@ -489,7 +489,7 @@ public class ProgrammeModule {
     var items =
         objectMapper.readValue(response.body(), new TypeReference<List<ProgrammeItem>>() {});
     return items.stream()
-        .sorted(Comparator.comparing(ProgrammeItem::startTime).reversed())
+        .sorted(Comparator.comparing((ProgrammeItem i) -> i.startTime(config.timezone())).reversed())
         .toList();
   }
 
@@ -601,7 +601,7 @@ public class ProgrammeModule {
                   // This is hardcoding the assumption that we are using a loc resolver :(
                   var progItem =
                       new ProgrammeItem(
-                          null, null, null, null, 0, discordThread.item().loc(), null, null, null);
+                          null, null, null,  null,null, null, 0, discordThread.item().loc(), null, null, null);
                   var channelName =
                       programmeConfig
                           .channelNameResolver()

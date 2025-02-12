@@ -9,13 +9,14 @@ import com.ajanuary.watson.programme.channelnameresolvers.DayTodChannelNameResol
 import com.ajanuary.watson.programme.channelnameresolvers.LocChannelNameResolver;
 import java.net.URI;
 import java.time.Duration;
+import java.time.ZoneId;
 import java.util.Optional;
 
 public class ProgrammeConfigYamlParser {
 
   private ProgrammeConfigYamlParser() {}
 
-  public static ProgrammeConfig parse(ObjectConfigParserWithValue configParser) {
+  public static ProgrammeConfig parse(ObjectConfigParserWithValue configParser, ZoneId timezone) {
     var programmeUrl = configParser.get("programmeUrl").string().required().map(URI::create);
     var assignDiscordPostsApiUrl =
         configParser.get("assignDiscordPostsApiUrl").string().defaultingTo("").<Optional<URI>>map(v -> {
@@ -65,16 +66,16 @@ public class ProgrammeConfigYamlParser {
                         .map(
                             resolverType ->
                                 switch (resolverType) {
-                                  case "day" -> new DayChannelNameResolver();
+                                  case "day" -> new DayChannelNameResolver(timezone);
                                   case "day-tod" ->
-                                      parseDayTodChannelNameResolver(channelNameResolverConfig);
+                                      parseDayTodChannelNameResolver(channelNameResolverConfig, timezone);
                                   case "loc" ->
                                       parseLocChannelNameResolver(channelNameResolverConfig);
                                   default ->
                                       throw new IllegalArgumentException(
                                           "Unknown resolver " + resolverType);
                                 }))
-            .orElseGet(DayChannelNameResolver::new);
+            .orElseGet(() -> new DayChannelNameResolver(timezone));
 
     var links =
         configParser.get("links").list().required().value().stream()
@@ -124,7 +125,7 @@ public class ProgrammeConfigYamlParser {
   }
 
   private static ChannelNameResolver parseDayTodChannelNameResolver(
-      ObjectConfigParserWithValue configParser) {
+      ObjectConfigParserWithValue configParser, ZoneId timezone) {
     var thresholdsConfig = configParser.get("thresholds").list().required();
     var thresholds =
         thresholdsConfig.value().stream()
@@ -161,7 +162,7 @@ public class ProgrammeConfigYamlParser {
       }
     }
 
-    return new DayTodChannelNameResolver(thresholds);
+    return new DayTodChannelNameResolver(thresholds, timezone);
   }
 
   private static Optional<String> validateTime(String value) {
