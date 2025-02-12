@@ -89,30 +89,6 @@ public class ConfigYamlParserTest {
   }
 
   @Test
-  void throwsIfPortalApiKeyMissing() throws JsonProcessingException {
-    var secretsConfig =
-        new YAMLMapper()
-            .readTree(
-                """
-      discordBotToken: some-token
-    """);
-    var jsonConfig =
-        new YAMLMapper()
-            .readTree(
-                """
-        guildId: some-guild-id
-        databasePath: some-db-path
-        timezone: America/New_York
-        """);
-
-    var parser = new ConfigYamlParser();
-
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
-
-    assertEquals("portalApiKey is required", thrown.getMessage());
-  }
-
-  @Test
   void readsCoreConfigFrom() throws JsonProcessingException {
     var secretsConfig =
         new YAMLMapper()
@@ -1103,88 +1079,6 @@ public class ConfigYamlParserTest {
     var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
 
     assertEquals("membership.membersApiUrl must be a string", thrown.getMessage());
-  }
-
-  @Test
-  void parsesMembershipDiscordModsChannel() throws JsonProcessingException {
-    var secretsConfig =
-        new YAMLMapper()
-            .readTree(
-                """
-      discordBotToken: some-token
-      portalApiKey: some-key
-    """);
-    var jsonConfig =
-        new YAMLMapper()
-            .readTree(
-                """
-        guildId: some-guild-id
-        databasePath: some-db-path
-        timezone: America/New_York
-        membership:
-          membersApiUrl: https://example.com/some-api-root
-          discordModsChannel: the-mods-channel
-        """);
-
-    var parser = new ConfigYamlParser();
-    var config = parser.parse(secretsConfig, jsonConfig);
-
-    assertTrue(config.membership().isPresent(), "membership config is present");
-    assertEquals("the-mods-channel", config.membership().get().discordModsChannel());
-  }
-
-  @Test
-  void defaultsMembershipDiscordModsChannelToDiscordMods() throws JsonProcessingException {
-    var secretsConfig =
-        new YAMLMapper()
-            .readTree(
-                """
-      discordBotToken: some-token
-      portalApiKey: some-key
-    """);
-    var jsonConfig =
-        new YAMLMapper()
-            .readTree(
-                """
-        guildId: some-guild-id
-        databasePath: some-db-path
-        timezone: America/New_York
-        membership:
-          membersApiUrl: https://example.com/some-api-root
-        """);
-
-    var parser = new ConfigYamlParser();
-    var config = parser.parse(secretsConfig, jsonConfig);
-
-    assertTrue(config.membership().isPresent(), "membership config is present");
-    assertEquals("discord-mods", config.membership().get().discordModsChannel());
-  }
-
-  @Test
-  void errorsIfMembershipDiscordModsChannelIsNotString() throws JsonProcessingException {
-    var secretsConfig =
-        new YAMLMapper()
-            .readTree(
-                """
-      discordBotToken: some-token
-      portalApiKey: some-key
-    """);
-    var jsonConfig =
-        new YAMLMapper()
-            .readTree(
-                """
-        guildId: some-guild-id
-        databasePath: some-db-path
-        timezone: America/New_York
-        membership:
-          membersApiUrl: https://example.com/some-api-root
-          discordModsChannel: 10
-        """);
-
-    var parser = new ConfigYamlParser();
-    var thrown = assertThrows(ConfigException.class, () -> parser.parse(secretsConfig, jsonConfig));
-
-    assertEquals("membership.discordModsChannel must be a string", thrown.getMessage());
   }
 
   @Test

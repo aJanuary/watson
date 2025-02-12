@@ -7,7 +7,6 @@ import java.util.Map;
 public record MembershipConfig(
     URI membersApiUrl,
     String helpDeskChannel,
-    String discordModsChannel,
     String memberRole,
     String unverifiedRole,
     Map<String, String> additionalRoles,
@@ -15,7 +14,6 @@ public record MembershipConfig(
 
   public void validateDiscordConfig(JDAUtils jdaUtils) {
     jdaUtils.getTextChannel(helpDeskChannel());
-    jdaUtils.getTextChannel(discordModsChannel());
     jdaUtils.getRole(memberRole());
     jdaUtils.getRole(unverifiedRole());
     jdaUtils.getRole(memberHelpRole());

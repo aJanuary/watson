@@ -130,8 +130,7 @@ public class ConfigTest {
             .withMembershipConfig(
                 membershipConfig ->
                     membershipConfig
-                        .withHelpDeskChannel("the-help-desk-channel-id")
-                        .withDiscordModsChannel("the-mods-channel-id"))
+                        .withHelpDeskChannel("the-help-desk-channel-id"))
             .build();
     var thrown =
         assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
@@ -157,8 +156,7 @@ public class ConfigTest {
             .withMembershipConfig(
                 membershipConfig ->
                     membershipConfig
-                        .withHelpDeskChannel("the-help-desk-channel-id")
-                        .withDiscordModsChannel("the-mods-channel-id"))
+                        .withHelpDeskChannel("the-help-desk-channel-id"))
             .build();
 
     config.validateDiscordConfig(jda);
@@ -182,39 +180,13 @@ public class ConfigTest {
             .withMembershipConfig(
                 membershipConfig ->
                     membershipConfig
-                        .withHelpDeskChannel("the-help-desk-channel-id")
-                        .withDiscordModsChannel("the-mods-channel-id"))
+                        .withHelpDeskChannel("the-help-desk-channel-id"))
             .build();
     var thrown =
         assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
     assertEquals(
         "Multiple channels found with the name: the-help-desk-channel-id", thrown.getMessage());
-  }
-
-  @Test
-  void validateErrorsIfDiscordModsChannelNotFound() {
-    var jda = mock(JDA.class);
-    var guild = mock(Guild.class);
-    when(jda.getGuildById("the-guild-id")).thenReturn(guild);
-    when(guild.getTextChannelsByName(eq("the-help-desk-channel-id"), anyBoolean()))
-        .thenReturn(List.of(mock(TextChannel.class)));
-    when(guild.getTextChannelsByName(eq("the-mods-channel-id"), anyBoolean()))
-        .thenReturn(List.of());
-
-    var config =
-        new TestConfigBuilder()
-            .withGuildId("the-guild-id")
-            .withMembershipConfig(
-                membershipConfig ->
-                    membershipConfig
-                        .withHelpDeskChannel("the-help-desk-channel-id")
-                        .withDiscordModsChannel("the-mods-channel-id"))
-            .build();
-    var thrown =
-        assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
-
-    assertEquals("Channel not found: the-mods-channel-id", thrown.getMessage());
   }
 
   @Test
@@ -235,38 +207,10 @@ public class ConfigTest {
             .withMembershipConfig(
                 membershipConfig ->
                     membershipConfig
-                        .withHelpDeskChannel("the-help-desk-channel-id")
-                        .withDiscordModsChannel("the-mods-channel-id"))
+                        .withHelpDeskChannel("the-help-desk-channel-id"))
             .build();
 
     config.validateDiscordConfig(jda);
-  }
-
-  @Test
-  void validateErrorsIfMultipleDiscordModsChannelsFound() {
-    var jda = mock(JDA.class);
-    var guild = mock(Guild.class);
-    when(jda.getGuildById("the-guild-id")).thenReturn(guild);
-    // Just mock any roles, as we don't care about them for this test
-    when(guild.getRolesByName(any(), anyBoolean())).thenReturn(List.of(mock(Role.class)));
-    when(guild.getTextChannelsByName(eq("the-help-desk-channel-id"), anyBoolean()))
-        .thenReturn(List.of(mock(TextChannel.class)));
-    when(guild.getTextChannelsByName(eq("the-mods-channel-id"), anyBoolean()))
-        .thenReturn(List.of(mock(TextChannel.class), mock(TextChannel.class)));
-
-    var config =
-        new TestConfigBuilder()
-            .withGuildId("the-guild-id")
-            .withMembershipConfig(
-                membershipConfig ->
-                    membershipConfig
-                        .withHelpDeskChannel("the-help-desk-channel-id")
-                        .withDiscordModsChannel("the-mods-channel-id"))
-            .build();
-    var thrown =
-        assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
-
-    assertEquals("Multiple channels found with the name: the-mods-channel-id", thrown.getMessage());
   }
 
   @Test

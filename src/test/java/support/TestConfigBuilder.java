@@ -177,7 +177,6 @@ public class TestConfigBuilder {
   public static class TestMembershipConfigBuilder {
     private URI membersApiUrl = URI.create("https://example.com/some-api-root");
     private String helpDeskChannel = "some-help-desk-channel";
-    private String discordModsChannel = "some-discord-mods-channel";
     private String memberRole = "some-member-role";
     private String unverifiedRole = "some-unverified-role";
     private final Map<String, String> additionalRoles = new HashMap<>();
@@ -187,7 +186,6 @@ public class TestConfigBuilder {
       return new MembershipConfig(
           membersApiUrl,
           helpDeskChannel,
-          discordModsChannel,
           memberRole,
           unverifiedRole,
           additionalRoles,
@@ -201,11 +199,6 @@ public class TestConfigBuilder {
 
     public TestMembershipConfigBuilder withHelpDeskChannel(String helpDeskChannel) {
       this.helpDeskChannel = helpDeskChannel;
-      return this;
-    }
-
-    public TestMembershipConfigBuilder withDiscordModsChannel(String discordModsChannel) {
-      this.discordModsChannel = discordModsChannel;
       return this;
     }
 

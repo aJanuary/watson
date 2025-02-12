@@ -152,8 +152,7 @@ public class MembershipCheckerTest {
             .withMembershipConfig(
                 membershipConfig -> {
                   membershipConfig
-                      .withUnverifiedRole("the-unverified-role")
-                      .withDiscordModsChannel("the-mods-channel");
+                      .withUnverifiedRole("the-unverified-role");
                 })
             .build();
 
@@ -200,8 +199,7 @@ public class MembershipCheckerTest {
             .withMembershipConfig(
                 membershipConfig -> {
                   membershipConfig
-                      .withUnverifiedRole("the-unverified-role")
-                      .withDiscordModsChannel("the-mods-channel");
+                      .withUnverifiedRole("the-unverified-role");
                 })
             .build();
 
@@ -249,8 +247,7 @@ public class MembershipCheckerTest {
             .withMembershipConfig(
                 membershipConfig -> {
                   membershipConfig
-                      .withUnverifiedRole("the-unverified-role")
-                      .withDiscordModsChannel("the-mods-channel");
+                      .withUnverifiedRole("the-unverified-role");
                 })
             .build();
 
@@ -298,8 +295,7 @@ public class MembershipCheckerTest {
             .withMembershipConfig(
                 membershipConfig -> {
                   membershipConfig
-                      .withMemberRole("the-member-role")
-                      .withDiscordModsChannel("the-mods-channel");
+                      .withMemberRole("the-member-role");
                 })
             .build();
 
@@ -349,8 +345,7 @@ public class MembershipCheckerTest {
             .withMembershipConfig(
                 membershipConfig -> {
                   membershipConfig
-                      .withMemberRole("the-member-role")
-                      .withDiscordModsChannel("the-mods-channel");
+                      .withMemberRole("the-member-role");
                 })
             .build();
 
@@ -401,7 +396,6 @@ public class MembershipCheckerTest {
                 membershipConfig -> {
                   membershipConfig
                       .withMemberRole("the-member-role")
-                      .withDiscordModsChannel("the-mods-channel")
                       .withAdditionalRole("role-1-name", "role-1-id")
                       .withAdditionalRole("role-2-name", "role-2-id");
                 })
@@ -465,8 +459,7 @@ public class MembershipCheckerTest {
             .withMembershipConfig(
                 membershipConfig -> {
                   membershipConfig
-                      .withMemberRole("the-member-role")
-                      .withDiscordModsChannel("the-mods-channel");
+                      .withMemberRole("the-member-role");
                 })
             .build();
 
@@ -519,7 +512,6 @@ public class MembershipCheckerTest {
                 membershipConfig -> {
                   membershipConfig
                       .withMemberRole("the-member-role")
-                      .withDiscordModsChannel("the-mods-channel")
                       .withAdditionalRole("role-1-name", "role-1-id")
                       .withAdditionalRole("role-2-name", "role-2-id");
                 })
@@ -582,8 +574,7 @@ public class MembershipCheckerTest {
             .withMembershipConfig(
                 membershipConfig -> {
                   membershipConfig
-                      .withMemberRole("the-member-role")
-                      .withDiscordModsChannel("the-mods-channel");
+                      .withMemberRole("the-member-role");
                 })
             .build();
 

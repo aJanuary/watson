@@ -12,8 +12,6 @@ public class MembershipConfigYamlParser {
     var membersApiUrl = configParser.get("membersApiUrl").string().required().map(URI::create);
     var helpDeskChannel =
         configParser.get("helpDeskChannel").string().defaultingTo("help-desk").value();
-    var discordModsChannel =
-        configParser.get("discordModsChannel").string().defaultingTo("discord-mods").value();
     var memberRole = configParser.get("memberRole").string().defaultingTo("member").value();
     var unverifiedRole =
         configParser.get("unverifiedRole").string().defaultingTo("unverified").value();
@@ -32,7 +30,6 @@ public class MembershipConfigYamlParser {
     return new MembershipConfig(
         membersApiUrl,
         helpDeskChannel,
-        discordModsChannel,
         memberRole,
         unverifiedRole,
         additionalRoles,
