@@ -64,7 +64,7 @@ public class ProgrammeModule {
   private final Config config;
   private final DatabaseManager databaseManager;
   private final EventDispatcher eventDispatcher;
-  private final PortalProgrammeApiClient portalProgrammeApiClient;
+  private final Optional<PortalProgrammeApiClient> portalProgrammeApiClient;
 
   private boolean doneFirstOnNowPoll = false;
 
@@ -80,8 +80,7 @@ public class ProgrammeModule {
     this.programmeConfig = programmeConfig;
     this.config = config;
     this.databaseManager = databaseManager;
-    this.portalProgrammeApiClient =
-        new PortalProgrammeApiClient(programmeConfig.assignDiscordPostsApiUrl(), portalApiClient);
+    this.portalProgrammeApiClient = programmeConfig.assignDiscordPostsApiUrl().map(assignDiscordPostsApiUrl -> new PortalProgrammeApiClient(assignDiscordPostsApiUrl, portalApiClient));
     this.eventDispatcher = eventDispatcher;
     Executors.newSingleThreadScheduledExecutor()
         .scheduleWithFixedDelay(this::pollProgramme, 0, 1, TimeUnit.MINUTES);
@@ -245,13 +244,14 @@ public class ProgrammeModule {
                     .findFirst()
                     .map(Location::id)
                     .orElse("");
-            portalProgrammeApiClient.addPostDetails(
+            var theDiscordThreadId = discordThreadId;
+            portalProgrammeApiClient.ifPresent(client -> client.addPostDetails(
                 newItem.id(),
                 newItem.title(),
                 newItem.startTime(),
                 newItem.mins(),
                 roomId,
-                "https://discord.com/channels/" + config.guildId() + "/" + discordThreadId);
+                "https://discord.com/channels/" + config.guildId() + "/" + theDiscordThreadId));
           }
 
           eventDispatcher.dispatch(new ItemChangedEvent());

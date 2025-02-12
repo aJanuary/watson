@@ -15,6 +15,7 @@ import java.net.http.HttpClient;
 import java.sql.SQLException;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
@@ -53,7 +54,7 @@ public class Bot {
     }
 
     PortalApiClient portalApiClient;
-    if (config.membership().isPresent() || config.programme().isPresent()) {
+    if ((config.membership().isPresent() || config.programme().isPresent()) && config.portalApiKey() != null) {
       portalApiClient = new PortalApiClient(config.portalApiKey(), HttpClient.newHttpClient());
     } else {
       portalApiClient = null;

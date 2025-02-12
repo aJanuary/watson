@@ -18,7 +18,13 @@ public class ProgrammeConfigYamlParser {
   public static ProgrammeConfig parse(ObjectConfigParserWithValue configParser) {
     var programmeUrl = configParser.get("programmeUrl").string().required().map(URI::create);
     var assignDiscordPostsApiUrl =
-        configParser.get("assignDiscordPostsApiUrl").string().required().map(URI::create);
+        configParser.get("assignDiscordPostsApiUrl").string().defaultingTo("").<Optional<URI>>map(v -> {
+          if (v.isEmpty()) {
+            return Optional.empty();
+          } else {
+            return Optional.of(URI.create(v));
+          }
+        });
     var majorAnnouncementsChannel =
         configParser
             .get("majorAnnouncementsChannel")

@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public record ProgrammeConfig(
     URI programmeUrl,
-    URI assignDiscordPostsApiUrl,
+    Optional<URI> assignDiscordPostsApiUrl,
     String majorAnnouncementsChannel,
     Optional<NowOnConfig> nowOn,
     ChannelNameResolver channelNameResolver,

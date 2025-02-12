@@ -10,6 +10,8 @@ import com.ajanuary.watson.programme.channelnameresolvers.DayTodChannelNameResol
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import java.net.URI;
+import java.util.Optional;
+
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import org.junit.jupiter.api.Test;
 
@@ -1557,7 +1559,7 @@ public class ConfigYamlParserTest {
 
     assertTrue(config.programme().isPresent(), "programme config is present");
     assertEquals(
-        URI.create("https://example.com/the-assign-discord-posts-api-url"),
+        Optional.of(URI.create("https://example.com/the-assign-discord-posts-api-url")),
         config.programme().get().assignDiscordPostsApiUrl());
   }
 

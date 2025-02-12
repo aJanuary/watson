@@ -12,7 +12,7 @@ public class ConfigYamlParser {
   public Config parse(JsonNode jsonSecrets, JsonNode jsonConfig) {
     var secretsParser = ConfigParser.parse(jsonSecrets);
     var discordBotToken = secretsParser.get("discordBotToken").string().required().value();
-    var portalApiKey = secretsParser.get("portalApiKey").string().required().value();
+    var portalApiKey = secretsParser.get("portalApiKey").string().defaultingTo(null).value();
 
     var configParser = ConfigParser.parse(jsonConfig);
     var guildId = configParser.get("guildId").string().required().value();

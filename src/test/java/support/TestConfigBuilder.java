@@ -238,7 +238,7 @@ public class TestConfigBuilder {
     public ProgrammeConfig build() {
       return new ProgrammeConfig(
           programmeApiRoot,
-          assignDiscordPostsApiUrl,
+          Optional.of(assignDiscordPostsApiUrl),
           majorAnnouncementChannel,
           nowOnConfig,
           channelNameResolver,
