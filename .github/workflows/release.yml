@@ -1,14 +1,14 @@
 ---
-name: Build
+name: Build and release
 
 on:
-  push:
-    branches:
-      - main
-    pull_request:
-      branches:
-        - main
+  release:
+    types:
+      - created
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   release:
@@ -25,4 +25,9 @@ jobs:
       - name: Build
         uses: gradle/gradle-build-action@v3
         with:
-          arguments: check shadowJar
+          arguments: -Pversion=${{ github.head_ref || github.ref_name }} check shadowJar
+
+      - name: Publish
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/libs/watson.jar
