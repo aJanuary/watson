@@ -171,15 +171,12 @@ public class ProgrammeModule {
 
       for (var newItem : newProgrammeItems) {
         var existingThread = conn.getDiscordThread(newItem.id());
-        var time =
-            newItem.startTime(config.timezone()).format(DATE_TIME_FORMATTER);
         var newDiscordItem =
             new DiscordItem(
                 newItem.id(),
                 newItem.title(),
                 newItem.desc(),
                 newItem.loc(),
-                time,
                 newItem.startTime(config.timezone()),
                 newItem.endTime(config.timezone()));
         if (existingThread.isEmpty()) {
@@ -191,7 +188,7 @@ public class ProgrammeModule {
           String discordThreadId = null;
           String discordMessageId = null;
 
-          var title = time + " " + newItem.title();
+          var title = formatTitle(newItem);
           if (programmeConfig.hasPerformedFirstLoad()) {
             if (title.length() > MAX_THREAD_TITLE_LEN - 6) {
               title = title.substring(0, MAX_THREAD_TITLE_LEN - 6);
@@ -259,7 +256,7 @@ public class ProgrammeModule {
           if (programmeConfig.hasPerformedFirstLoad()) {
             var announcementEmbedBuilder = new EmbedBuilder();
             announcementEmbedBuilder.appendDescription("'" + newItem.title() + "' has been added");
-            announcementEmbedBuilder.addField("Time", time, false);
+            announcementEmbedBuilder.addField("Time", newItem.startTime(config.timezone()).format(DATE_TIME_FORMATTER), false);
             announcementEmbedBuilder.addField("Room", newItem.loc(), false);
             if (discordThreadId != null) {
               announcementEmbedBuilder.addField(
@@ -299,7 +296,7 @@ public class ProgrammeModule {
           var isSignificantUpdate =
               timeChanged || noLongerCancelled || roomDifferent || !tagChanges.isEmpty();
 
-          var title = time + " " + newItem.title();
+          var title = formatTitle(newItem);
 
           if (!programmeConfig.hasPerformedFirstLoad()
               && (isSignificantUpdate || existingThread.get().status() == Status.UPDATED)) {
@@ -342,7 +339,7 @@ public class ProgrammeModule {
                   builder -> builder.addField("Status", "The item is no longer cancelled", false));
             }
             if (timeChanged) {
-              allEmbedBuilders.forEach(builder -> builder.addField("New time", time, false));
+              allEmbedBuilders.forEach(builder -> builder.addField("New time", newItem.startTime(config.timezone()).format(DATE_TIME_FORMATTER), false));
             }
             if (roomDifferent) {
               allEmbedBuilders.forEach(
@@ -400,7 +397,7 @@ public class ProgrammeModule {
             if (existingThread.status() != Status.CANCELLED) {
               logger.info("Cancel item [{}] '{}'", oldItemId, existingThread.item().title());
 
-              var title = existingThread.item().time() + " " + existingThread.item().title();
+              var title = formatTitle(existingThread.item());
 
               if (title.length() > MAX_THREAD_TITLE_LEN - 12) {
                 title = title.substring(0, MAX_THREAD_TITLE_LEN - 12);
@@ -663,6 +660,19 @@ public class ProgrammeModule {
     } catch (SQLException e) {
       logger.error("Failed to delete now on message", e);
     }
+  }
+
+
+  private String formatTitle(ProgrammeItem item) {
+    var formatter = programmeConfig.channelNameResolver().nameIncludesDay() ? TIME_FORMATTER : DATE_TIME_FORMATTER;
+    var time = item.startTime(config.timezone()).format(formatter);
+    return time + " " + item.title();
+  }
+
+  private String formatTitle(DiscordItem item) {
+    var formatter = programmeConfig.channelNameResolver().nameIncludesDay() ? TIME_FORMATTER : DATE_TIME_FORMATTER;
+    var time = item.startTime().format(formatter);
+    return time + " " + item.title();
   }
 
   private record TagChange(String tag, boolean added) {}

@@ -1,0 +1,1 @@
+alter table discord_threads drop column time;

@@ -68,7 +68,6 @@ public class DatabaseManager {
             title,
             desc,
             loc,
-            time,
             start_time,
             end_time,
             status
@@ -105,16 +104,15 @@ public class DatabaseManager {
           desc = new String(descBytes);
         }
         var loc = rs.getString(5);
-        var time = rs.getString(6);
-        var startTime = ZonedDateTime.parse(rs.getString(7));
-        var endTime = ZonedDateTime.parse(rs.getString(8));
-        var status = Status.valueOf(rs.getString(9));
+        var startTime = ZonedDateTime.parse(rs.getString(6));
+        var endTime = ZonedDateTime.parse(rs.getString(7));
+        var status = Status.valueOf(rs.getString(8));
         return Optional.of(
             new DiscordThread(
                 threadId,
                 messageId,
                 status,
-                new DiscordItem(programmeItemId, title, desc, loc, time, startTime, endTime)));
+                new DiscordItem(programmeItemId, title, desc, loc, startTime, endTime)));
       }
     }
 
@@ -130,12 +128,11 @@ public class DatabaseManager {
             title,
             desc,
             loc,
-            time,
             start_time,
             end_time,
             status
           )
-          values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          values (?, ?, ?, ?, ?, ?, ?, ?, ?)
           """)) {
         statement.setString(1, discordThread.item().id());
         if (discordThread.discordThreadId().isPresent()) {
@@ -155,10 +152,9 @@ public class DatabaseManager {
           statement.setBytes(5, discordThread.item().body().getBytes());
         }
         statement.setString(6, discordThread.item().loc());
-        statement.setString(7, discordThread.item().time());
-        statement.setString(8, toDbDateTimeString(discordThread.item().startTime()));
-        statement.setString(9, toDbDateTimeString(discordThread.item().endTime()));
-        statement.setString(10, discordThread.status().toString());
+        statement.setString(7, toDbDateTimeString(discordThread.item().startTime()));
+        statement.setString(8, toDbDateTimeString(discordThread.item().endTime()));
+        statement.setString(9, discordThread.status().toString());
 
         var rowsAffected = statement.executeUpdate();
         if (rowsAffected != 1) {
@@ -179,7 +175,6 @@ public class DatabaseManager {
             title = ?,
             desc = ?,
             loc = ?,
-            time = ?,
             start_time = ?,
             end_time = ?,
             status = ?
@@ -203,11 +198,10 @@ public class DatabaseManager {
           statement.setBytes(4, discordThread.item().body().getBytes());
         }
         statement.setString(5, discordThread.item().loc());
-        statement.setString(6, discordThread.item().time());
-        statement.setString(7, toDbDateTimeString(discordThread.item().startTime()));
-        statement.setString(8, toDbDateTimeString(discordThread.item().endTime()));
-        statement.setString(9, discordThread.status().toString());
-        statement.setString(10, discordThread.item().id());
+        statement.setString(6, toDbDateTimeString(discordThread.item().startTime()));
+        statement.setString(7, toDbDateTimeString(discordThread.item().endTime()));
+        statement.setString(8, discordThread.status().toString());
+        statement.setString(9, discordThread.item().id());
 
         var rowsAffected = statement.executeUpdate();
         if (rowsAffected != 1) {
@@ -248,7 +242,6 @@ public class DatabaseManager {
             title,
             desc,
             loc,
-            time,
             start_time,
             end_time,
             status
@@ -286,16 +279,15 @@ public class DatabaseManager {
             desc = new String(descBytes);
           }
           var loc = rs.getString(6);
-          var time = rs.getString(7);
-          var startTime = ZonedDateTime.parse(rs.getString(8));
-          var endTime = ZonedDateTime.parse(rs.getString(9));
-          var status = Status.valueOf(rs.getString(10));
+          var startTime = ZonedDateTime.parse(rs.getString(7));
+          var endTime = ZonedDateTime.parse(rs.getString(8));
+          var status = Status.valueOf(rs.getString(9));
           results.add(
               new DiscordThread(
                   threadId,
                   messageId,
                   status,
-                  new DiscordItem(programmeItemId, title, desc, loc, time, startTime, endTime)));
+                  new DiscordItem(programmeItemId, title, desc, loc, startTime, endTime)));
         }
         return results;
       }
@@ -592,7 +584,6 @@ public class DatabaseManager {
             title,
             desc,
             loc,
-            time,
             start_time,
             end_time,
             status
@@ -639,16 +630,15 @@ public class DatabaseManager {
             desc = new String(descBytes);
           }
           var loc = rs.getString(6);
-          var time = rs.getString(7);
-          var startTime = ZonedDateTime.parse(rs.getString(8));
-          var endTime = ZonedDateTime.parse(rs.getString(9));
-          var status = Status.valueOf(rs.getString(10));
+          var startTime = ZonedDateTime.parse(rs.getString(7));
+          var endTime = ZonedDateTime.parse(rs.getString(8));
+          var status = Status.valueOf(rs.getString(9));
           results.add(
               new DiscordThread(
                   threadId,
                   messageId,
                   status,
-                  new DiscordItem(programmeItemId, title, desc, loc, time, startTime, endTime)));
+                  new DiscordItem(programmeItemId, title, desc, loc, startTime, endTime)));
         }
         return results;
       }

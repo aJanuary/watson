@@ -47,5 +47,10 @@ public class DayTodChannelNameResolver implements ChannelNameResolver {
         .collect(Collectors.toSet());
   }
 
+  @Override
+  public boolean nameIncludesDay() {
+    return true;
+  }
+
   public record Threshold(String label, String start, String end) {}
 }

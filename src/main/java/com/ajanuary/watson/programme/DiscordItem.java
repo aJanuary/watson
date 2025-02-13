@@ -7,6 +7,5 @@ public record DiscordItem(
     String title,
     String body,
     String loc,
-    String time,
     ZonedDateTime startTime,
     ZonedDateTime endTime) {}

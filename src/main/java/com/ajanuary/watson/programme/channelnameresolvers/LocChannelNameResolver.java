@@ -23,4 +23,9 @@ public class LocChannelNameResolver implements ChannelNameResolver {
   public Set<String> getPossibleNames() {
     return new HashSet<>(locMappings.values());
   }
+
+  @Override
+  public boolean nameIncludesDay() {
+    return false;
+  }
 }
