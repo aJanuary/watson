@@ -42,6 +42,8 @@ The bot will create a forum post in a channel for each programme items. It will 
 and update the forum post. If the item's start time or room changes it will send a message to a major announcements
 channel.
 
+Any tags on the item that match a forum tag in the Discord channel are applied to the post.
+
 The bot can also send "Now on" messages when an item starts and remove them when the item ends.
 
 The posts will be created in reverse start time order. When the forum channel is configured to show items in created
