@@ -1404,6 +1404,10 @@ public class ConfigYamlParserTest {
         programme:
           programmeUrl: https://example.com/the-programme-url
           assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
+          channelNameResolver:
+            type: day
+            dayMappings:
+              Friday: friday
           links:
             - name: some-name
               label: some-label
@@ -1443,6 +1447,10 @@ public class ConfigYamlParserTest {
           links:
             - name: some-name
               label: some-label
+          channelNameResolver:
+            type: day
+            dayMappings:
+              Friday: friday
           locations:
             - id: some-id
               name: some-name
@@ -1527,6 +1535,10 @@ public class ConfigYamlParserTest {
         programme:
           programmeUrl: https://example.com/some-programme-url
           assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
+          channelNameResolver:
+            type: day
+            dayMappings:
+              Friday: friday
           links:
             - name: some-name
               label: some-label
@@ -1565,6 +1577,10 @@ public class ConfigYamlParserTest {
             channel: the-now-on-channel-id
             timeBeforeToAdd: 15m
             timeAfterToKeep: 15m
+          channelNameResolver:
+            type: day
+            dayMappings:
+              Friday: friday
           links:
             - name: some-name
               label: some-label
@@ -1603,6 +1619,10 @@ public class ConfigYamlParserTest {
           nowOn:
             timeBeforeToAdd: 15m
             timeAfterToKeep: 15m
+          channelNameResolver:
+            type: day
+            dayMappings:
+              Friday: friday
           links:
             - name: some-name
               label: some-label
@@ -1672,6 +1692,10 @@ public class ConfigYamlParserTest {
           nowOn:
             timeBeforeToAdd: 15m
             timeAfterToKeep: 15m
+          channelNameResolver:
+            type: day
+            dayMappings:
+              Friday: friday
           links:
             - name: some-name
               label: some-label
@@ -1801,6 +1825,10 @@ public class ConfigYamlParserTest {
           nowOn:
             timeBeforeToAdd: 15m
             timeAfterToKeep: 15m
+          channelNameResolver:
+            type: day
+            dayMappings:
+              Friday: friday
           links:
             - name: some-name
               label: some-label
@@ -1928,6 +1956,10 @@ public class ConfigYamlParserTest {
           programmeUrl: https://example.com/some-programme-url
           assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           majorAnnouncementsChannel: the-major-announcements-channel
+          channelNameResolver:
+            type: day
+            dayMappings:
+              Friday: friday
           links:
             - name: some-name
               label: some-label
@@ -1966,6 +1998,10 @@ public class ConfigYamlParserTest {
           assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           timeBeforeToAddToNowOn: 15m
           timeAfterToKeepInNowOn: 15m
+          channelNameResolver:
+            type: day
+            dayMappings:
+              Friday: friday
           links:
             - name: some-name
               label: some-label
@@ -2029,6 +2065,10 @@ public class ConfigYamlParserTest {
             programmeUrl: https://example.com/some-programme-url
             assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
             hasPerformedFirstLoad: true
+            channelNameResolver:
+              type: day
+              dayMappings:
+                Friday: friday
             links:
               - name: some-name
                 label: some-label
@@ -2063,6 +2103,10 @@ public class ConfigYamlParserTest {
           programme:
             programmeUrl: https://example.com/some-programme-url
             assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
+            channelNameResolver:
+              type: day
+              dayMappings:
+                Friday: friday
             links:
               - name: some-name
                 label: some-label
@@ -2098,6 +2142,10 @@ public class ConfigYamlParserTest {
             programmeUrl: https://example.com/some-programme-url
             assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
             hasPerformedFirstLoad: 10
+            channelNameResolver:
+              type: day
+              dayMappings:
+                Friday: friday
             links:
               - name: some-name
                 label: some-label
@@ -2131,6 +2179,10 @@ public class ConfigYamlParserTest {
         programme:
           programmeUrl: https://example.com/some-programme-url
           assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
+          channelNameResolver:
+            type: day
+            dayMappings:
+              Friday: friday
           links:
             - name: some-name
               label: some-label
@@ -2283,6 +2335,8 @@ public class ConfigYamlParserTest {
           assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           channelNameResolver:
             type: day
+            dayMappings:
+              Friday: friday
           links:
             - name: some-name
               label: some-label
@@ -2319,6 +2373,8 @@ public class ConfigYamlParserTest {
           assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           channelNameResolver:
             type: day-tod
+            dayMappings:
+              Friday: friday
             thresholds:
               - label: morning
                 start: 00:00
@@ -2379,6 +2435,8 @@ public class ConfigYamlParserTest {
           assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           channelNameResolver:
             type: day-tod
+            dayMappings:
+              Friday: friday
         """);
 
     var parser = new ConfigYamlParser();
@@ -2409,6 +2467,8 @@ public class ConfigYamlParserTest {
           assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           channelNameResolver:
             type: day-tod
+            dayMappings:
+              Friday: friday
             thresholds: 10
         """);
 
@@ -2440,6 +2500,8 @@ public class ConfigYamlParserTest {
           assignDiscordPostsApiUrl: https://example.com/some-assign-discord-posts-api-url
           channelNameResolver:
             type: day-tod
+            dayMappings:
+              Friday: friday
             thresholds:
               - 10
         """);
@@ -2474,6 +2536,8 @@ public class ConfigYamlParserTest {
           timeAfterToKeepInNowOn: 15m
           channelNameResolver:
             type: day-tod
+            dayMappings:
+              Friday: friday
             thresholds:
               - start: 00:00
                 end: 12:00
@@ -2509,6 +2573,8 @@ public class ConfigYamlParserTest {
           timeAfterToKeepInNowOn: 15m
           channelNameResolver:
             type: day-tod
+            dayMappings:
+              Friday: friday
             thresholds:
               - label: 10
                 start: 00:00
@@ -2545,6 +2611,8 @@ public class ConfigYamlParserTest {
           timeAfterToKeepInNowOn: 15m
           channelNameResolver:
             type: day-tod
+            dayMappings:
+              Friday: friday
             thresholds:
               - label: morning
                 end: 12:00
@@ -2580,6 +2648,8 @@ public class ConfigYamlParserTest {
           timeAfterToKeepInNowOn: 15m
           channelNameResolver:
             type: day-tod
+            dayMappings:
+              Friday: friday
             thresholds:
               - label: morning
                 start: 10
@@ -2616,6 +2686,8 @@ public class ConfigYamlParserTest {
           timeAfterToKeepInNowOn: 15m
           channelNameResolver:
             type: day-tod
+            dayMappings:
+              Friday: friday
             thresholds:
               - label: morning
                 start: invalid
@@ -2653,6 +2725,8 @@ public class ConfigYamlParserTest {
           timeAfterToKeepInNowOn: 15m
           channelNameResolver:
             type: day-tod
+            dayMappings:
+              Friday: friday
             thresholds:
               - label: morning
                 start: 00:00
@@ -2688,6 +2762,8 @@ public class ConfigYamlParserTest {
           timeAfterToKeepInNowOn: 15m
           channelNameResolver:
             type: day-tod
+            dayMappings:
+              Friday: friday
             thresholds:
               - label: morning
                 start: 00:00
@@ -2724,6 +2800,8 @@ public class ConfigYamlParserTest {
           timeAfterToKeepInNowOn: 15m
           channelNameResolver:
             type: day-tod
+            dayMappings:
+              Friday: friday
             thresholds:
               - label: morning
                 start: 00:00
@@ -2761,6 +2839,8 @@ public class ConfigYamlParserTest {
           timeAfterToKeepInNowOn: 15m
           channelNameResolver:
             type: day-tod
+            dayMappings:
+              Friday: friday
             thresholds:
               - label: morning
                 start: 00:00

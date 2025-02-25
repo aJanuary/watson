@@ -229,7 +229,7 @@ programme:
 
   # How to decide which channel to post a programme item in.
   # The channel must be a forum channel.
-  # Optional. Defaults to day.
+  # Required
   channelNameResolver:
     # Type of the resolver to use.
     # Must be one of:
@@ -238,6 +238,20 @@ programme:
     # `loc`     - Posts in a channel named after the location the item is in.
     # e.g. day-tod
     type: <type name>
+
+    # How to map from the English day of the week (Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday)
+    # to the channel name.
+    # Only used when the `type` is `day` or `day-tod`.
+    # The keys are case-sensitive.
+    # The values of the mappings must exist as forum channels.
+    # Required when `type` is `day` or `day-tod`.
+    # e.g.
+    #   Friday: freitag
+    #   Saturday: samstag
+    #   Sunday: sonntag
+    #   Monday: montag
+    dayMappings:
+      <english name>: <channel name>
 
      # How to label the parts of the day.
      # Only used when `type` is `day-tod`

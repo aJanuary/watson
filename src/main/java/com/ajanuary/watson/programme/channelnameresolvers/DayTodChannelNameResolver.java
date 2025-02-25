@@ -5,16 +5,19 @@ import com.ajanuary.watson.programme.ProgrammeItem;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public class DayTodChannelNameResolver implements ChannelNameResolver {
 
+  private final Map<String, String> dayMappings;
   private final List<Threshold> thresholds;
   private final ZoneId timezone;
 
-  public DayTodChannelNameResolver(List<Threshold> thresholds, ZoneId timezone) {
+  public DayTodChannelNameResolver(Map<String, String> dayMappings, List<Threshold> thresholds, ZoneId timezone) {
+    this.dayMappings = dayMappings;
     this.thresholds = thresholds;
     this.timezone = timezone;
   }
@@ -25,7 +28,12 @@ public class DayTodChannelNameResolver implements ChannelNameResolver {
 
   @Override
   public Optional<String> resolveChannelName(ProgrammeItem item) {
-    var day = item.startTime(timezone).format(DateTimeFormatter.ofPattern("EEEE"));
+    var dayEnglish = item.startTime(timezone).format(DateTimeFormatter.ofPattern("EEEE"));
+    var day = dayMappings.get(dayEnglish);
+    if (day == null) {
+      return Optional.empty();
+    }
+
     return Optional.of(
         thresholds.stream()
             .filter(
@@ -40,8 +48,8 @@ public class DayTodChannelNameResolver implements ChannelNameResolver {
   }
 
   @Override
-  public Set<String> getPossibleNames() {
-    return Set.of("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
+  public Set<String> getChannelNames() {
+    return dayMappings.values()
         .stream()
         .flatMap(day -> thresholds.stream().map(threshold -> day + "-" + threshold.label()))
         .collect(Collectors.toSet());

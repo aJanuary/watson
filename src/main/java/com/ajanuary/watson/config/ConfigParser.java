@@ -112,6 +112,16 @@ public abstract class ConfigParser {
       return new UnknownTypeConfigParser(node.get(key), keyPath);
     }
 
+    public <T> T map(Function<ObjectConfigParserWithValue, T> mapper) {
+      try {
+        return mapper.apply(new ObjectConfigParserWithValue(node, path));
+      } catch (ConfigException e) {
+        throw e;
+      } catch (Exception e) {
+        throw new ConfigException("Malformed value for " + path + ": " + e.getMessage(), e);
+      }
+    }
+
     public <TValue> Map<String, TValue> toMap(
         Function<UnknownTypeConfigParser, TValue> valueMapper) {
       var map = new HashMap<String, TValue>();

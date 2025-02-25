@@ -8,7 +8,7 @@ public interface ChannelNameResolver {
 
   Optional<String> resolveChannelName(ProgrammeItem item);
 
-  Set<String> getPossibleNames();
+  Set<String> getChannelNames();
 
   boolean nameIncludesDay();
 }

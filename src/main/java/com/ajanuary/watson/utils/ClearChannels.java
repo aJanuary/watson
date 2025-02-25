@@ -24,8 +24,8 @@ public class ClearChannels {
     var jsonConfig = objectMapper.readTree(Paths.get(args[1]).toFile());
     var config = new ConfigYamlParser().parse(jsonSecrets, jsonConfig);
 
-    var possibleNames =
-        config.programme().get().channelNameResolver().getPossibleNames().stream()
+    var channelNames =
+        config.programme().get().channelNameResolver().getChannelNames().stream()
             .map(String::toLowerCase)
             .collect(Collectors.toSet());
 
@@ -43,7 +43,7 @@ public class ClearChannels {
         .getForumChannels()
         .forEach(
             channel -> {
-              if (possibleNames.contains(channel.getName().toLowerCase())) {
+              if (channelNames.contains(channel.getName().toLowerCase())) {
                 try {
                   channel
                       .getThreadChannels()

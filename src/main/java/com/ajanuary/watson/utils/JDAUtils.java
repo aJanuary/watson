@@ -3,7 +3,10 @@ package com.ajanuary.watson.utils;
 import com.ajanuary.watson.config.Config;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+
+import java.util.Optional;
 
 public class JDAUtils {
 
@@ -30,16 +33,20 @@ public class JDAUtils {
   }
 
   public TextChannel getTextChannel(String channelName) {
+    return getOptionalTextChannel(channelName).orElseThrow(() -> new IllegalArgumentException("Channel not found: " + channelName));
+  }
+
+  public Optional<TextChannel> getOptionalTextChannel(String channelName) {
     var guild = jda.getGuildById(config.guildId());
     assert guild != null;
 
     var channels = guild.getTextChannelsByName(channelName, true);
     if (channels.isEmpty()) {
-      throw new IllegalArgumentException("Channel not found: " + channelName);
+      return Optional.empty();
     }
     if (channels.size() > 1) {
       throw new IllegalArgumentException("Multiple channels found with the name: " + channelName);
     }
-    return channels.get(0);
+    return Optional.of(channels.get(0));
   }
 }
