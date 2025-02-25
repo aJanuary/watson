@@ -226,8 +226,7 @@ public class TestConfigBuilder {
     private String majorAnnouncementChannel = "some-major-announcement-channel";
     private Optional<NowOnConfig> nowOnConfig = Optional.empty();
     private ChannelNameResolver channelNameResolver = new DayChannelNameResolver(
-        Map.of("Friday", "friday", "Saturday", "saturday",
-            "Sunday", "sunday", "Monday", "monday"),
+        Map.of("Friday", "friday"),
         ZoneId.of("UTC"));
     private List<Link> links = new ArrayList<>();
     private List<Location> locations = new ArrayList<>();

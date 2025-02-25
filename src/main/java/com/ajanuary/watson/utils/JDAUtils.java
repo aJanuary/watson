@@ -2,9 +2,11 @@ package com.ajanuary.watson.utils;
 
 import com.ajanuary.watson.config.Config;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.channel.Channel;
+import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 
 import java.util.Optional;
 
@@ -33,7 +35,7 @@ public class JDAUtils {
   }
 
   public TextChannel getTextChannel(String channelName) {
-    return getOptionalTextChannel(channelName).orElseThrow(() -> new IllegalArgumentException("Channel not found: " + channelName));
+    return getOptionalTextChannel(channelName).orElseThrow(() -> new IllegalArgumentException("Text channel not found: " + channelName));
   }
 
   public Optional<TextChannel> getOptionalTextChannel(String channelName) {
@@ -45,8 +47,36 @@ public class JDAUtils {
       return Optional.empty();
     }
     if (channels.size() > 1) {
-      throw new IllegalArgumentException("Multiple channels found with the name: " + channelName);
+      throw new IllegalArgumentException("Multiple text channels found with the name: " + channelName);
     }
     return Optional.of(channels.get(0));
+  }
+
+  public ForumChannel getForumChannel(String channelName) {
+    return getOptionalForumChannel(channelName).orElseThrow(() -> new IllegalArgumentException("Forum channel not found: " + channelName));
+  }
+
+  public Optional<ForumChannel> getOptionalForumChannel(String channelName) {
+    var guild = jda.getGuildById(config.guildId());
+    assert guild != null;
+
+    var channels = guild.getForumChannelsByName(channelName, true);
+    if (channels.isEmpty()) {
+      return Optional.empty();
+    }
+    if (channels.size() > 1) {
+      throw new IllegalArgumentException("Multiple forum channels found with the name: " + channelName);
+    }
+    return Optional.of(channels.get(0));
+  }
+
+  public void checkPermissions(GuildChannel channel, Permission... permissions) {
+    var guild = jda.getGuildById(config.guildId());
+    assert guild != null;
+    for (var permission : permissions) {
+      if (!guild.getSelfMember().hasPermission(channel, permission)) {
+        throw new IllegalArgumentException("Bot is missing required permission '" + permission.getName() + "' on channel: " + channel.getName());
+      }
+    }
   }
 }

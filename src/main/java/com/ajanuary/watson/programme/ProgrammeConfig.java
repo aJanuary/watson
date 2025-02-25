@@ -2,6 +2,8 @@ package com.ajanuary.watson.programme;
 
 import com.ajanuary.watson.programme.channelnameresolvers.ChannelNameResolver;
 import com.ajanuary.watson.utils.JDAUtils;
+import net.dv8tion.jda.api.Permission;
+
 import java.net.URI;
 import java.time.temporal.TemporalAmount;
 import java.util.List;
@@ -18,8 +20,19 @@ public record ProgrammeConfig(
     boolean hasPerformedFirstLoad) {
 
   public void validateDiscordConfig(JDAUtils jdaUtils) {
-    jdaUtils.getTextChannel(majorAnnouncementsChannel());
-    nowOn().ifPresent(nowOn -> jdaUtils.getTextChannel(nowOn.channel()));
+    var majorAnnouncementsChannel = jdaUtils.getTextChannel(majorAnnouncementsChannel());
+    jdaUtils.checkPermissions(majorAnnouncementsChannel, Permission.MESSAGE_SEND, Permission.MESSAGE_EMBED_LINKS);
+
+    nowOn().ifPresent(nowOn -> {
+      var nowOnChannel = jdaUtils.getTextChannel(nowOn.channel());
+      jdaUtils.checkPermissions(nowOnChannel, Permission.MESSAGE_SEND);
+    });
+
+    var channelNames = channelNameResolver().getChannelNames();
+    for (var channelName : channelNames) {
+      var forumChannel = jdaUtils.getForumChannel(channelName);
+      jdaUtils.checkPermissions(forumChannel, Permission.MESSAGE_SEND, Permission.MESSAGE_SEND_IN_THREADS, Permission.MESSAGE_EMBED_LINKS);
+    }
   }
 
   public record NowOnConfig(

@@ -13,8 +13,11 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import org.junit.jupiter.api.Test;
 import support.TestConfigBuilder;
@@ -71,7 +74,7 @@ public class ConfigTest {
     var thrown =
         assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
-    assertEquals("Channel not found: the-channel-id", thrown.getMessage());
+    assertEquals("Text channel not found: the-channel-id", thrown.getMessage());
   }
 
   @Test
@@ -111,7 +114,7 @@ public class ConfigTest {
     var thrown =
         assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
-    assertEquals("Multiple channels found with the name: the-channel-id", thrown.getMessage());
+    assertEquals("Multiple text channels found with the name: the-channel-id", thrown.getMessage());
   }
 
   @Test
@@ -135,7 +138,7 @@ public class ConfigTest {
     var thrown =
         assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
-    assertEquals("Channel not found: the-help-desk-channel-id", thrown.getMessage());
+    assertEquals("Text channel not found: the-help-desk-channel-id", thrown.getMessage());
   }
 
   @Test
@@ -186,7 +189,7 @@ public class ConfigTest {
         assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
     assertEquals(
-        "Multiple channels found with the name: the-help-desk-channel-id", thrown.getMessage());
+        "Multiple text channels found with the name: the-help-desk-channel-id", thrown.getMessage());
   }
 
   @Test
@@ -445,20 +448,24 @@ public class ConfigTest {
     var thrown =
         assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
-    assertEquals("Channel not found: the-major-announcements-channel-id", thrown.getMessage());
+    assertEquals("Text channel not found: the-major-announcements-channel-id", thrown.getMessage());
   }
 
   @Test
   void validateDoesNotErrorIfAllChannelsFound() {
     var jda = mock(JDA.class);
     var guild = mock(Guild.class);
+    var selfMember = mock(Member.class);
+    when(selfMember.hasPermission(any(), (Permission[]) any())).thenReturn(true);
     when(jda.getGuildById("the-guild-id")).thenReturn(guild);
+    when(guild.getSelfMember()).thenReturn(selfMember);
     // Just mock any roles, as we don't care about them for this test
     when(guild.getRolesByName(any(), anyBoolean())).thenReturn(List.of(mock(Role.class)));
     when(guild.getTextChannelsByName(eq("the-major-announcements-channel-id"), anyBoolean()))
         .thenReturn(List.of(mock(TextChannel.class)));
     when(guild.getTextChannelsByName(eq("the-now-next-channel"), anyBoolean()))
         .thenReturn(List.of(mock(TextChannel.class)));
+    when(guild.getForumChannelsByName(eq("friday"), anyBoolean())).thenReturn(List.of(mock(ForumChannel.class)));
 
     var config =
         new TestConfigBuilder()
@@ -496,7 +503,7 @@ public class ConfigTest {
         assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
     assertEquals(
-        "Multiple channels found with the name: the-major-announcements-channel-id",
+        "Multiple text channels found with the name: the-major-announcements-channel-id",
         thrown.getMessage());
   }
 
@@ -504,7 +511,10 @@ public class ConfigTest {
   void validateErrorsINowNextChannelNotFound() {
     var jda = mock(JDA.class);
     var guild = mock(Guild.class);
+    var selfMember = mock(Member.class);
+    when(selfMember.hasPermission(any(), (Permission[]) any())).thenReturn(true);
     when(jda.getGuildById("the-guild-id")).thenReturn(guild);
+    when(guild.getSelfMember()).thenReturn(selfMember);
     when(guild.getTextChannelsByName(eq("the-major-announcements-channel-id"), anyBoolean()))
         .thenReturn(List.of(mock(TextChannel.class)));
     when(guild.getTextChannelById("the-now-next-channel")).thenReturn(null);
@@ -521,14 +531,17 @@ public class ConfigTest {
     var thrown =
         assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
-    assertEquals("Channel not found: the-now-next-channel", thrown.getMessage());
+    assertEquals("Text channel not found: the-now-next-channel", thrown.getMessage());
   }
 
   @Test
   void validateErrorsIfMultipleNowNextChannelsFound() {
     var jda = mock(JDA.class);
     var guild = mock(Guild.class);
+    var selfMember = mock(Member.class);
+    when(selfMember.hasPermission(any(), (Permission[]) any())).thenReturn(true);
     when(jda.getGuildById("the-guild-id")).thenReturn(guild);
+    when(guild.getSelfMember()).thenReturn(selfMember);
     // Just mock any roles, as we don't care about them for this test
     when(guild.getRolesByName(any(), anyBoolean())).thenReturn(List.of(mock(Role.class)));
     when(guild.getTextChannelsByName(eq("the-major-announcements-channel-id"), anyBoolean()))
@@ -549,6 +562,6 @@ public class ConfigTest {
         assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));
 
     assertEquals(
-        "Multiple channels found with the name: the-now-next-channel", thrown.getMessage());
+        "Multiple text channels found with the name: the-now-next-channel", thrown.getMessage());
   }
 }
