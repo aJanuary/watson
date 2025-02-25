@@ -170,7 +170,7 @@ public class ProgrammeModule {
       var newProgrammeItems = getNewProgrammeItems();
 
       for (var newItem : newProgrammeItems) {
-        var existingThread = conn.getDiscordThread(newItem.id());
+        var existingThread = conn.getDiscordThread(newItem.id(), config.timezone());
         var newDiscordItem =
             new DiscordItem(
                 newItem.id(),
@@ -379,7 +379,7 @@ public class ProgrammeModule {
 
       for (var oldItemId : conn.getAllProgrammeItemIds()) {
         if (newProgrammeItems.stream().noneMatch(newItem -> newItem.id().equals(oldItemId))) {
-          var existingThreadM = conn.getDiscordThread(oldItemId);
+          var existingThreadM = conn.getDiscordThread(oldItemId, config.timezone());
           if (existingThreadM.isEmpty()) {
             logger.error("Existing to find item for {} but not found", oldItemId);
             continue;

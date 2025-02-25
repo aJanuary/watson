@@ -8,6 +8,7 @@ import com.ajanuary.watson.programme.Status;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -57,7 +58,7 @@ public class DatabaseManager {
       connection.close();
     }
 
-    public Optional<DiscordThread> getDiscordThread(String programmeItemId) throws SQLException {
+    public Optional<DiscordThread> getDiscordThread(String programmeItemId, ZoneId zoneId) throws SQLException {
       try (var connection = dataSource.getConnection();
           var statement =
               connection.prepareStatement(
@@ -104,8 +105,8 @@ public class DatabaseManager {
           desc = new String(descBytes);
         }
         var loc = rs.getString(5);
-        var startTime = ZonedDateTime.parse(rs.getString(6));
-        var endTime = ZonedDateTime.parse(rs.getString(7));
+        var startTime = ZonedDateTime.parse(rs.getString(6)).withZoneSameInstant(zoneId);
+        var endTime = ZonedDateTime.parse(rs.getString(7)).withZoneSameInstant(zoneId);
         var status = Status.valueOf(rs.getString(8));
         return Optional.of(
             new DiscordThread(
