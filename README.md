@@ -69,6 +69,12 @@ discordBotToken: <discord bot token>
 portalApiKey: <portal api key>
 ```
 
+## Discord bot configuration
+
+The Discord bot needs the following intents:
+ * Server member intent
+ * Message content intent
+
 ## Configuration file
 Contains configuration for the bot. May be stored in SCM.
 
@@ -200,7 +206,9 @@ programme:
 
   # Name of the channel to send major announcements to.
   # A major announcement is any time a programme item's start time or room changes.
-  # The bot must have permissions to send messages in the channel.
+  # The bot must have the following permissions on the channel:
+  #  * Send Messages
+  #  * Embed Links
   # Optional. Defaults to `programme-announcements`
   # e.g. programme-announcements
   majorAnnouncementsChannel: <channel name>
@@ -210,7 +218,8 @@ programme:
   # Optional. If not provided, no now on messages are sent.
   nowOn:
     # Name of the channel to send "Now on" messages to.
-    # The bot must have permissions to send messages in the channel.
+    # The bot must have the following permissions on the channel:
+    #   * Send Messages
     # Optional. Defaults to `now-on`
     # e.g. now-on
     channel: <channel name>
@@ -229,6 +238,10 @@ programme:
 
   # How to decide which channel to post a programme item in.
   # The channel must be a forum channel.
+  # The bot must have the following permissions on the channel:
+  #  * Create Posts (aka 'Send Messages')
+  #  * Send Messages in Posts (aka 'Send Messages in Threads')
+  #  * Embed Links
   # Required
   channelNameResolver:
     # Type of the resolver to use.
