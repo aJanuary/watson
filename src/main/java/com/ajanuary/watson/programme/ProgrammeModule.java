@@ -298,7 +298,7 @@ public class ProgrammeModule {
 
           var title = formatTitle(newItem);
 
-          if (!programmeConfig.hasPerformedFirstLoad()
+          if (programmeConfig.hasPerformedFirstLoad()
               && (isSignificantUpdate || existingThread.get().status() == Status.UPDATED)) {
             if (title.length() > MAX_THREAD_TITLE_LEN - 10) {
               title = title.substring(0, MAX_THREAD_TITLE_LEN - 10);
