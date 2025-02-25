@@ -30,8 +30,7 @@ public class ClearChannels {
             .collect(Collectors.toSet());
 
     var builder =
-        JDABuilder.createDefault(config.discordBotToken())
-            .enableIntents(GatewayIntent.GUILD_MEMBERS);
+        JDABuilder.createDefault(config.discordBotToken());
     var jda = builder.build();
     jda.awaitReady();
 
