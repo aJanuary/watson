@@ -10,6 +10,7 @@ import com.ajanuary.watson.programme.ProgrammeConfig.Location;
 import com.ajanuary.watson.programme.ProgrammeConfig.NowOnConfig;
 import com.ajanuary.watson.programme.channelnameresolvers.ChannelNameResolver;
 import com.ajanuary.watson.programme.channelnameresolvers.DayChannelNameResolver;
+
 import java.net.URI;
 import java.time.Duration;
 import java.time.ZoneId;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
+
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 
 public class TestConfigBuilder {
@@ -223,7 +225,10 @@ public class TestConfigBuilder {
     private URI assignDiscordPostsApiUrl = URI.create("https://example.com/some-api-root");
     private String majorAnnouncementChannel = "some-major-announcement-channel";
     private Optional<NowOnConfig> nowOnConfig = Optional.empty();
-    private ChannelNameResolver channelNameResolver = new DayChannelNameResolver(ZoneId.of("UTC"));
+    private ChannelNameResolver channelNameResolver = new DayChannelNameResolver(
+        Map.of("Friday", "friday", "Saturday", "saturday",
+            "Sunday", "sunday", "Monday", "monday"),
+        ZoneId.of("UTC"));
     private List<Link> links = new ArrayList<>();
     private List<Location> locations = new ArrayList<>();
     private boolean hasPerformedFirstLoad = true;

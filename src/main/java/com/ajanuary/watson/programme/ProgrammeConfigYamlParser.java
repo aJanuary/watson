@@ -57,6 +57,7 @@ public class ProgrammeConfigYamlParser {
         configParser
             .get("channelNameResolver")
             .object()
+            .required()
             .map(
                 channelNameResolverConfig ->
                     channelNameResolverConfig
@@ -66,7 +67,7 @@ public class ProgrammeConfigYamlParser {
                         .map(
                             resolverType ->
                                 switch (resolverType) {
-                                  case "day" -> new DayChannelNameResolver(timezone);
+                                  case "day" -> parseDayNameResolver(channelNameResolverConfig, timezone);
                                   case "day-tod" ->
                                       parseDayTodChannelNameResolver(channelNameResolverConfig, timezone);
                                   case "loc" ->
@@ -74,8 +75,7 @@ public class ProgrammeConfigYamlParser {
                                   default ->
                                       throw new IllegalArgumentException(
                                           "Unknown resolver " + resolverType);
-                                }))
-            .orElseGet(() -> new DayChannelNameResolver(timezone));
+                                }));
 
     var links =
         configParser.get("links").list().required().value().stream()
@@ -124,8 +124,22 @@ public class ProgrammeConfigYamlParser {
     return new LocChannelNameResolver(roomMapping);
   }
 
+  private static ChannelNameResolver parseDayNameResolver(ObjectConfigParserWithValue configParser, ZoneId timezone) {
+    var dayMappings = configParser
+        .get("dayMappings")
+        .object()
+        .required()
+        .toMap(mapping -> mapping.string().required().value());
+    return new DayChannelNameResolver(dayMappings, timezone);
+  }
+
   private static ChannelNameResolver parseDayTodChannelNameResolver(
       ObjectConfigParserWithValue configParser, ZoneId timezone) {
+    var dayMappings = configParser
+        .get("dayMappings")
+        .object()
+        .required()
+        .toMap(mapping -> mapping.string().required().value());
     var thresholdsConfig = configParser.get("thresholds").list().required();
     var thresholds =
         thresholdsConfig.value().stream()
@@ -162,7 +176,7 @@ public class ProgrammeConfigYamlParser {
       }
     }
 
-    return new DayTodChannelNameResolver(thresholds, timezone);
+    return new DayTodChannelNameResolver(dayMappings, thresholds, timezone);
   }
 
   private static Optional<String> validateTime(String value) {

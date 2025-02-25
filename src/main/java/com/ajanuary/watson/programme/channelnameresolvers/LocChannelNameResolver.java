@@ -20,7 +20,7 @@ public class LocChannelNameResolver implements ChannelNameResolver {
   }
 
   @Override
-  public Set<String> getPossibleNames() {
+  public Set<String> getChannelNames() {
     return new HashSet<>(locMappings.values());
   }
 
