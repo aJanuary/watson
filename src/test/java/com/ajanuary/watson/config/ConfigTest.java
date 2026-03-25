@@ -70,6 +70,7 @@ public class ConfigTest {
         Optional.empty(),
         Optional.of(new ApiConfig("the-channel-id")),
         Optional.empty(),
+        Optional.empty(),
         Optional.empty());
     var thrown =
         assertThrows(IllegalArgumentException.class, () -> config.validateDiscordConfig(jda));

@@ -2,6 +2,7 @@ package com.ajanuary.watson.db;
 
 import com.ajanuary.watson.alarms.ScheduledDM;
 import com.ajanuary.watson.alarms.WithId;
+import com.ajanuary.watson.newsletter.NewsletterDbItem;
 import com.ajanuary.watson.programme.DiscordItem;
 import com.ajanuary.watson.programme.DiscordThread;
 import com.ajanuary.watson.programme.Status;
@@ -716,6 +717,97 @@ public class DatabaseManager {
           return false;
         }
         throw e;
+      }
+    }
+
+    public Optional<NewsletterDbItem> getNewsletterItem(String id) throws SQLException {
+      try (var connection = dataSource.getConnection();
+          var statement =
+              connection.prepareStatement(
+                  """
+          select
+            discord_message_id,
+            content_checksum
+          from
+            newsletter_items
+          where
+            id = ?
+          """)) {
+        statement.setString(1, id);
+        var rs = statement.executeQuery();
+        if (!rs.next()) {
+          return Optional.empty();
+        }
+        return Optional.of(
+            new NewsletterDbItem(id, rs.getString(1), rs.getString(2)));
+      }
+    }
+
+    public void insertNewsletterItem(String id, String discordMessageId, String contentChecksum)
+        throws SQLException {
+      try (var connection = dataSource.getConnection();
+          var statement =
+              connection.prepareStatement(
+                  """
+          insert into newsletter_items (id, discord_message_id, content_checksum)
+          values (?, ?, ?)
+          """)) {
+        statement.setString(1, id);
+        statement.setString(2, discordMessageId);
+        statement.setString(3, contentChecksum);
+        var rowsAffected = statement.executeUpdate();
+        if (rowsAffected != 1) {
+          throw new SQLException(
+              "Error inserting newsletter item. Expected to insert 1 row but got " + rowsAffected);
+        }
+      }
+    }
+
+    public void updateNewsletterItem(String id, String contentChecksum) throws SQLException {
+      try (var connection = dataSource.getConnection();
+          var statement =
+              connection.prepareStatement(
+                  """
+          update newsletter_items
+          set content_checksum = ?
+          where id = ?
+          """)) {
+        statement.setString(1, contentChecksum);
+        statement.setString(2, id);
+        var rowsAffected = statement.executeUpdate();
+        if (rowsAffected != 1) {
+          throw new SQLException(
+              "Error updating newsletter item. Expected to update 1 row but got " + rowsAffected);
+        }
+      }
+    }
+
+    public void deleteNewsletterItem(String id) throws SQLException {
+      try (var connection = dataSource.getConnection();
+          var statement =
+              connection.prepareStatement(
+                  """
+          delete from newsletter_items
+          where id = ?
+          """)) {
+        statement.setString(1, id);
+        statement.executeUpdate();
+      }
+    }
+
+    public List<String> getAllNewsletterIds() throws SQLException {
+      try (var connection = dataSource.getConnection();
+          var statement =
+              connection.prepareStatement(
+                  """
+          select id from newsletter_items
+          """)) {
+        var rs = statement.executeQuery();
+        var results = new ArrayList<String>();
+        while (rs.next()) {
+          results.add(rs.getString(1));
+        }
+        return results;
       }
     }
   }

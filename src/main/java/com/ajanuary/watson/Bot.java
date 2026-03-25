@@ -7,6 +7,7 @@ import com.ajanuary.watson.db.DatabaseManager;
 import com.ajanuary.watson.membership.MembersApiClient;
 import com.ajanuary.watson.membership.MembershipChecker;
 import com.ajanuary.watson.membership.MembershipModule;
+import com.ajanuary.watson.newsletter.NewsletterModule;
 import com.ajanuary.watson.notification.EventDispatcher;
 import com.ajanuary.watson.notification.ReadyEvent;
 import com.ajanuary.watson.portalapi.PortalApiClient;
@@ -80,6 +81,11 @@ public class Bot {
                   new MembershipChecker(jda, membershipConfig, config, apiClient, databaseManager);
               new MembershipModule(jda, config, membershipChecker, eventDispatcher);
             });
+    config
+        .newsletter()
+        .ifPresent(
+            newsletterConfig ->
+                new NewsletterModule(jda, newsletterConfig, config, databaseManager));
     config
         .programme()
         .ifPresent(

@@ -45,6 +45,7 @@ public class TestConfigBuilder {
         Optional.ofNullable(alarmsConfigBuilder).map(TestAlarmsConfigBuilder::build),
         Optional.ofNullable(apiConfigBuilder).map(TestApiConfigBuilder::build),
         Optional.ofNullable(membershipConfigBuilder).map(TestMembershipConfigBuilder::build),
+        Optional.empty(),
         Optional.ofNullable(programmeConfigBuilder).map(TestProgrammeConfigBuilder::build));
   }
 

@@ -35,6 +35,18 @@ Discord id with their membership.
 
 The member portal can also send a list of roles to assign the user in the response.
 
+### Newsletter
+Allows the bot to post newsletter items from a JSON feed to Discord.
+
+The bot will poll a JSON feed at a configurable interval. Each item in the feed has an `id`, and may have a `title`,
+`body` (HTML), and `image` (relative URL). For each new item, the bot will convert the body from HTML to markdown,
+download and attach any image, and post a message in the configured channel. If a title is present, it is prepended
+as a heading. HTML entities in the title are decoded.
+
+If an item's content changes in a subsequent poll, the bot will edit the existing Discord message. If an item is removed
+from the feed, the bot will delete the corresponding Discord message. Messages that exceed Discord's 2000 character
+limit are truncated.
+
 ### Programme
 Allows the bot to post programme items from a JSON file to Discord.
 
@@ -183,6 +195,30 @@ membership:
   #  Staff (committee): staff
   additionalRoles:
     <name in the member portal>: <discord role name>
+
+# Enable the newsletter module.
+# Optional. If not provided, the module will be disabled.
+newsletter:
+  # Name of the channel to post newsletter messages to.
+  # The bot must have the following permissions on the channel:
+  #  * Send Messages
+  #  * Attach Files
+  #  * Manage Messages
+  # Required.
+  # e.g. newsletter
+  channel: <channel name>
+
+  # URL of the newsletter JSON feed.
+  # Should return a JSON array of objects with `id`, and optionally `title`, `body` (HTML), and `image` (relative URL) fields.
+  # Required.
+  # e.g. https://example.com/newsletter/discord.json
+  feedUrl: <url>
+
+  # How often to poll the feed for changes.
+  # Expressed as an ISO8601 duration without the leading `PT`.
+  # Required.
+  # e.g. 5m
+  pollInterval: <duration>
 
 # Enable the programme module.
 # Optional. If not provided, the module will be disabled.

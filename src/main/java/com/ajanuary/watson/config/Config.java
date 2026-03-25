@@ -3,6 +3,7 @@ package com.ajanuary.watson.config;
 import com.ajanuary.watson.alarms.AlarmsConfig;
 import com.ajanuary.watson.api.ApiConfig;
 import com.ajanuary.watson.membership.MembershipConfig;
+import com.ajanuary.watson.newsletter.NewsletterConfig;
 import com.ajanuary.watson.programme.ProgrammeConfig;
 import com.ajanuary.watson.utils.JDAUtils;
 import java.time.ZoneId;
@@ -18,6 +19,7 @@ public record Config(
     Optional<AlarmsConfig> alarms,
     Optional<ApiConfig> api,
     Optional<MembershipConfig> membership,
+    Optional<NewsletterConfig> newsletter,
     Optional<ProgrammeConfig> programme) {
 
   public void validateDiscordConfig(JDA jda) {
@@ -33,6 +35,7 @@ public record Config(
     alarms().ifPresent(alarmsConfig -> alarmsConfig.validateDiscordConfig(jdaUtils));
     api().ifPresent(apiConfig -> apiConfig.validateDiscordConfig(jdaUtils));
     membership().ifPresent(membershipConfig -> membershipConfig.validateDiscordConfig(jdaUtils));
+    newsletter().ifPresent(newsletterConfig -> newsletterConfig.validateDiscordConfig(jdaUtils));
     programme().ifPresent(programmeConfig -> programmeConfig.validateDiscordConfig(jdaUtils));
   }
 }
