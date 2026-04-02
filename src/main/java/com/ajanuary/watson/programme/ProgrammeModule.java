@@ -7,6 +7,7 @@ import com.ajanuary.watson.notification.EventDispatcher;
 import com.ajanuary.watson.portalapi.PortalApiClient;
 import com.ajanuary.watson.programme.ProgrammeConfig.Location;
 import com.ajanuary.watson.utils.JDAUtils;
+import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.StreamReadFeature;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -488,8 +489,14 @@ public class ProgrammeModule {
     if (response.statusCode() != 200) {
       throw new IOException("Error polling programme: " + response.body());
     }
-    var items =
-        objectMapper.readValue(response.body(), new TypeReference<List<ProgrammeItem>>() {});
+    List<ProgrammeItem> items;
+    try {
+      items = objectMapper.readValue(response.body(), new TypeReference<ProgrammeDocument>() {}).program();
+    } catch (JacksonException e) {
+      // If we can't parse the new format, try the old format
+      items = objectMapper.readValue(response.body(), new TypeReference<List<ProgrammeItem>>() {
+      });
+    }
     return items.stream()
         .sorted(Comparator.comparing((ProgrammeItem i) -> i.startTime(config.timezone())).reversed())
         .toList();
