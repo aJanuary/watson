@@ -142,7 +142,7 @@ public class MembershipChecker {
                           userId,
                           () -> {
                             var helpDeskChannel =
-                                jdaUtils.getTextChannel(membershipConfig.helpDeskChannel());
+                                jdaUtils.getMessageChannel(membershipConfig.helpDeskChannel());
                             return helpDeskChannel
                                 .createThreadChannel("verification", true)
                                 .complete();

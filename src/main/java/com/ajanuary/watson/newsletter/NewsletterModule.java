@@ -61,7 +61,7 @@ public class NewsletterModule {
     var numDeleted = 0;
     try (var conn = databaseManager.getConnection()) {
       var feedItems = fetchFeed();
-      var channel = jdaUtils.getTextChannel(newsletterConfig.channel());
+      var channel = jdaUtils.getMessageChannel(newsletterConfig.channel());
 
       var feedIds = new HashSet<String>();
       for (var item : feedItems) {

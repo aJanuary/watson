@@ -32,6 +32,7 @@ import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
@@ -106,13 +107,17 @@ public class ProgrammeModule {
             tag -> {
               if (newItem.tags().stream()
                   .map(String::toLowerCase)
-                  .anyMatch(t -> t.equals(tag.getName().toLowerCase()))) {
+                  .anyMatch(t -> tagMatches(t, tag.getName()))) {
                 tags.add(tag);
               } else if (tag.getName().equals(newItem.loc())) {
                 tags.add(tag);
               }
             });
     return tags;
+  }
+
+  private static boolean tagMatches(String discordTag, String itemTag) {
+    return itemTag.toLowerCase().matches("(^|.*:\\s*)?" + Pattern.quote(discordTag.toLowerCase()) + "$");
   }
 
   @NotNull
@@ -164,7 +169,7 @@ public class ProgrammeModule {
       assert guild != null;
 
       var announcementChannel =
-          jdaUtils.getTextChannel(programmeConfig.majorAnnouncementsChannel());
+          jdaUtils.getMessageChannel(programmeConfig.majorAnnouncementsChannel());
       assert announcementChannel != null;
 
       var newProgrammeItems = getNewProgrammeItems();
@@ -632,7 +637,7 @@ public class ProgrammeModule {
     }
     var message =
         jdaUtils
-            .getTextChannel(programmeConfig.nowOn().get().channel())
+            .getMessageChannel(programmeConfig.nowOn().get().channel())
             .sendMessage(messageContent)
             .complete();
     try (var conn = databaseManager.getConnection()) {
@@ -648,7 +653,7 @@ public class ProgrammeModule {
   private void handleNowOnDelete(String messageId) {
     logger.info("Deleting now on message {}", messageId);
     jdaUtils
-        .getTextChannel(programmeConfig.nowOn().get().channel())
+        .getMessageChannel(programmeConfig.nowOn().get().channel())
         .retrieveMessageById(messageId)
         .queue(
             message -> {

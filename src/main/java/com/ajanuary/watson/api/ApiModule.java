@@ -75,7 +75,7 @@ public class ApiModule implements EventListener {
       return;
     }
 
-    var commsChannel = jdaUtils.getTextChannel(apiConfig.channel());
+    var commsChannel = jdaUtils.getMessageChannel(apiConfig.channel());
 
     commsChannel
         .getHistory()

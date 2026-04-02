@@ -197,7 +197,7 @@ public class AlarmsModule {
                     conn,
                     dm.userId(),
                     () -> {
-                      var nowNextChannel = jdaUtils.getTextChannel(alarmsConfig.alarmsChannel());
+                      var nowNextChannel = jdaUtils.getMessageChannel(alarmsConfig.alarmsChannel());
                       return nowNextChannel.createThreadChannel("reminders", true).complete();
                     })
                 .thread();

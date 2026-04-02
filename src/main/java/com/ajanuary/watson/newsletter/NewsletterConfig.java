@@ -8,7 +8,7 @@ import net.dv8tion.jda.api.Permission;
 public record NewsletterConfig(String channel, URI feedUrl, Duration pollInterval) {
 
   public void validateDiscordConfig(JDAUtils jdaUtils) {
-    var textChannel = jdaUtils.getTextChannel(channel());
+    var textChannel = jdaUtils.getMessageChannel(channel());
     jdaUtils.checkPermissions(
         textChannel,
         Permission.MESSAGE_SEND,

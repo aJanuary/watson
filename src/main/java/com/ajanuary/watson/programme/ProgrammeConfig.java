@@ -20,11 +20,11 @@ public record ProgrammeConfig(
     boolean hasPerformedFirstLoad) {
 
   public void validateDiscordConfig(JDAUtils jdaUtils) {
-    var majorAnnouncementsChannel = jdaUtils.getTextChannel(majorAnnouncementsChannel());
+    var majorAnnouncementsChannel = jdaUtils.getMessageChannel(majorAnnouncementsChannel());
     jdaUtils.checkPermissions(majorAnnouncementsChannel, Permission.MESSAGE_SEND, Permission.MESSAGE_EMBED_LINKS);
 
     nowOn().ifPresent(nowOn -> {
-      var nowOnChannel = jdaUtils.getTextChannel(nowOn.channel());
+      var nowOnChannel = jdaUtils.getMessageChannel(nowOn.channel());
       jdaUtils.checkPermissions(nowOnChannel, Permission.MESSAGE_SEND);
     });
 

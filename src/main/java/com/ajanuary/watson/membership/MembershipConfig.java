@@ -13,7 +13,7 @@ public record MembershipConfig(
     String memberHelpRole) {
 
   public void validateDiscordConfig(JDAUtils jdaUtils) {
-    jdaUtils.getTextChannel(helpDeskChannel());
+    jdaUtils.getMessageChannel(helpDeskChannel());
     jdaUtils.getRole(memberRole());
     jdaUtils.getRole(unverifiedRole());
     jdaUtils.getRole(memberHelpRole());

@@ -12,6 +12,6 @@ public record AlarmsConfig(
     TemporalAmount minTimeBetweenDMs) {
 
   public void validateDiscordConfig(JDAUtils jdaUtils) {
-    jdaUtils.getTextChannel(alarmsChannel());
+    jdaUtils.getMessageChannel(alarmsChannel());
   }
 }

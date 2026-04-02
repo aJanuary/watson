@@ -5,8 +5,10 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.NewsChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.StandardGuildMessageChannel;
 
 import java.util.Optional;
 
@@ -34,8 +36,11 @@ public class JDAUtils {
     return roles.get(0);
   }
 
-  public TextChannel getTextChannel(String channelName) {
-    return getOptionalTextChannel(channelName).orElseThrow(() -> new IllegalArgumentException("Text channel not found: " + channelName));
+  public StandardGuildMessageChannel getMessageChannel(String channelName) {
+    return getOptionalTextChannel(channelName)
+            .map(x -> (StandardGuildMessageChannel) x)
+            .or(() -> getOptionalNewsChannel(channelName))
+            .orElseThrow(() -> new IllegalArgumentException("Text channel not found: " + channelName));
   }
 
   public Optional<TextChannel> getOptionalTextChannel(String channelName) {
@@ -43,6 +48,20 @@ public class JDAUtils {
     assert guild != null;
 
     var channels = guild.getTextChannelsByName(channelName, true);
+    if (channels.isEmpty()) {
+      return Optional.empty();
+    }
+    if (channels.size() > 1) {
+      throw new IllegalArgumentException("Multiple text channels found with the name: " + channelName);
+    }
+    return Optional.of(channels.get(0));
+  }
+
+  public Optional<NewsChannel> getOptionalNewsChannel(String channelName) {
+    var guild = jda.getGuildById(config.guildId());
+    assert guild != null;
+
+    var channels = guild.getNewsChannelsByName(channelName, true);
     if (channels.isEmpty()) {
       return Optional.empty();
     }
