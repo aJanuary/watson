@@ -117,7 +117,7 @@ public class ProgrammeModule {
     return tags;
   }
 
-  private static boolean tagMatches(String discordTag, String itemTag) {
+  private static boolean tagMatches(String itemTag, String discordTag) {
     return itemTag.toLowerCase().matches("(^|.*:\\s*)?" + Pattern.quote(discordTag.toLowerCase()) + "$");
   }
 
