@@ -41,6 +41,7 @@ import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
+import net.dv8tion.jda.api.entities.channel.middleman.StandardGuildMessageChannel;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -594,42 +595,35 @@ public class ProgrammeModule {
             .endTime()
             .withZoneSameInstant(config.timezone())
             .format(TIME_FORMATTER);
-    var discussUrl =
-        discordThread
-            .discordThreadId()
-            .map(
-                discordThreadId ->
-                    "https://discord.com/channels/" + config.guildId() + "/" + discordThreadId)
-            .orElseGet(
-                () -> {
-                  // This is a huuuuuuge hack
-                  // We need to get the channel name for the item so we can link to it, but
-                  // our mechanism for that uses programme items, which we don't have.
-                  // We should do something like calculate the channel earlier and pass it around
-                  // with the rest of the data, but I just don't have time to do that.
-                  // This is hardcoding the assumption that we are using a loc resolver :(
-                  var progItem =
-                      new ProgrammeItem(
-                          null, null, null,  null,null, null, 0, discordThread.item().loc(), null, null, null);
-                  var channelName =
-                      programmeConfig
-                          .channelNameResolver()
-                          .resolveChannelName(progItem)
-                          .orElse(null);
-                  if (channelName != null) {
-                    var guild = jda.getGuildById(config.guildId());
-                    if (guild != null) {
-                      var channels = guild.getTextChannelsByName(channelName, true);
-                      if (!channels.isEmpty()) {
-                        return "https://discord.com/channels/"
-                            + config.guildId()
-                            + "/"
-                            + channels.get(0).getId();
-                      }
-                    }
-                  }
-                  return null;
-                });
+    String discussUrl = null;
+    var discordThreadId = discordThread.discordThreadId().orElse(null);
+    if (discordThreadId != null) {
+      discussUrl = "https://discord.com/channels/" + config.guildId() + "/" + discordThreadId;
+    } else {
+      // This is a huuuuuuge hack
+      // We need to get the channel name for the item so we can link to it, but
+      // our mechanism for that uses programme items, which we don't have.
+      // We should do something like calculate the channel earlier and pass it around
+      // with the rest of the data, but I just don't have time to do that.
+      // This is hardcoding the assumption that we are using a loc resolver :(
+      var progItem =
+          new ProgrammeItem(
+              null, null, null, null, null, null, 0, discordThread.item().loc(), null, null, null);
+      var channelName =
+          programmeConfig.channelNameResolver().resolveChannelName(progItem).orElse(null);
+      if (channelName != null) {
+        StandardGuildMessageChannel channel;
+        try {
+          channel = jdaUtils.getMessageChannel(channelName);
+        } catch (IllegalArgumentException e) {
+          channel = null;
+        }
+        if (channel != null) {
+          discussUrl = "https://discord.com/channels/" + config.guildId() + "/" + channel.getId();
+          postPermanentNowOnMessage(channel, discordThread, start, end);
+        }
+      }
+    }
     String messageContent =
         "**"
             + start
@@ -654,6 +648,36 @@ public class ProgrammeModule {
           discordThread.item().endTime().plus(programmeConfig.nowOn().get().timeAfterToKeep()));
     } catch (SQLException e) {
       logger.error("Failed to insert now on message", e);
+    }
+  }
+
+  private void postPermanentNowOnMessage(
+      StandardGuildMessageChannel channel, DiscordThread discordThread, String start, String end) {
+    var item = discordThread.item();
+    var messageContent =
+        new StringBuilder()
+            .append("**")
+            .append(start)
+            .append(" - ")
+            .append(end)
+            .append(" ")
+            .append(item.title());
+
+    if (item.body() != null && !item.body().isBlank()) {
+      var descMd = new CopyDown().convert(item.body());
+      messageContent.append("\n\n").append(descMd);
+    }
+
+    if (messageContent.length() > 2000) {
+      messageContent.setLength(1997);
+      messageContent.append("...");
+    }
+
+    try {
+      channel.sendMessage(messageContent.toString()).queue();
+    } catch (RuntimeException e) {
+      logger.error(
+          "Failed to post permanent now on message for {}", discordThread.item().id(), e);
     }
   }
 

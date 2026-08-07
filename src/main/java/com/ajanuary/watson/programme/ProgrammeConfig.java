@@ -30,8 +30,13 @@ public record ProgrammeConfig(
 
     var channelNames = channelNameResolver().getChannelNames();
     for (var channelName : channelNames) {
-      var forumChannel = jdaUtils.getForumChannel(channelName);
-      jdaUtils.checkPermissions(forumChannel, Permission.MESSAGE_SEND, Permission.MESSAGE_SEND_IN_THREADS, Permission.MESSAGE_EMBED_LINKS);
+      var forumChannel = jdaUtils.getOptionalForumChannel(channelName);
+      if (forumChannel.isPresent()) {
+        jdaUtils.checkPermissions(forumChannel.get(), Permission.MESSAGE_SEND, Permission.MESSAGE_SEND_IN_THREADS, Permission.MESSAGE_EMBED_LINKS);
+      } else {
+        var messageChannel = jdaUtils.getMessageChannel(channelName);
+        jdaUtils.checkPermissions(messageChannel, Permission.MESSAGE_SEND, Permission.MESSAGE_EMBED_LINKS);
+      }
     }
   }
 
