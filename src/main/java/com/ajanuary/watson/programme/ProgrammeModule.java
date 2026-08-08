@@ -15,6 +15,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.github.furstenheim.CopyDown;
+
+import java.awt.*;
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -36,6 +38,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
@@ -654,27 +657,20 @@ public class ProgrammeModule {
   private void postPermanentNowOnMessage(
       StandardGuildMessageChannel channel, DiscordThread discordThread, String start, String end) {
     var item = discordThread.item();
-    var messageContent =
-        new StringBuilder()
-            .append("**")
-            .append(start)
-            .append(" - ")
-            .append(end)
-            .append(" ")
-            .append(item.title());
+    var embedBuilder = new EmbedBuilder();
+    embedBuilder.setColor(Color.BLUE);
+    embedBuilder.setTitle(start + " - " + end + " " + item.title());
 
     if (item.body() != null && !item.body().isBlank()) {
       var descMd = new CopyDown().convert(item.body());
-      messageContent.append("\n\n").append(descMd);
-    }
-
-    if (messageContent.length() > 2000) {
-      messageContent.setLength(1997);
-      messageContent.append("...");
+      if (descMd.length() > MessageEmbed.DESCRIPTION_MAX_LENGTH) {
+        descMd = descMd.substring(0, MessageEmbed.DESCRIPTION_MAX_LENGTH - 3) + "...";
+      }
+      embedBuilder.setDescription(descMd);
     }
 
     try {
-      channel.sendMessage(messageContent.toString()).queue();
+      channel.sendMessage(MessageCreateData.fromEmbeds(embedBuilder.build())).queue();
     } catch (RuntimeException e) {
       logger.error(
           "Failed to post permanent now on message for {}", discordThread.item().id(), e);
